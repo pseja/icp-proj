@@ -1,0 +1,1 @@
+Specifies which functionality has been implemented completely, which has some limitations, and which not at all (so that the evaluator does not unnecessarily try to make something work that is known in advance to be broken)
