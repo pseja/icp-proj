@@ -1,4 +1,4 @@
-PROJECT_NAME=""
+PROJECT_NAME="oblivion"
 BUILD_DIR="build"
 SOURCE_DIR="src"
 
@@ -11,7 +11,7 @@ build:
 	cd $(BUILD_DIR) && cmake .. && $(MAKE)
 
 run: build
-	./$(BUILD_DIR)/$(SOURCE_DIR)/projectname
+	./$(BUILD_DIR)/$(SOURCE_DIR)/$(PROJECT_NAME)
 
 clean:
 	rm -rf $(BUILD_DIR)

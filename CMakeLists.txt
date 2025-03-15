@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(projectname)
+project(oblivion)
 
 # C++17 standard
 set(CMAKE_CXX_STANDARD 17)
