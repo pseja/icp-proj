@@ -1,0 +1,63 @@
+<automaton name="TOF">
+    <comment>Timer to off, umí nastavit timeout a na požádání sdělit zbývající čas timeru.</comment>
+    <inputs>
+        <input name="in" type="int"/>
+        <input name="set_to" type="int"/>
+        <input name="req_rt" type="int"/>
+    </inputs>
+    <outputs>
+        <output name="out" type="int"/>
+        <output name="rt" type="int"/>
+    </outputs>
+    <variables>
+        <variable name="timeout" type="int" value="5000"/>
+    </variables>
+    <states>
+        <state name="IDLE" initial="true">
+            <action>if (defined("set_to")) timeout = atoi(valueof("set_to"));</action>
+            <action>output("out", 0);</action>
+            <action>output("rt", 0);</action>
+        </state>
+        <state name="ACTIVE">
+            <action>if (defined("set_to")) timeout = atoi(valueof("set_to"));</action>
+            <action>output("out", 1);</action>
+            <action>output("rt", timeout);</action>
+        </state>
+        <state name="TIMING">
+            <action>if (defined("set_to")) timeout = atoi(valueof("set_to"));</action>
+            <action>output("rt", timeout - elapsed());</action>
+        </state>
+    </states>
+    <transitions>
+        <transition from="IDLE" to="ACTIVE">
+            <condition event="in">atoi(valueof("in")) == 1</condition>
+        </transition>
+        <transition from="ACTIVE" to="TIMING">
+            <condition event="in">atoi(valueof("in")) == 0</condition>
+        </transition>
+        <transition from="TIMING" to="ACTIVE">
+            <condition event="in">atoi(valueof("in")) == 1</condition>
+        </transition>
+        <transition from="TIMING" to="IDLE">
+            <delay>timeout</delay>
+        </transition>
+        <transition from="IDLE" to="IDLE">
+            <condition event="set_to"/>
+        </transition>
+        <transition from="ACTIVE" to="ACTIVE">
+            <condition event="set_to"/>
+        </transition>
+        <transition from="TIMING" to="TIMING">
+            <condition event="set_to"/>
+        </transition>
+        <transition from="IDLE" to="IDLE">
+            <condition event="req_rt"/>
+        </transition>
+        <transition from="ACTIVE" to="ACTIVE">
+            <condition event="req_rt"/>
+        </transition>
+        <transition from="TIMING" to="TIMING">
+            <condition event="req_rt"/>
+        </transition>
+    </transitions>
+</automaton>
