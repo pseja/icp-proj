@@ -8,6 +8,7 @@ class Transition
   private:
     State from;
     State to;
+    // TODO needs more brainstorming with code gen
     std::function<bool()> condition;
     int delay = 0;
 
