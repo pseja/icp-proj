@@ -1,5 +1,4 @@
-<automaton name="TOF5s">
-    <comment>Timer to off, jednoduchá verze.</comment>
+<automaton name="TOF5s" comment="Timer to off, jednoduchá verze.">
     <inputs>
         <input name="in" type="int"/>
     </inputs>

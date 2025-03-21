@@ -1,5 +1,4 @@
-<automaton name="TOF">
-    <comment>Timer to off, umí nastavit timeout a na požádání sdělit zbývající čas timeru.</comment>
+<automaton name="TOF" comment="Timer to off, umí nastavit timeout a na požádání sdělit zbývající čas timeru.">
     <inputs>
         <input name="in" type="int"/>
         <input name="set_to" type="int"/>
