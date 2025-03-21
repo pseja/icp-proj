@@ -18,5 +18,15 @@ int main()
     std::cout << "    > FSM name: " << fsm.getName() << "\n";
     std::cout << "    > FSM comment: " << fsm.getComment() << "\n";
 
+    if (Parser::FSMtoXML(fsm, "./examples/TOF5s_copy.xml"))
+    {
+        std::cout << "FSM saved successfully\n";
+    }
+    else
+    {
+        std::cerr << "Error saving FSM\n";
+        return 2;
+    }
+
     return 0;
 }

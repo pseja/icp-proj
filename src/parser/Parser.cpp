@@ -37,3 +37,15 @@ bool Parser::XMLtoFSM(const std::string &file_path, FSM &fsm)
 
     return true;
 }
+
+bool Parser::FSMtoXML(FSM &fsm, const std::string &file_path)
+{
+    pugi::xml_document doc;
+
+    pugi::xml_node automaton_node = doc.append_child("automaton");
+    automaton_node.append_attribute("name") = fsm.getName().c_str();
+    automaton_node.append_attribute("comment") = fsm.getComment().c_str();
+
+    // TODO figure out UTF-8 encoding
+    return doc.save_file(file_path.c_str());
+}

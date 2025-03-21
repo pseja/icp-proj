@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <automaton name="TOF5s" comment="Timer to off, jednoduchá verze.">
     <inputs>
         <input name="in" type="int"/>
