@@ -1,7 +1,11 @@
 # executables in here
 add_executable(oblivion
     main.cpp
-    fsm/FiniteStateMachine.cpp
+    fsm/FSM.cpp
+    fsm/State.cpp
+    fsm/Transition.cpp
+    fsm/Variable.cpp
+    parser/Parser.cpp
 )
 
 # include external libraries directory
