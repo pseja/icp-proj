@@ -1,3 +1,6 @@
+// DISCLAIMER:
+// Don't use this code, it was written just for testing. It's equivalent is FSM.cpp
+
 #include "FiniteStateMachine.hpp"
 #include <chrono>
 #include <iostream>

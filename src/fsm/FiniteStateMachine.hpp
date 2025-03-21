@@ -1,3 +1,6 @@
+// DISCLAIMER:
+// Don't use this code, it was written just for testing. It's equivalent is FSM.cpp
+
 #ifndef FINITE_STATE_MACHINE_HPP
 #define FINITE_STATE_MACHINE_HPP
 
