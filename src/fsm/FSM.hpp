@@ -20,7 +20,9 @@ class FSM
     std::vector<std::string> outputs;
 
   public:
-    FSM(std::string name, std::string comment, State initial_state);
+    FSM();
+    FSM(std::string name);
+    FSM(std::string name, std::string comment);
 
     std::string getName();
     std::string getComment();
