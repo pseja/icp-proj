@@ -17,6 +17,19 @@ void FSM::prettyPrint()
 {
     std::cout << "Name: " << name << "\n";
     std::cout << "Comment: " << comment << "\n";
+
+    std::cout << "States:\n";
+    for (State state : states)
+    {
+        if (state.getName() == initial_state.getName())
+        {
+            std::cout << " -> " << state.getName() << "\n";
+        }
+        else
+        {
+            std::cout << "    " << state.getName() << "\n";
+        }
+    }
 }
 
 std::string FSM::getName()

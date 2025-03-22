@@ -35,6 +35,37 @@ bool Parser::XMLtoFSM(const std::string &file_path, FSM &fsm)
     }
     fsm.setComment(automaton_comment);
 
+    pugi::xml_node states = automaton_node.child("states");
+    if (!states)
+    {
+        std::cerr << "Error: No states node found in XML file\n";
+        return false;
+    }
+
+    for (pugi::xml_node state = states.child("state"); state; state = state.next_sibling("state"))
+    {
+        std::string state_name = state.attribute("name").as_string();
+        if (state_name.empty())
+        {
+            std::cerr << "Error: No name attribute found in state node\n";
+            return false;
+        }
+        State new_state = State(state_name);
+        fsm.addState(new_state);
+
+        // TODO this could maybe be done without nesting
+        if (state.attribute("initial").as_bool())
+        {
+            if (!fsm.getInitialState().getName().empty())
+            {
+                std::cerr << "Error: Multiple initial states found\n";
+                return false;
+            }
+
+            fsm.setInitialState(State(state_name));
+        }
+    }
+
     return true;
 }
 
