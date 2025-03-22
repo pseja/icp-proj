@@ -77,6 +77,17 @@ bool Parser::FSMtoXML(FSM &fsm, const std::string &file_path)
     automaton_node.append_attribute("name") = fsm.getName().c_str();
     automaton_node.append_attribute("comment") = fsm.getComment().c_str();
 
+    automaton_node.append_child("states");
+    for (State state : fsm.getStates())
+    {
+        pugi::xml_node state_node = automaton_node.child("states").append_child("state");
+        state_node.append_attribute("name") = state.getName().c_str();
+        if (state.getName() == fsm.getInitialState().getName())
+        {
+            state_node.append_attribute("initial") = true;
+        }
+    }
+
     // TODO figure out UTF-8 encoding
     return doc.save_file(file_path.c_str());
 }
