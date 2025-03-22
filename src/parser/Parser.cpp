@@ -78,8 +78,10 @@ bool Parser::FSMtoXML(FSM &fsm, const std::string &file_path)
     automaton_node.append_attribute("comment") = fsm.getComment().c_str();
 
     automaton_node.append_child("states");
-    for (State state : fsm.getStates())
+    for (std::pair<const std::string, State> &pair : fsm.getStates())
     {
+        State &state = pair.second;
+
         pugi::xml_node state_node = automaton_node.child("states").append_child("state");
         state_node.append_attribute("name") = state.getName().c_str();
         if (state.getName() == fsm.getInitialState().getName())

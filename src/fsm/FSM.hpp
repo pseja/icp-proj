@@ -4,6 +4,15 @@
 #include "Transition.hpp"
 #include "Variable.hpp"
 #include <string>
+#include <utility> // std::pair
+
+struct PairHash
+{
+    template <class T1, class T2> std::size_t operator()(const std::pair<T1, T2> &pair) const
+    {
+        return std::hash<T1>()(pair.first) ^ (std::hash<T2>()(pair.second) << 1);
+    }
+};
 
 class FSM
 {
@@ -13,8 +22,8 @@ class FSM
 
     State initial_state;
 
-    std::vector<State> states;
-    std::vector<Transition> transitions;
+    std::unordered_map<std::string, State> states;
+    std::unordered_map<std::pair<std::string, std::string>, Transition, PairHash> transitions;
     std::vector<Variable> variables;
     std::vector<std::string> inputs;
     std::vector<std::string> outputs;
@@ -29,8 +38,9 @@ class FSM
     std::string getName();
     std::string getComment();
     State getInitialState();
-    std::vector<State> getStates();
-    std::vector<Transition> getTransitions();
+    std::unordered_map<std::string, State> getStates();
+    State getState(std::string state_name);
+    std::unordered_map<std::pair<std::string, std::string>, Transition, PairHash> getTransitions();
     std::vector<Variable> getVariables();
     std::vector<std::string> getInputs();
     std::vector<std::string> getOutputs();

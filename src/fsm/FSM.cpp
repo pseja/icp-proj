@@ -18,9 +18,10 @@ void FSM::prettyPrint()
     std::cout << "Name: " << name << "\n";
     std::cout << "Comment: " << comment << "\n";
 
-    std::cout << "States:\n";
-    for (State state : states)
+    for (std::pair<std::string, State> pair : states)
     {
+        State &state = pair.second;
+
         if (state.getName() == initial_state.getName())
         {
             std::cout << " -> " << state.getName() << "\n";
@@ -47,12 +48,17 @@ State FSM::getInitialState()
     return initial_state;
 }
 
-std::vector<State> FSM::getStates()
+std::unordered_map<std::string, State> FSM::getStates()
 {
     return states;
 }
 
-std::vector<Transition> FSM::getTransitions()
+State FSM::getState(std::string state_name)
+{
+    return states[state_name];
+}
+
+std::unordered_map<std::pair<std::string, std::string>, Transition, PairHash> FSM::getTransitions()
 {
     return transitions;
 }
@@ -89,12 +95,13 @@ void FSM::setInitialState(State new_initial_state)
 
 void FSM::addState(State new_state)
 {
-    states.push_back(new_state);
+    states[new_state.getName()] = new_state;
 }
 
 void FSM::addTransition(Transition new_transition)
 {
-    transitions.push_back(new_transition);
+    std::pair<std::string, std::string> key = {new_transition.getFrom().getName(), new_transition.getTo().getName()};
+    transitions.insert({key, new_transition});
 }
 
 void FSM::addVariable(Variable new_variable)
