@@ -24,6 +24,8 @@ class FSM
     FSM(std::string name);
     FSM(std::string name, std::string comment);
 
+    void prettyPrint();
+
     std::string getName();
     std::string getComment();
     State getInitialState();

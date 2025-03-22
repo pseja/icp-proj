@@ -1,4 +1,5 @@
 #include "FSM.hpp"
+#include <iostream>
 
 FSM::FSM()
 {
@@ -10,6 +11,12 @@ FSM::FSM(std::string name) : name(name)
 
 FSM::FSM(std::string name, std::string comment) : name(name), comment(comment)
 {
+}
+
+void FSM::prettyPrint()
+{
+    std::cout << "Name: " << name << "\n";
+    std::cout << "Comment: " << comment << "\n";
 }
 
 std::string FSM::getName()

@@ -15,8 +15,7 @@ int main()
         return 1;
     }
 
-    std::cout << "    > FSM name: " << fsm.getName() << "\n";
-    std::cout << "    > FSM comment: " << fsm.getComment() << "\n";
+    fsm.prettyPrint();
 
     if (Parser::FSMtoXML(fsm, "./examples/TOF5s_copy.xml"))
     {
