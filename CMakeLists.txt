@@ -1,20 +1,29 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(icp-proj VERSION 0.1 LANGUAGES CXX)
 
+# Set paths to Qt5 libraries
+set(Qt5_DIR "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib/cmake/Qt5/")
+set(CMAKE_PREFIX_PATH "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/")
+
+# Find includes in corresponding build directories
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Enable automatic processing for Qt features
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Export compile commands for Clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+# Find required Qt5 components
+find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Scxml Qml Xml Test)
 
+# Define project sources
 set(PROJECT_SOURCES
         src/main.cpp
         src/frontend/mainwindow.cpp
@@ -22,52 +31,15 @@ set(PROJECT_SOURCES
         src/frontend/mainwindow.ui
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(icp-proj
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-    )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET icp-proj APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-else()
-    if(ANDROID)
-        add_library(icp-proj SHARED
-            ${PROJECT_SOURCES}
-        )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    else()
-        add_executable(icp-proj
-            ${PROJECT_SOURCES}
-        )
-    endif()
-endif()
+# Add executable target
+add_executable(icp-proj ${PROJECT_SOURCES})
 
-target_link_libraries(icp-proj PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+# Link required Qt5 modules
+target_link_libraries(icp-proj PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Scxml Qt5::Qml Qt5::Xml Qt5::Test)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.icp-proj)
-endif()
-set_target_properties(icp-proj PROPERTIES
-    ${BUNDLE_ID_OPTION}
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
-)
-
-include(GNUInstallDirs)
+# Install the target
 install(TARGETS icp-proj
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(icp-proj)
-endif()

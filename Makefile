@@ -18,7 +18,8 @@ all:
 
 run: all
 	@echo "Running project..."
-	./$(BUILD_DIR)/$(TARGET)
+# the QT_QPA_PLATFORM_PLUGIN_PATH is needed to run the application on merlin
+	QT_QPA_PLATFORM_PLUGIN_PATH=/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/plugins/platforms ./"build"/icp-proj
 
 doxygen:
 	@echo "Not implemented yet"
