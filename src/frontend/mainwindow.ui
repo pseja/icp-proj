@@ -20,11 +20,24 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>19</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuicp">
+    <property name="title">
+     <string>icp</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="actionlol"/>
+   </widget>
+   <addaction name="menuicp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionlol">
+   <property name="text">
+    <string>lol</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
