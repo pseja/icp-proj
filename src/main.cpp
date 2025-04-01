@@ -1,7 +1,11 @@
-#include <iostream>
+#include "frontend/mainwindow.hpp"
 
-int main()
+#include <QApplication>
+
+int main(int argc, char *argv[])
 {
-    std::cout << "Hello world\n";
-    return 0;
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
 }
