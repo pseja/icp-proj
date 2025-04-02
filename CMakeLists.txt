@@ -29,6 +29,8 @@ set(PROJECT_SOURCES
         src/frontend/mainwindow.cpp
         src/frontend/mainwindow.hpp
         src/frontend/mainwindow.ui
+        src/backend/xmlparser.cpp
+        src/backend/logger.cpp
 )
 
 # Add executable target
