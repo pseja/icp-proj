@@ -29,6 +29,8 @@ set(PROJECT_SOURCES
         src/frontend/mainwindow.cpp
         src/frontend/mainwindow.hpp
         src/frontend/mainwindow.ui
+        src/frontend/AutomatView.cpp
+        src/frontend/AutomatView.hpp
 )
 
 # Add executable target
