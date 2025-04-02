@@ -1,10 +1,10 @@
 <automaton name="TOF5s">
     <comment>Timer to off, jednoduchá verze.</comment>
     <inputs>
-        <input name="in" type="int"/>
+        <input name="in"/>
     </inputs>
     <outputs>
-        <output name="out" type="int"/>
+        <output name="out"/>
     </outputs>
     <variables>
         <variable name="timeout" type="int" value="5000"/>

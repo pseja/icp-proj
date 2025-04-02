@@ -1,13 +1,13 @@
 <automaton name="TOF">
     <comment>Timer to off, umí nastavit timeout a na požádání sdělit zbývající čas timeru.</comment>
     <inputs>
-        <input name="in" type="int"/>
-        <input name="set_to" type="int"/>
-        <input name="req_rt" type="int"/>
+        <input name="in"/>
+        <input name="set_to"/>
+        <input name="req_rt"/>
     </inputs>
     <outputs>
-        <output name="out" type="int"/>
-        <output name="rt" type="int"/>
+        <output name="out"/>
+        <output name="rt"/>
     </outputs>
     <variables>
         <variable name="timeout" type="int" value="5000"/>
