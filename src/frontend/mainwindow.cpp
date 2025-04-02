@@ -7,14 +7,17 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
+  setFixedSize(1920, 1080);
+  resize(1920, 1080);
+  setMinimumSize(800, 600);
   automatView = new AutomatView(this);
-  //automatView->setMinimumSize(400, 300);
+  automatView->setMinimumSize(400, 300);
   
-  //setCentralWidget(automatView);
+  setCentralWidget(automatView);
 }
 
 MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::on_addStateButton_clicked() {
-  automatView->addState(100, 100);
+
 }

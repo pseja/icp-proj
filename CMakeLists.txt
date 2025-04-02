@@ -30,7 +30,7 @@ set(PROJECT_SOURCES
         src/frontend/mainwindow.hpp
         src/frontend/mainwindow.ui
         src/frontend/AutomatView.cpp
-        src/frontend/AutomatView.hpp
+        src/frontend/StateItem.cpp
 )
 
 # Add executable target
