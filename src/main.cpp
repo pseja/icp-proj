@@ -1,26 +1,26 @@
-// #include "frontend/mainwindow.hpp"
+#include "backend/fsm.hpp"
+#include "backend/logger.hpp"
 #include "backend/xmlparser.hpp"
-#include <QApplication>
-#include <QStateMachine>
+#include "frontend/mainwindow.hpp" // for MainWindow
+#include <QApplication>            // for QApplication
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    MainWindow w;
+    w.show();
 
-    // i don't need the window, i won't be showing anything anyway (i guess)
-    // MainWindow w;
-    // w.show();
+    qInstallMessageHandler(Logger::messageHandler);
 
-    QStateMachine state_machine;
-    QString xml_file_path = "examples/test.xml";
+    FSM state_machine = new FSM("test");
 
-    if (!XMLParser::parseXML(xml_file_path, state_machine))
+    QString xml_file_path = "examples/TOF5s.xml";
+
+    if (!XMLParser::XMLtoFSM(xml_file_path, state_machine))
     {
-        Logger::logError("Failed to parse XML in %s", xml_file_path.toUtf8().constData());
+        qCritical() << "Failed to parse XML in" << xml_file_path;
         return 1;
     }
-
-    // state_machine.start();
 
     return app.exec();
 }
