@@ -317,52 +317,43 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
     code += " */\n";
     code += "class ConditionTransition : public QAbstractTransition {\n";
     code += "public:\n";
-    code += "    ConditionTransition(const QString& condition) : m_condition(condition) {}\n\n";
+    code += "    /**\n";
+    code += "     * @brief Constructor accepting a lambda function for the condition\n";
+    code += "     * @param condition A lambda function that evaluates to a boolean\n";
+    code += "     */\n";
+    code += "    explicit ConditionTransition(std::function<bool()> condition)\n";
+    code += "        : m_condition(std::move(condition)) {}\n\n";
     
     code += "protected:\n";
+    code += "    /**\n";
+    code += "     * @brief Evaluates the condition when the transition is triggered\n";
+    code += "     * @param event The event triggering the transition\n";
+    code += "     * @return True if the condition evaluates to true, false otherwise\n";
+    code += "     */\n";
     code += "    bool eventTest(QEvent* event) override {\n";
     code += "        Q_UNUSED(event);\n";
-    code += "        // Evaluate the condition code\n";
-    code += "        if (m_condition.isEmpty()) return false;\n";
-    code += "        \n";
-    code += "        // The condition code is expected to use functions like defined(), valueof(), atoi_safe()\n";
-    code += "        // which we've defined in our helper functions\n";
-    code += "        bool result = false;\n";
     code += "        try {\n";
-    code += "            // We're evaluating a C++ expression in runtime\n";
-    code += "            // In a real implementation, you'd need to implement an expression evaluator\n";
-    code += "            // or use lambdas. For simplicity, we're doing a direct check here\n";
-    code += "            result = eval(m_condition);\n";
+    code += "            return m_condition();\n";
+    code += "        } catch (const std::exception& e) {\n";
+    code += "            debugPrint(\"Error evaluating condition: \" + QString::fromStdString(e.what()), 3);\n";
+    code += "            return false;\n";
     code += "        } catch (...) {\n";
-    code += "            debugPrint(\"Error evaluating condition: \" + m_condition, 3);\n";
+    code += "            debugPrint(\"Unknown error evaluating condition\", 3);\n";
     code += "            return false;\n";
     code += "        }\n";
-    code += "        return result;\n";
     code += "    }\n\n";
     
-    // Enhance the onTransition method in ConditionTransition class
+    code += "    /**\n";
+    code += "     * @brief Logs the transition when it occurs\n";
+    code += "     * @param event The event triggering the transition\n";
+    code += "     */\n";
     code += "    void onTransition(QEvent* event) override {\n";
     code += "        Q_UNUSED(event);\n";
-    code += "        debugPrint(SECTION_SEPARATOR);\n";
-    code += "        debugPrint(ANSI_BOLD + ANSI_YELLOW + \"CONDITION TRIGGERED: \" + ANSI_RESET + m_condition);\n";
-    code += "        debugPrint(SECTION_SEPARATOR);\n";
-    code += "    }\n\n";
-    
-    code += "    bool eval(const QString& condition) {\n";
-    code += "        // In a real implementation, you'd use a proper expression evaluator\n";
-    code += "        // This is a simplistic approach for demonstration\n";
-    code += "        if (condition.contains(\"defined(\\\"in\\\") && atoi_safe(valueof(\\\"in\\\")) == 1\")) {\n";
-    code += "            return defined(\"in\") && atoi_safe(valueof(\"in\")) == 1;\n";
-    code += "        }\n";
-    code += "        else if (condition.contains(\"defined(\\\"in\\\") && atoi_safe(valueof(\\\"in\\\")) == 0\")) {\n";
-    code += "            return defined(\"in\") && atoi_safe(valueof(\"in\")) == 0;\n";
-    code += "        }\n";
-    code += "        debugPrint(\"Unknown condition: \" + condition, 2);\n";
-    code += "        return false;\n";
+    code += "        debugPrint(\"Condition triggered, executing transition.\");\n";
     code += "    }\n\n";
     
     code += "private:\n";
-    code += "    QString m_condition;\n";
+    code += "    std::function<bool()> m_condition; ///< The condition to evaluate\n";
     code += "};\n\n";
 
     code += "/**\n";
@@ -519,7 +510,24 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
                 code += "    DelayedStateTransition* " + sourceName.toLower() + "To" + targetName + "Delayed = new DelayedStateTransition(" + delayMs + ");\n";
                 code += "    " + sourceName.toLower() + "State->addTransition(" + sourceName.toLower() + "To" + targetName + "Delayed);\n";
                 code += "    " + sourceName.toLower() + "To" + targetName + "Delayed->setTargetState(" + targetName.toLower() + "State);\n";
+                
+                // Add documentation for timer start lambda
+                code += "    /**\n";
+                code += "     * @brief TimerStarter - Lambda that starts the delayed transition timer\n";
+                code += "     *\n";
+                code += "     * Detailed Description:\n";
+                code += "     *   This lambda is connected to the state's entered signal and starts the timer\n";
+                code += "     *   for the delayed transition when the source state is entered.\n";
+                code += "     *\n";
+                code += "     * Capture List:\n";
+                code += "     *   - " + sourceName.toLower() + "To" + targetName + "Delayed (by value): The delayed transition object\n";
+                code += "     *     that contains the timer to be started.\n";
+                code += "     *\n";
+                code += "     * Returns:\n";
+                code += "     *   void - This lambda is used for its side effect of starting the timer.\n";
+                code += "     */\n";
                 code += "    QObject::connect(" + sourceName.toLower() + "State, &QState::entered, [=]() {\n";
+                code += "        // Start the timer when entering the state\n";
                 code += "        " + sourceName.toLower() + "To" + targetName + "Delayed->start();\n";
                 code += "    });\n\n";
             } else {
@@ -527,7 +535,25 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
                 QString condition = transition->property("condition_code").toString();
                 if (!condition.isEmpty()) {
                     code += "    // Create condition transition: " + sourceName + " → " + targetName + "\n";
-                    code += "    ConditionTransition* " + sourceName.toLower() + "To" + targetName + "Condition = new ConditionTransition(\"" + condition.replace("\"", "\\\"") + "\");\n";
+                    
+                    // Add documentation for condition lambda
+                    code += "    /**\n";
+                    code += "     * @brief TransitionCondition - Lambda for evaluating the transition condition\n";
+                    code += "     *\n";
+                    code += "     * Detailed Description:\n";
+                    code += "     *   This lambda evaluates whether the transition from " + sourceName + " to " + targetName + "\n";
+                    code += "     *   should be taken based on the specified condition.\n";
+                    code += "     *\n";
+                    code += "     * Returns:\n";
+                    code += "     *   bool - True if the transition should occur, False otherwise.\n";
+                    code += "     *\n";
+                    code += "     * Condition:\n";
+                    code += "     *   " + condition + "\n";
+                    code += "     */\n";
+                    code += "    ConditionTransition* " + sourceName.toLower() + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
+                    code += "        // Evaluate condition: " + condition + "\n";
+                    code += "        return " + condition + ";\n";
+                    code += "    });\n";
                     code += "    " + sourceName.toLower() + "State->addTransition(" + sourceName.toLower() + "To" + targetName + "Condition);\n";
                     code += "    " + sourceName.toLower() + "To" + targetName + "Condition->setTargetState(" + targetName.toLower() + "State);\n\n";
                 }
@@ -557,6 +583,26 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
     code += "    // Create a notifier for terminal input\n";
     code += "    int terminalFd = fileno(terminalInput);\n";
     code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n";
+    
+    // Add proper documentation for the input handler lambda
+    code += "    /**\n";
+    code += "     * @brief TerminalInputHandler - Lambda that processes user input from the terminal\n";
+    code += "     *\n";
+    code += "     * Detailed Description:\n";
+    code += "     *   This lambda function is triggered when user input is available from the terminal.\n";
+    code += "     *   It processes commands like input value assignments, status requests, help\n";
+    code += "     *   commands, and application exit commands.\n";
+    code += "     *\n";
+    code += "     * Capture List:\n";
+    code += "     *   - inputNotifier (by reference): Socket notifier that needs to be re-enabled\n";
+    code += "     *     after processing input.\n";
+    code += "     *   - app (by reference): Application object needed for quitting the app.\n";
+    code += "     *   - fsm (by reference): State machine to post events to and retrieve status from.\n";
+    code += "     *   - terminalInput (by value): File handle for reading from terminal.\n";
+    code += "     *\n";
+    code += "     * Returns:\n";
+    code += "     *   void - This lambda is used for its side effects of processing input.\n";
+    code += "     */\n";
     code += "    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {\n";
     code += "        // Read from the terminal\n";
     code += "        char buffer[1024];\n";
