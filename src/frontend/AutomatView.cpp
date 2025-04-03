@@ -25,8 +25,12 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
 
   for (QGraphicsItem *item : clicked) {
     if (typeid(*item) == typeid(StateItem)) {
-      qDebug() << "Stav nakliknut!";
-      item->setSelected(true);
+      if (item->isSelected()) {
+        item->setSelected(false);
+      }
+      else {
+        item->setSelected(true);
+      }
       return;
     }
   }
@@ -35,6 +39,17 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
 void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   QPointF scenePos = mapToScene(event->pos());
   qDebug() << "Kliknuto na souřadnice:" << scenePos;
+
+  // Vytvoříme dočasný state jen pro kontrolu kolizí
+  StateItem tempState(nullptr);
+  tempState.setPos(scenePos);
+
+  // Zjistíme, jestli by se překrýval s jinými objekty
+  for (QGraphicsItem *item : scene()->items()) {
+    if (typeid(*item) == typeid(StateItem) && item->collidesWithItem(&tempState)) {
+      return;
+    }
+  }
 
   StateItem *state = new StateItem(nullptr);
   state->setBrush(Qt::cyan);
