@@ -1,23 +1,34 @@
 #include "AutomatView.hpp"
 #include "StateItem.hpp"
+#include <qdebug.h>
 #include <qevent.h>
 #include <qglobal.h>
 #include <qgraphicsitem.h>
 #include <qgraphicsscene.h>
 #include <qgraphicssceneevent.h>
+#include <qlist.h>
 #include <qnamespace.h>
 #include <qpoint.h>
+#include <typeinfo>
 
 // implementace automat platna
 AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
-  scene = new QGraphicsScene(this);
   setMinimumSize(400, 300); // Nastav minimální velikost
-  setScene(scene);
+  setScene(new QGraphicsScene(this));
   setRenderHint(QPainter::Antialiasing);
 }
 
 void AutomatView::mousePressEvent(QMouseEvent *event) {
+  QPointF scenePos = mapToScene(event->pos());
+  QList<QGraphicsItem *> clicked = scene()->items(scenePos);
 
+  for (QGraphicsItem *item : clicked) {
+    if (typeid(*item) == typeid(StateItem)) {
+      qDebug() << "Stav nakliknut!";
+      item->setSelected(true);
+      return;
+    }
+  }
 }
 
 void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
@@ -27,6 +38,8 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   StateItem *state = new StateItem(100, 200, nullptr);
   state->setBrush(Qt::cyan);
   state->setPos(scenePos);
-
-  scene->addItem(state);
+  state->setFlags(QGraphicsItem::ItemIsSelectable |
+                  QGraphicsItem::ItemIsMovable);
+  scene()->addItem(state);
+  //state->setSelected(true);
 }

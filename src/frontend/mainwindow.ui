@@ -36,7 +36,7 @@
      </rect>
     </property>
     <property name="title">
-     <string>GroupBox</string>
+     <string/>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox_2">
@@ -61,7 +61,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>RadioButton</string>
+      <string>See description</string>
      </property>
     </widget>
     <widget class="QRadioButton" name="radioButton_2">
@@ -74,7 +74,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>RadioButton</string>
+      <string>See code</string>
      </property>
     </widget>
     <widget class="QCheckBox" name="checkBox">
@@ -113,6 +113,22 @@
       </rect>
      </property>
     </widget>
+   </widget>
+   <widget class="QPlainTextEdit" name="plainTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>800</y>
+      <width>731</width>
+      <height>231</height>
+     </rect>
+    </property>
+    <property name="undoRedoEnabled">
+     <bool>true</bool>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

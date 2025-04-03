@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
   setMinimumSize(800, 600);
   automatView = new AutomatView(this);
   automatView->setMinimumSize(400, 300);
-
+  
   automatView->setGeometry(360, 30, 1551, 561);
   //setCentralWidget(automatView);
 }
