@@ -14,18 +14,13 @@
     </variables>
     <states>
         <state name="IDLE" initial="true">
-            <action>if (defined("set_to")) timeout = atoi(valueof("set_to"));</action>
-            <action>output("out", 0);</action>
-            <action>output("rt", 0);</action>
+            <code>if (defined("set_to")) timeout = atoi(valueof("set_to"));output("out", 0);output("rt", 0);</code>
         </state>
         <state name="ACTIVE">
-            <action>if (defined("set_to")) timeout = atoi(valueof("set_to"));</action>
-            <action>output("out", 1);</action>
-            <action>output("rt", timeout);</action>
+            <code>if (defined("set_to")) timeout = atoi(valueof("set_to"));output("out", 1);output("rt", timeout);</code>
         </state>
         <state name="TIMING">
-            <action>if (defined("set_to")) timeout = atoi(valueof("set_to"));</action>
-            <action>output("rt", timeout - elapsed());</action>
+            <code>if (defined("set_to")) timeout = atoi(valueof("set_to"));output("rt", timeout - elapsed());</code>
         </state>
     </states>
     <transitions>
