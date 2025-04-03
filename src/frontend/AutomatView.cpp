@@ -1,5 +1,6 @@
 #include "AutomatView.hpp"
 #include "StateItem.hpp"
+#include <asm-generic/errno.h>
 #include <qdebug.h>
 #include <qevent.h>
 #include <qglobal.h>
@@ -35,7 +36,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   QPointF scenePos = mapToScene(event->pos());
   qDebug() << "Kliknuto na souřadnice:" << scenePos;
 
-  StateItem *state = new StateItem(100, 200, nullptr);
+  StateItem *state = new StateItem(nullptr);
   state->setBrush(Qt::cyan);
   state->setPos(scenePos);
   state->setFlags(QGraphicsItem::ItemIsSelectable |

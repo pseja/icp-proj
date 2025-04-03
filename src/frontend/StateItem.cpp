@@ -3,8 +3,8 @@
 #include <QDebug>
 #include <qglobal.h>
 
-StateItem::StateItem(qreal x, qreal y, QGraphicsItem *parent)
-    : QGraphicsEllipseItem(-20, -20, 40, 40, parent) {
+StateItem::StateItem(QGraphicsItem *parent)
+    : QGraphicsEllipseItem(-40, -40, 80, 80, parent) {
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 }
 

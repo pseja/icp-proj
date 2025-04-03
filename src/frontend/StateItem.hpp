@@ -9,7 +9,7 @@
 
 class StateItem : public QGraphicsEllipseItem {
 public:
-    explicit StateItem(qreal x = 0, qreal y = 0, QGraphicsItem *parent = nullptr);
+    explicit StateItem(QGraphicsItem *parent = nullptr);
 
 protected:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
