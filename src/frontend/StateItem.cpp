@@ -3,9 +3,10 @@
 #include <QDebug>
 #include <qglobal.h>
 
-StateItem::StateItem(QGraphicsItem *parent)
+StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *parent)
     : QGraphicsEllipseItem(-40, -40, 80, 80, parent) {
-    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+  setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+  
 }
 
 void StateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
