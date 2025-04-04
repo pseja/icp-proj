@@ -30,6 +30,8 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
       }
       else {
         item->setSelected(true);
+        StateItem *state = dynamic_cast<StateItem *>(item);
+        emit stateSelected(state);
       }
       return;
     }
@@ -50,7 +52,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
       return;
     }
   }
-
+  
   StateItem *state = new StateItem(nullptr);
   state->setBrush(Qt::cyan);
   state->setPos(scenePos);

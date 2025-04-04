@@ -1,6 +1,7 @@
 #ifndef AUTOMATVIEW_HPP
 #define AUTOMATVIEW_HPP
 
+#include "src/frontend/StateItem.hpp"
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
@@ -20,6 +21,9 @@ class AutomatView : public QGraphicsView {
 
 public:
   explicit AutomatView(QWidget *parent = nullptr);
+
+signals:
+  void stateSelected(StateItem *state);
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;
