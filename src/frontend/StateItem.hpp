@@ -7,8 +7,11 @@
 #include <QAction>
 #include <qglobal.h>
 #include <qgraphicsitem.h>
+#include <qobjectdefs.h>
 
 class StateItem : public QGraphicsEllipseItem {
+  Q_OBJECT
+  
 public:
     explicit StateItem(const QString &name, const QString &code = "", QGraphicsItem *parent = nullptr);
 
@@ -19,6 +22,9 @@ public:
 
 protected:
   void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
+signals:
+  void stateDeleted(StateItem *state);
 
 private:
   QGraphicsTextItem *textItem;

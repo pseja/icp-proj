@@ -2,6 +2,7 @@
 #define AUTOMATVIEW_HPP
 
 #include "src/frontend/StateItem.hpp"
+//#include "src/frontend/mainwindow.hpp"
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>

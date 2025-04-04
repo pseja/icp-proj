@@ -21,7 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
   // setCentralWidget(automatView);
   connect(automatView, &AutomatView::stateSelected, this,
           &MainWindow::updateStateInfo);
-  connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this, &MainWindow::saveState);
+  connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,
+          &MainWindow::saveState);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -50,6 +51,7 @@ void MainWindow::updateStateInfo(StateItem *state) {
     textedit->setText(selectedState->getCodeSegment());
   }
 }
+
 
 void MainWindow::loadAutomat(const QVector<StateItem *> &states) {
   automatView->clearMask();

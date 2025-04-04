@@ -11,6 +11,7 @@
 #include <qnamespace.h>
 #include <qpoint.h>
 #include <typeinfo>
+//#include "mainwindow.hpp"
 
 // implementace automat platna
 AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
@@ -56,5 +57,10 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   state->setFlags(QGraphicsItem::ItemIsSelectable |
                   QGraphicsItem::ItemIsMovable);
   scene()->addItem(state);
+
+    //MainWindow *mainWin = qobject_cast<MainWindow *>(window());
+    //if (mainWin) {
+        //connect(state, &StateItem::stateDeleted, mainWin, &MainWindow::handleStateDeleted);
+    //}
   //state->setSelected(true);
 }
