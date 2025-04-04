@@ -21,12 +21,14 @@ public:
     ~MainWindow();
 
 private slots:
+    void saveState();
     void updateStateInfo(StateItem *state);
     void on_addStateButton_clicked();
 
 private:
   Ui::MainWindow *ui;
   AutomatView *automatView;
+  StateItem *selectedState = nullptr;
   void addState(StateItem *state);
   void loadAutomat(const QVector<StateItem *> &states);
 };

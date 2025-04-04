@@ -24,3 +24,11 @@ void StateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         delete this;
     }
 }
+
+void StateItem::setName(const QString &newName) { stateName = newName; }
+void StateItem::setCodeSegment(const QString &newCode) {
+  codeSegment = newCode;
+}
+
+QString StateItem::getName() { return stateName; }
+QString StateItem::getCodeSegment() {return codeSegment;}

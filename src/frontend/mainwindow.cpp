@@ -2,6 +2,7 @@
 #include "AutomatView.hpp"
 #include "src/frontend/StateItem.hpp"
 #include "src/frontend/ui_mainwindow.h"
+#include <qdialogbuttonbox.h>
 #include <qtextedit.h>
 #include <qvector.h>
 #include <QLineEdit>
@@ -18,7 +19,9 @@ MainWindow::MainWindow(QWidget *parent)
   
   automatView->setGeometry(360, 30, 1551, 561);
   // setCentralWidget(automatView);
-  connect(automatView, &AutomatView::stateSelected, this, &MainWindow::updateStateInfo);
+  connect(automatView, &AutomatView::stateSelected, this,
+          &MainWindow::updateStateInfo);
+  connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this, &MainWindow::saveState);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -27,14 +30,24 @@ void MainWindow::on_addStateButton_clicked() {
 
 }
 
+void MainWindow::saveState() {
+  if (selectedState) {
+    selectedState->setName(ui->lineEdit->text());
+    selectedState->setCodeSegment(ui->textEdit->toPlainText());
+  }
+}
+
+//aka clicking on state calls this with pointer to that state
 void MainWindow::updateStateInfo(StateItem *state) {
+  selectedState = state;
+  ui->groupBox->setEnabled(true);
   QLineEdit *lineEdit = ui->groupBox->findChild<QLineEdit *>("lineEdit");
   QTextEdit *textedit = ui->groupBox->findChild<QTextEdit *>("textEdit");
   if (lineEdit) {
-    lineEdit->setText("Nový název");
+    lineEdit->setText(selectedState->getName());
   }
   if (textedit) {
-    textedit->setText("some code");
+    textedit->setText(selectedState->getCodeSegment());
   }
 }
 

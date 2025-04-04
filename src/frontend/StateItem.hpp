@@ -14,7 +14,8 @@ public:
 
     void setName(const QString &newName);
     void setCodeSegment(const QString &newCode);
-    QString getCodeSegment() const;
+    QString getCodeSegment();
+    QString getName();
 
 protected:
   void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;

@@ -25,15 +25,12 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
 
   for (QGraphicsItem *item : clicked) {
     if (typeid(*item) == typeid(StateItem)) {
-      if (item->isSelected()) {
-        item->setSelected(false);
-      }
-      else {
+        scene()->clearSelection();
+      
         item->setSelected(true);
         StateItem *state = dynamic_cast<StateItem *>(item);
         emit stateSelected(state);
-      }
-      return;
+        return;
     }
   }
 }
