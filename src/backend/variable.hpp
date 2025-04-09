@@ -32,6 +32,11 @@ class Variable : public QObject
 
   public:
     /**
+     * @brief Default constructor for the Variable class.
+     */
+    Variable() = default;
+
+    /**
      * @brief Constructs a Variable object with the given type, name, and value.
      * @param type The type of the variable.
      * @param name The name of the variable.
