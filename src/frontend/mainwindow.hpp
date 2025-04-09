@@ -2,6 +2,10 @@
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include <qobjectdefs.h>
+#include <qvector.h>
+#include "AutomatView.hpp"
+#include "src/frontend/StateItem.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -16,8 +20,21 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    
+
+private slots:
+    void saveState();
+    void updateStateInfo(StateItem *state);
+    void on_addStateButton_clicked();
+public slots:
+    void handleStateDeleted();
+    
 
 private:
-    Ui::MainWindow *ui;
+  Ui::MainWindow *ui;
+  AutomatView *automatView;
+  StateItem *selectedState = nullptr;
+  void addState(StateItem *state);
+  void loadAutomat(const QVector<StateItem *> &states);
 };
 #endif // MAINWINDOW_HPP
