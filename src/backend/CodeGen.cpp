@@ -204,7 +204,6 @@ QString CodeGen::generateRuntimeMonitoring()
     code += " * Runtime monitoring and debugging\n";
     code += " ******************************************************************************/\n\n";
 
-    // Add ANSI color codes for cosmic void / Oblivion theme
     code += "// ANSI color codes for cosmic void / Oblivion theme\n";
     code += "const QString ANSI_RESET = \"\\033[0m\";\n";
     code += "const QString ANSI_BOLD = \"\\033[1m\";\n";
@@ -214,8 +213,6 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "const QString ANSI_SILVER = \"\\033[37m\";           // Silver Mist (secondary color)\n";
     code += "const QString ANSI_CELESTIAL_WHITE = \"\\033[97m\";  // Celestial White (actions)\n";
     
-    // Create aliases for backward compatibility with existing code
-    code += "\n// Aliases for backward compatibility\n";
     code += "const QString ANSI_RED = ANSI_MAGENTA;      // Errors\n";
     code += "const QString ANSI_GREEN = ANSI_VOID_PURPLE; // Success\n";
     code += "const QString ANSI_YELLOW = ANSI_OBLIVION_BLUE; // Warnings/Notice\n";
@@ -223,8 +220,6 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "const QString ANSI_CYAN = ANSI_SILVER;       // Faded text\n";
     code += "const QString ANSI_WHITE = ANSI_CELESTIAL_WHITE; // Brightest text\n\n";
 
-    // Add custom color constants for enhanced formatting
-    code += "// Enhanced UI formatting constants with Oblivion theme\n";
     code += "const QString STATE_HEADER = ANSI_BOLD + ANSI_VOID_PURPLE + \"════════ STATE: \" + ANSI_RESET;\n";
     code += "const QString COMMAND_HEADER = ANSI_BOLD + ANSI_CELESTIAL_WHITE + \"⟫ COMMAND: \" + ANSI_RESET;\n";
     code += "const QString SECTION_SEPARATOR = ANSI_SILVER + \"───────────────────────────────────────────────────\" + ANSI_RESET;\n";
@@ -314,68 +309,61 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     QString sourceLower = sourceName.toLower();
     QString targetLower = targetName.toLower();
     
-    // Handle case with both condition and delay
-    if (transition->isDelayedTransition() && !transition->getCondition().isEmpty()) {
-        // Create a combined condition and delayed transition
-        code += "    // Create condition-delayed transition: " + sourceName + " → " + targetName + "\n";
-        code += "    DelayedStateTransition* " + sourceLower + "To" + targetName + "Delayed = new DelayedStateTransition(" + QString::number(transition->getDelay()) + ");\n";
-        
-        QString conditionCode = transition->getCondition();
-        code += "    // Setup condition check for the transition\n";
-        code += "    ConditionTransition* " + sourceLower + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
-        code += "        // Evaluate condition: " + conditionCode + "\n";
-        code += "        return " + conditionCode + ";\n";
-        code += "    }, \"" + sourceName + "\", \"" + targetName + "\", \"" + conditionCode.replace("\"", "\\\"") + "\");\n";
-        
-        code += "    // Chain the condition and delay: condition first, then delayed transition\n";
-        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Condition);\n";
-        code += "    " + sourceLower + "To" + targetName + "Condition->setTargetState(" + sourceLower + "State); // Stay in same state until delay\n";
-        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Delayed);\n";
-        code += "    " + sourceLower + "To" + targetName + "Delayed->setTargetState(" + targetLower + "State);\n";
-        
-        // Add documentation for timer start lambda
-        code += "    /**\n";
-        code += "     * @brief TimerStarter - Lambda that starts the delayed transition timer when condition is met\n";
-        code += "     */\n";
-        code += "    QObject::connect(" + sourceLower + "To" + targetName + "Condition, &QAbstractTransition::triggered, [=]() {\n";
-        code += "        // Start the timer when the condition is true\n";
-        code += "        debugPrint(\"Condition met, starting delay timer for \" + QString::number(" + QString::number(transition->getDelay()) + ") + \"ms\");\n";
-        code += "        " + sourceLower + "To" + targetName + "Delayed->start();\n";
-        code += "    });\n\n";
+    // Get transition properties
+    QString condition = transition->getCondition();
+    int delay = transition->isDelayedTransition() ? transition->getDelay() : 0;
+    bool hasCondition = !condition.isEmpty();
+    bool hasDelay = delay > 0;
+    
+    // Variable name for the transition
+    QString transName = sourceLower + "To" + targetName + "Transition";
+    
+    // Create the unified transition
+    code += "    // Create unified transition: " + sourceName + " → " + targetName;
+    
+    // Add condition and/or delay information to the comment
+    if (hasCondition || hasDelay) {
+        code += " (";
+        if (hasCondition) {
+            code += "[ " + condition + " ]";
+        }
+        if (hasDelay) {
+            if (hasCondition) code += " ";
+            code += "@ " + QString::number(delay) + "ms";
+        }
+        code += ")";
     }
-    else if (transition->isDelayedTransition()) {
-        // Create a delayed transition
-        code += "    // Create delayed transition: " + sourceName + " → " + targetName + "\n";
-        code += "    DelayedStateTransition* " + sourceLower + "To" + targetName + "Delayed = new DelayedStateTransition(" + QString::number(transition->getDelay()) + ");\n";
-        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Delayed);\n";
-        code += "    " + sourceLower + "To" + targetName + "Delayed->setTargetState(" + targetLower + "State);\n";
-        
-        // Add documentation for timer start lambda
-        code += "    /**\n";
-        code += "     * @brief TimerStarter - Lambda that starts the delayed transition timer\n";
-        code += "     */\n";
-        code += "    QObject::connect(" + sourceLower + "State, &QState::entered, [=]() {\n";
-        code += "        // Start the timer when entering the state\n";
-        code += "        " + sourceLower + "To" + targetName + "Delayed->start();\n";
-        code += "    });\n\n";
-    } 
-    else if (!transition->getCondition().isEmpty()) {
-        code += "    // Create condition transition: " + sourceName + " → " + targetName + "\n";
-        
-        // Add documentation for condition lambda
-        code += "    /**\n";
-        code += "     * @brief TransitionCondition - Lambda for evaluating the transition condition\n";
-        code += "     */\n";
-        
-        QString conditionCode = transition->getCondition();
-        
-        code += "    ConditionTransition* " + sourceLower + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
-        code += "        // Evaluate condition: " + conditionCode + "\n";
-        code += "        return " + conditionCode + ";\n";
-        code += "    }, \"" + sourceName + "\", \"" + targetName + "\", \"" + conditionCode.replace("\"", "\\\"") + "\");\n";
-        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Condition);\n";
-        code += "    " + sourceLower + "To" + targetName + "Condition->setTargetState(" + targetLower + "State);\n\n";
+    code += "\n";
+    
+    // Create the transition object
+    code += "    UnifiedTransition* " + transName + " = new UnifiedTransition(";
+    
+    // Add condition lambda if present
+    if (hasCondition) {
+        code += "[]() -> bool {\n";
+        code += "        // Evaluate condition: " + condition + "\n";
+        code += "        return " + condition + ";\n";
+        code += "    }";
+    } else {
+        code += "[]() { return true; }"; // Default condition always true
     }
+    
+    // Add delay if present
+    code += ", " + QString::number(delay);
+    
+    // Add source and target state names for logging
+    code += ", \"" + sourceName + "\", \"" + targetName + "\"";
+    
+    // Add condition string for logging
+    if (hasCondition) {
+        code += ", \"" + condition.replace("\"", "\\\"") + "\"";
+    }
+    
+    code += ");\n";
+    
+    // Add the transition to the state machine
+    code += "    " + sourceLower + "State->addTransition(" + transName + ");\n";
+    code += "    " + transName + "->setTargetState(" + targetLower + "State);\n\n";
     
     return code;
 }
@@ -407,41 +395,81 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
 
     // Define the classes needed for QStateMachine
     code += "/**\n";
-    code += " * @brief Custom transition that evaluates a condition expression\n";
+    code += " * @brief Unified transition class handling both conditions and delays\n";
     code += " */\n";
-    code += "class ConditionTransition : public QAbstractTransition {\n";
+    code += "class UnifiedTransition : public QAbstractTransition {\n";
     code += "public:\n";
     code += "    /**\n";
-    code += "     * @brief Constructor accepting a lambda function for the condition\n";
+    code += "     * @brief Constructor for a unified transition that handles both conditions and delays\n";
     code += "     * @param condition A lambda function that evaluates to a boolean\n";
+    code += "     * @param delayMs Delay in milliseconds before triggering the transition (0 = no delay)\n";
     code += "     * @param fromState Source state name (for logging)\n";
     code += "     * @param toState Target state name (for logging)\n";
-    code += "     * @param conditionStr Condition string (for logging)\n";
+    code += "     * @param conditionStr String representation of the condition (for logging)\n";
     code += "     */\n";
-    code += "    explicit ConditionTransition(std::function<bool()> condition,\n";
-    code += "                                const QString& fromState = QString(), \n";
-    code += "                                const QString& toState = QString(),\n";
-    code += "                                const QString& conditionStr = QString())\n";
-    code += "        : m_condition(std::move(condition)), \n";
+    code += "    explicit UnifiedTransition(std::function<bool()> condition = []() { return true; },\n";
+    code += "                             int delayMs = 0,\n";
+    code += "                             const QString& fromState = QString(),\n";
+    code += "                             const QString& toState = QString(),\n";
+    code += "                             const QString& conditionStr = QString())\n";
+    code += "        : m_condition(std::move(condition)),\n";
+    code += "          m_delay(delayMs),\n";
     code += "          m_fromState(fromState),\n";
     code += "          m_toState(toState),\n";
-    code += "          m_conditionStr(conditionStr) {}\n\n";
+    code += "          m_conditionStr(conditionStr),\n";
+    code += "          m_timer(nullptr),\n";
+    code += "          m_conditionMet(false)\n";
+    code += "    {\n";
+    code += "        if (m_delay > 0) {\n";
+    code += "            m_timer = new QTimer(this);\n";
+    code += "            m_timer->setSingleShot(true);\n";
+    code += "            connect(m_timer, &QTimer::timeout, this, &UnifiedTransition::triggerTransition);\n";
+    code += "        }\n";
+    code += "    }\n\n";
     
     code += "protected:\n";
     code += "    /**\n";
-    code += "     * @brief Evaluates the condition when the transition is triggered\n";
+    code += "     * @brief Tests whether the transition should be triggered\n";
     code += "     * @param event The event triggering the transition\n";
-    code += "     * @return True if the condition evaluates to true, false otherwise\n";
+    code += "     * @return True if the transition should occur, false otherwise\n";
     code += "     */\n";
     code += "    bool eventTest(QEvent* event) override {\n";
-    code += "        Q_UNUSED(event);\n";
+    code += "        // If this is our custom timeout event and the condition was met previously\n";
+    code += "        if (event->type() == QEvent::User + 1 && m_conditionMet) {\n";
+    code += "            return true;\n";
+    code += "        }\n";
+    code += "        \n";
+    code += "        // For all other events, we check the condition\n";
     code += "        try {\n";
-    code += "            return m_condition();\n";
+    code += "            m_conditionMet = m_condition();\n";
+    code += "            \n";
+    code += "            // If condition failed, stop any running timer\n";
+    code += "            if (!m_conditionMet) {\n";
+    code += "                if (m_timer && m_timer->isActive()) {\n";
+    code += "                    m_timer->stop();\n";
+    code += "                }\n";
+    code += "                return false;\n";
+    code += "            }\n";
+    code += "            \n";
+    code += "            // Condition passed - if we have a delay, start the timer (if not already running)\n";
+    code += "            if (m_delay > 0) {\n";
+    code += "                if (m_timer && !m_timer->isActive()) {\n";
+    code += "                    debugPrint(\"Condition met for transition \" + \n";
+    code += "                              ANSI_CYAN + m_fromState + ANSI_RESET + \" → \" + \n";
+    code += "                              ANSI_GREEN + m_toState + ANSI_RESET + \n";
+    code += "                              \", starting \" + QString::number(m_delay) + \"ms delay timer\");\n";
+    code += "                    m_timer->start(m_delay);\n";
+    code += "                }\n";
+    code += "                return false; // Don't trigger yet, wait for timer\n";
+    code += "            }\n";
+    code += "            \n";
+    code += "            // No delay, trigger immediately\n";
+    code += "            return m_conditionMet;\n";
     code += "        } catch (const std::exception& e) {\n";
-    code += "            debugPrint(\"Error evaluating condition: \" + QString::fromStdString(e.what()), 3);\n";
+    code += "            debugPrint(\"Error evaluating transition condition: \" + QString::fromStdString(e.what()), 3);\n";
     code += "            return false;\n";
     code += "        } catch (...) {\n";
-    code += "            debugPrint(\"Unknown error evaluating condition\", 3);\n";
+    code += "            debugPrint(\"Unknown error evaluating transition condition\", 3);\n";
     code += "            return false;\n";
     code += "        }\n";
     code += "    }\n\n";
@@ -452,71 +480,51 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "     */\n";
     code += "    void onTransition(QEvent* event) override {\n";
     code += "        Q_UNUSED(event);\n";
-    code += "        if (!m_fromState.isEmpty() && !m_toState.isEmpty()) {\n";
-    code += "            // More concise transition logging with condition on separate line\n";
-    code += "            debugPrint(\"Transition: \" + \n";
-    code += "                      ANSI_BOLD + ANSI_CYAN + m_fromState + ANSI_RESET + \" → \" + \n";
-    code += "                      ANSI_BOLD + ANSI_GREEN + m_toState + ANSI_RESET);\n";
-    code += "                      \n";
-    code += "            if (!m_conditionStr.isEmpty()) {\n";
-    code += "                debugPrint(\"Condition passed: \" + m_conditionStr);\n";
-    code += "            }\n";
+    code += "        \n";
+    code += "        debugPrint(DOUBLE_SEPARATOR);\n";
+    code += "        debugPrint(\"Transition: \" + \n";
+    code += "                  ANSI_BOLD + ANSI_CYAN + m_fromState + ANSI_RESET + \n";
+    code += "                  \" → \" + \n";
+    code += "                  ANSI_BOLD + ANSI_GREEN + m_toState + ANSI_RESET);\n";
+    code += "        \n";
+    code += "        if (!m_conditionStr.isEmpty()) {\n";
+    code += "            debugPrint(\"  Condition satisfied: \" + m_conditionStr);\n";
+    code += "        }\n";
+    code += "        \n";
+    code += "        if (m_delay > 0) {\n";
+    code += "            debugPrint(\"  Delay completed: \" + QString::number(m_delay) + \"ms\");\n";
+    code += "        }\n";
+    code += "        debugPrint(SECTION_SEPARATOR);\n";
+    code += "        \n";
+    code += "        // Reset condition state after transition\n";
+    code += "        m_conditionMet = false;\n";
+    code += "    }\n\n";
+    
+    code += "private slots:\n";
+    code += "    /**\n";
+    code += "     * @brief Triggers the transition after the delay timer expires\n";
+    code += "     */\n";
+    code += "    void triggerTransition() {\n";
+    code += "        // We only want to post the event if the condition is still true\n";
+    code += "        if (m_condition()) {\n";
+    code += "            QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1));\n";
+    code += "            machine()->postEvent(customEvent);\n";
     code += "        } else {\n";
-    code += "            debugPrint(\"Transition triggered.\");\n";
+    code += "            m_conditionMet = false;\n";
+    code += "            debugPrint(\"Condition no longer valid after delay for transition \" + \n";
+    code += "                      m_fromState + \" → \" + m_toState + \n";
+    code += "                      \", not triggering\");\n";
     code += "        }\n";
     code += "    }\n\n";
     
     code += "private:\n";
-    code += "    std::function<bool()> m_condition; ///< The condition to evaluate\n";
-    code += "    QString m_fromState;       ///< Source state name for verbose logging\n";
-    code += "    QString m_toState;         ///< Target state name for verbose logging\n";
-    code += "    QString m_conditionStr;    ///< Condition string for verbose logging\n";
-    code += "};\n\n";
-
-    code += "/**\n";
-    code += " * @brief Class for handling timer-based transitions using Qt's timer system\n";
-    code += " */\n";
-    code += "class DelayedStateTransition : public QAbstractTransition {\n";
-    code += "public:\n";
-    code += "    DelayedStateTransition(int delayMs) : m_delay(delayMs), m_timer(new QTimer(this)) {\n";
-    code += "        m_timer->setSingleShot(true);\n";
-    code += "        connect(m_timer, &QTimer::timeout, this, &DelayedStateTransition::timeout);\n";
-    code += "    }\n\n";
-    
-    code += "    void start() {\n";
-    code += "        m_timer->start(m_delay);\n";
-    code += "        debugPrint(\"Started delayed transition timer for \" + QString::number(m_delay) + \"ms\");\n";
-    code += "        // Show expected completion time\n";
-    code += "        QDateTime expectedCompletion = QDateTime::currentDateTime().addMSecs(m_delay);\n";
-    code += "        debugPrint(ANSI_BOLD + \"TIMER:\" + ANSI_RESET + \" Will expire at \" + \n";
-    code += "                  ANSI_YELLOW + expectedCompletion.toString(\"hh:mm:ss.zzz\") + ANSI_RESET + \n";
-    code += "                  \" (in \" + QString::number(m_delay) + \"ms)\");\n";
-    code += "    }\n\n";
-    
-    code += "protected:\n";
-    code += "    bool eventTest(QEvent* event) override {\n";
-    code += "        // This only triggers on our custom timeout event\n";
-    code += "        return event->type() == QEvent::User + 1;\n";
-    code += "    }\n\n";
-    
-    code += "    void onTransition(QEvent* event) override {\n";
-    code += "        Q_UNUSED(event);\n";
-    code += "        debugPrint(DOUBLE_SEPARATOR);\n";
-    code += "        debugPrint(ANSI_BOLD + ANSI_RED + \"TIMER EXPIRED: \" + ANSI_RESET + \"Delayed transition triggered after \" + \n";
-    code += "                  ANSI_BOLD + QString::number(m_delay) + \"ms\" + ANSI_RESET);\n";
-    code += "        debugPrint(DOUBLE_SEPARATOR);\n";
-    code += "    }\n\n";
-    
-    code += "private slots:\n";
-    code += "    void timeout() {\n";
-    code += "        // Create a custom event to trigger the transition\n";
-    code += "        QEvent* event = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1));\n";
-    code += "        machine()->postEvent(event);\n";
-    code += "    }\n\n";
-    
-    code += "private:\n";
-    code += "    int m_delay;\n";
-    code += "    QTimer* m_timer;\n";
+    code += "    std::function<bool()> m_condition;  ///< The condition to evaluate\n";
+    code += "    int m_delay;                        ///< Delay in milliseconds (0 = no delay)\n";
+    code += "    QString m_fromState;                ///< Source state name for logging\n";
+    code += "    QString m_toState;                  ///< Target state name for logging\n";
+    code += "    QString m_conditionStr;             ///< Condition string for logging\n";
+    code += "    QTimer* m_timer;                    ///< Timer for delayed transitions\n";
+    code += "    bool m_conditionMet;                ///< Tracks whether the condition was met\n";
     code += "};\n\n";
 
     code += "/**\n";
