@@ -5,6 +5,7 @@
 #include "variable.hpp"
 #include <QDebug>
 #include <QRegularExpression>
+#include <csignal>
 
 /**
  * @brief Constructor for the CodeGen class
@@ -78,6 +79,7 @@ QString CodeGen::generateHeaders()
     code += "#include <QtCore/QAbstractTransition>\n";
     code += "#include <stdio.h>\n";
     code += "#include <unistd.h>\n";
+    code += "#include <csignal>\n";
     code += "\n";
     
     return code;
@@ -202,17 +204,31 @@ QString CodeGen::generateRuntimeMonitoring()
     code += " * Runtime monitoring and debugging\n";
     code += " ******************************************************************************/\n\n";
 
-    // Add ANSI color codes for terminal output
-    code += "// ANSI color codes for terminal output\n";
+    // Add ANSI color codes for cosmic void / Oblivion theme
+    code += "// ANSI color codes for cosmic void / Oblivion theme\n";
     code += "const QString ANSI_RESET = \"\\033[0m\";\n";
     code += "const QString ANSI_BOLD = \"\\033[1m\";\n";
-    code += "const QString ANSI_RED = \"\\033[31m\";\n";
-    code += "const QString ANSI_GREEN = \"\\033[32m\";\n";
-    code += "const QString ANSI_YELLOW = \"\\033[33m\";\n";
-    code += "const QString ANSI_BLUE = \"\\033[34m\";\n";
-    code += "const QString ANSI_MAGENTA = \"\\033[35m\";\n";
-    code += "const QString ANSI_CYAN = \"\\033[36m\";\n";
-    code += "const QString ANSI_WHITE = \"\\033[37m\";\n\n";
+    code += "const QString ANSI_MAGENTA = \"\\033[95m\";          // Error/Warning (cool magenta)\n";
+    code += "const QString ANSI_VOID_PURPLE = \"\\033[38;5;99m\"; // Deep Void Purple (accent color)\n";
+    code += "const QString ANSI_OBLIVION_BLUE = \"\\033[96m\";    // Oblivion Blue (primary color)\n";
+    code += "const QString ANSI_SILVER = \"\\033[37m\";           // Silver Mist (secondary color)\n";
+    code += "const QString ANSI_CELESTIAL_WHITE = \"\\033[97m\";  // Celestial White (actions)\n";
+    
+    // Create aliases for backward compatibility with existing code
+    code += "\n// Aliases for backward compatibility\n";
+    code += "const QString ANSI_RED = ANSI_MAGENTA;      // Errors\n";
+    code += "const QString ANSI_GREEN = ANSI_VOID_PURPLE; // Success\n";
+    code += "const QString ANSI_YELLOW = ANSI_OBLIVION_BLUE; // Warnings/Notice\n";
+    code += "const QString ANSI_BLUE = ANSI_OBLIVION_BLUE;  // Info\n";
+    code += "const QString ANSI_CYAN = ANSI_SILVER;       // Faded text\n";
+    code += "const QString ANSI_WHITE = ANSI_CELESTIAL_WHITE; // Brightest text\n\n";
+
+    // Add custom color constants for enhanced formatting
+    code += "// Enhanced UI formatting constants with Oblivion theme\n";
+    code += "const QString STATE_HEADER = ANSI_BOLD + ANSI_VOID_PURPLE + \"════════ STATE: \" + ANSI_RESET;\n";
+    code += "const QString COMMAND_HEADER = ANSI_BOLD + ANSI_CELESTIAL_WHITE + \"⟫ COMMAND: \" + ANSI_RESET;\n";
+    code += "const QString SECTION_SEPARATOR = ANSI_SILVER + \"───────────────────────────────────────────────────\" + ANSI_RESET;\n";
+    code += "const QString DOUBLE_SEPARATOR = ANSI_OBLIVION_BLUE + \"═══════════════════════════════════════════════════\" + ANSI_RESET;\n\n";
 
     // State change logging function
     code += "/**\n";
@@ -222,10 +238,12 @@ QString CodeGen::generateRuntimeMonitoring()
     code += " */\n";
     code += "void logStateChange(const QString& fromState, const QString& toState) {\n";
     code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+    code += "    qDebug().noquote() << \"\";\n";  // Add empty line before state change for separation
     code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" \n";
-    code += "             << ANSI_BOLD + ANSI_MAGENTA + \"STATE CHANGE:\" + ANSI_RESET\n";
-    code += "             << ANSI_CYAN + fromState + ANSI_RESET << \"->\"\n";
-    code += "             << ANSI_GREEN + ANSI_BOLD + toState + ANSI_RESET;\n";
+    code += "             << ANSI_BOLD + ANSI_VOID_PURPLE + \"STATE CHANGE\" + ANSI_RESET + \": \"\n";
+    code += "             << ANSI_OBLIVION_BLUE + fromState + ANSI_RESET \n";
+    code += "             << \" → \" \n";  // Use Unicode arrow for better visual flow
+    code += "             << ANSI_BOLD + ANSI_VOID_PURPLE + toState + ANSI_RESET;\n";
     code += "}\n\n";
     
     // Input event logging function
@@ -237,9 +255,10 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "void logInputEvent(const QString& input, const QString& value) {\n";
     code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
     code += "    qDebug().noquote() << \"[\" << timeMs << \"]\"\n";
-    code += "             << ANSI_YELLOW + \"INPUT:\" + ANSI_RESET\n";
-    code += "             << ANSI_BOLD + input + ANSI_RESET << \"=\"\n";
-    code += "             << ANSI_CYAN + value + ANSI_RESET;\n";
+    code += "             << ANSI_OBLIVION_BLUE + \"INPUT\" + ANSI_RESET + \": \"\n";
+    code += "             << \"  \" + ANSI_BOLD + input + ANSI_RESET \n";
+    code += "             << \" = \" \n";
+    code += "             << ANSI_SILVER + value + ANSI_RESET;\n";
     code += "}\n\n";
     
     // Output event logging function
@@ -251,9 +270,10 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "void logOutputEvent(const QString& output, const QString& value) {\n";
     code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
     code += "    qDebug().noquote() << \"[\" << timeMs << \"]\"\n";
-    code += "             << ANSI_GREEN + \"OUTPUT:\" + ANSI_RESET\n";
-    code += "             << ANSI_BOLD + output + ANSI_RESET << \"=\"\n";
-    code += "             << ANSI_CYAN + value + ANSI_RESET;\n";
+    code += "             << ANSI_VOID_PURPLE + \"OUTPUT\" + ANSI_RESET + \": \"\n";
+    code += "             << \"  \" + ANSI_BOLD + output + ANSI_RESET \n";
+    code += "             << \" = \" \n";
+    code += "             << ANSI_SILVER + value + ANSI_RESET;\n";
     code += "}\n\n";
     
     // Debug print function for general debugging messages
@@ -266,11 +286,11 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
     code += "    QString prefix;\n";
     code += "    switch (level) {\n";
-    code += "        case 0: prefix = ANSI_BLUE + \"INFO:\" + ANSI_RESET; break;\n";
-    code += "        case 1: prefix = ANSI_CYAN + \"NOTICE:\" + ANSI_RESET; break;\n";
-    code += "        case 2: prefix = ANSI_YELLOW + \"WARNING:\" + ANSI_RESET; break;\n";
-    code += "        case 3: prefix = ANSI_RED + \"ERROR:\" + ANSI_RESET; break;\n";
-    code += "        default: prefix = \"DEBUG:\";\n";
+    code += "        case 0: prefix = ANSI_OBLIVION_BLUE + \"INFO\" + ANSI_RESET + \": \"; break;\n";
+    code += "        case 1: prefix = ANSI_SILVER + \"NOTICE\" + ANSI_RESET + \": \"; break;\n";
+    code += "        case 2: prefix = ANSI_OBLIVION_BLUE + \"WARNING\" + ANSI_RESET + \": \"; break;\n";
+    code += "        case 3: prefix = ANSI_MAGENTA + \"ERROR\" + ANSI_RESET + \": \"; break;\n";
+    code += "        default: prefix = \"DEBUG: \";\n";
     code += "    }\n";
     code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" << prefix << message;\n";
     code += "}\n\n";
@@ -305,7 +325,7 @@ QString CodeGen::generateTransitionCode(Transition *transition,
         code += "    ConditionTransition* " + sourceLower + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
         code += "        // Evaluate condition: " + conditionCode + "\n";
         code += "        return " + conditionCode + ";\n";
-        code += "    });\n";
+        code += "    }, \"" + sourceName + "\", \"" + targetName + "\", \"" + conditionCode.replace("\"", "\\\"") + "\");\n";
         
         code += "    // Chain the condition and delay: condition first, then delayed transition\n";
         code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Condition);\n";
@@ -352,7 +372,7 @@ QString CodeGen::generateTransitionCode(Transition *transition,
         code += "    ConditionTransition* " + sourceLower + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
         code += "        // Evaluate condition: " + conditionCode + "\n";
         code += "        return " + conditionCode + ";\n";
-        code += "    });\n";
+        code += "    }, \"" + sourceName + "\", \"" + targetName + "\", \"" + conditionCode.replace("\"", "\\\"") + "\");\n";
         code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Condition);\n";
         code += "    " + sourceLower + "To" + targetName + "Condition->setTargetState(" + targetLower + "State);\n\n";
     }
@@ -385,13 +405,6 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     
     QString initialStateName = initial ? initial->getName() : "UNKNOWN";
 
-    // Add custom color constants for enhanced formatting
-    code += "// Enhanced UI formatting constants\n";
-    code += "const QString STATE_HEADER = ANSI_BOLD + ANSI_BLUE + \"════════ STATE: \" + ANSI_RESET;\n";
-    code += "const QString COMMAND_HEADER = ANSI_BOLD + ANSI_CYAN + \"⟫ COMMAND: \" + ANSI_RESET;\n";
-    code += "const QString SECTION_SEPARATOR = ANSI_CYAN + \"───────────────────────────────────────────────────\" + ANSI_RESET;\n";
-    code += "const QString DOUBLE_SEPARATOR = ANSI_YELLOW + \"═══════════════════════════════════════════════════\" + ANSI_RESET;\n\n";
-
     // Define the classes needed for QStateMachine
     code += "/**\n";
     code += " * @brief Custom transition that evaluates a condition expression\n";
@@ -401,9 +414,18 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    /**\n";
     code += "     * @brief Constructor accepting a lambda function for the condition\n";
     code += "     * @param condition A lambda function that evaluates to a boolean\n";
+    code += "     * @param fromState Source state name (for logging)\n";
+    code += "     * @param toState Target state name (for logging)\n";
+    code += "     * @param conditionStr Condition string (for logging)\n";
     code += "     */\n";
-    code += "    explicit ConditionTransition(std::function<bool()> condition)\n";
-    code += "        : m_condition(std::move(condition)) {}\n\n";
+    code += "    explicit ConditionTransition(std::function<bool()> condition,\n";
+    code += "                                const QString& fromState = QString(), \n";
+    code += "                                const QString& toState = QString(),\n";
+    code += "                                const QString& conditionStr = QString())\n";
+    code += "        : m_condition(std::move(condition)), \n";
+    code += "          m_fromState(fromState),\n";
+    code += "          m_toState(toState),\n";
+    code += "          m_conditionStr(conditionStr) {}\n\n";
     
     code += "protected:\n";
     code += "    /**\n";
@@ -430,11 +452,25 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "     */\n";
     code += "    void onTransition(QEvent* event) override {\n";
     code += "        Q_UNUSED(event);\n";
-    code += "        debugPrint(\"Condition triggered, executing transition.\");\n";
+    code += "        if (!m_fromState.isEmpty() && !m_toState.isEmpty()) {\n";
+    code += "            // More concise transition logging with condition on separate line\n";
+    code += "            debugPrint(\"Transition: \" + \n";
+    code += "                      ANSI_BOLD + ANSI_CYAN + m_fromState + ANSI_RESET + \" → \" + \n";
+    code += "                      ANSI_BOLD + ANSI_GREEN + m_toState + ANSI_RESET);\n";
+    code += "                      \n";
+    code += "            if (!m_conditionStr.isEmpty()) {\n";
+    code += "                debugPrint(\"Condition passed: \" + m_conditionStr);\n";
+    code += "            }\n";
+    code += "        } else {\n";
+    code += "            debugPrint(\"Transition triggered.\");\n";
+    code += "        }\n";
     code += "    }\n\n";
     
     code += "private:\n";
     code += "    std::function<bool()> m_condition; ///< The condition to evaluate\n";
+    code += "    QString m_fromState;       ///< Source state name for verbose logging\n";
+    code += "    QString m_toState;         ///< Target state name for verbose logging\n";
+    code += "    QString m_conditionStr;    ///< Condition string for verbose logging\n";
     code += "};\n\n";
 
     code += "/**\n";
@@ -507,14 +543,23 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "int main(int argc, char *argv[]) {\n";
     code += "    QCoreApplication app(argc, argv);\n";
     code += "    \n";
-    code += "    // Application header with visual emphasis\n";
+    code += "    // Application header with cosmic void visualization\n";
     code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + ANSI_GREEN + \"◆ ◆ ◆  QT STATE MACHINE APPLICATION  ◆ ◆ ◆\" + ANSI_RESET;\n";
+    code += "    qDebug().noquote() << ANSI_BOLD + ANSI_VOID_PURPLE + \"✧ ✧ ✧  OBLIVION STATE MACHINE  ✧ ✧ ✧\" + ANSI_RESET;\n";
+    code += "    qDebug().noquote() << ANSI_OBLIVION_BLUE + \"     Navigating the cosmic void of software states\" + ANSI_RESET;\n";
     code += "    qDebug().noquote() << DOUBLE_SEPARATOR + \"\\n\";\n";
     code += "    \n";
     code += "    debugPrint(\"Starting FSM application with QStateMachine\");\n";
-    code += "    debugPrint(\"State machine name: \" + ANSI_BOLD + ANSI_GREEN + \"" + fsm->getName() + "\" + ANSI_RESET);\n";
+    code += "    debugPrint(\"State machine name: \" + ANSI_BOLD + ANSI_VOID_PURPLE + \"" + fsm->getName() + "\" + ANSI_RESET);\n";
     
+    // Add signal handler for SIGINT (Ctrl+C)
+    code += "    // Setup signal handler for Ctrl+C (SIGINT)\n";
+    code += "    std::signal(SIGINT, [](int) {\n";
+    code += "        qDebug().noquote() << \"\";\n";  // Add empty line for clarity
+    code += "        debugPrint(ANSI_BOLD + ANSI_MAGENTA + \"Interrupt received. Exiting gracefully...\" + ANSI_RESET);\n";
+    code += "        QCoreApplication::quit();\n";
+    code += "    });\n\n";
+
     // Extract and initialize inputs/outputs
     QSet<QString> inputNames = fsm->getInputs();
     QSet<QString> outputNames = fsm->getOutputs();
@@ -553,7 +598,7 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
         if (!onEntry.isEmpty()) {
             code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
             code += "        debugPrint(DOUBLE_SEPARATOR);\n";
-            code += "        debugPrint(STATE_HEADER + ANSI_BOLD + ANSI_GREEN + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
+            code += "        debugPrint(STATE_HEADER + ANSI_BOLD + ANSI_VOID_PURPLE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
             code += "        debugPrint(SECTION_SEPARATOR);\n";
             code += "        debugPrint(\"Executing onEntry action for state: \" + ANSI_BOLD + \"" + stateName + "\" + ANSI_RESET);\n";
             code += "        " + onEntry + "\n";
@@ -563,7 +608,7 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
             // Even if no onEntry code, still provide visual feedback for state entry
             code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
             code += "        debugPrint(DOUBLE_SEPARATOR);\n";
-            code += "        debugPrint(STATE_HEADER + ANSI_BOLD + ANSI_GREEN + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
+            code += "        debugPrint(STATE_HEADER + ANSI_BOLD + ANSI_VOID_PURPLE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
             code += "        debugPrint(SECTION_SEPARATOR);\n";
             code += "    });\n";
         }
@@ -620,16 +665,15 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     
     // Rest of the main function (command handling, etc.)
     code += "    // Print application usage help\n";
-    code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + ANSI_BLUE + \"          AVAILABLE COMMANDS          \" + ANSI_RESET;\n";
-    code += "    qDebug().noquote() << DOUBLE_SEPARATOR;\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + \"name=value\" + ANSI_RESET + \" - Set an input value\";\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + \"status\" + ANSI_RESET + \"    - Show the current system state\";\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + \"help\" + ANSI_RESET + \"      - Show this help message\";\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + \"quit/exit\" + ANSI_RESET + \" - Exit the application\";\n";
-    code += "    qDebug().noquote() << DOUBLE_SEPARATOR + \"\\n\";\n\n";
+    code += "    debugPrint(\"Available Commands:\");\n";
+    code += "    debugPrint(SECTION_SEPARATOR);\n";
+    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"name=value\").leftJustified(15) + ANSI_RESET + \"- Set an input value\";\n";
+    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"status\").leftJustified(15) + ANSI_RESET + \"- Show the current system state\";\n";
+    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"help\").leftJustified(15) + ANSI_RESET + \"- Show this help message\";\n";
+    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"quit/exit\").leftJustified(15) + ANSI_RESET + \"- Exit the application\";\n";
+    code += "    debugPrint(SECTION_SEPARATOR + \"\\n\");\n\n";
 
-    // Enhanced input handling
+    // Add terminal input setup
     code += "    // Setup input handling from the terminal\n";
     code += "    FILE* terminalInput = fdopen(dup(STDIN_FILENO), \"r\");\n";
     code += "    if (!terminalInput) {\n";
@@ -637,14 +681,12 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "        return 1;\n";
     code += "    }\n\n";
     
+    // Create a notifier for terminal input
     code += "    // Create a notifier for terminal input\n";
     code += "    int terminalFd = fileno(terminalInput);\n";
-    code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n";
+    code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n\n";
     
-    // Input handler lambda
-    code += "    /**\n";
-    code += "     * @brief TerminalInputHandler - Lambda that processes user input from the terminal\n";
-    code += "     */\n";
+    // Updated input handler with streamlined logging and reduced repetition
     code += "    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {\n";
     code += "        // Read from the terminal\n";
     code += "        char buffer[1024];\n";
@@ -652,90 +694,84 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            QString line = QString::fromUtf8(buffer).trimmed();\n";
     code += "            \n";
     code += "            if (line.isEmpty()) {\n";
-    code += "                // Re-enable the notifier and return\n";
     code += "                inputNotifier->setEnabled(true);\n";
     code += "                return;\n";
     code += "            }\n";
     code += "            \n";
-    code += "            // Visual separator for commands\n";
-    code += "            qDebug().noquote() << \"\\n\" + SECTION_SEPARATOR;\n";
-    code += "            qDebug().noquote() << COMMAND_HEADER + ANSI_YELLOW + \"\\\"\" + line + \"\\\"\" + ANSI_RESET;\n";
-    code += "            qDebug().noquote() << SECTION_SEPARATOR;\n";
+    code += "            // Get current state for context\n";
+    code += "            QString currentState = fsm.configuration().isEmpty() ? \"UNKNOWN\" : \n";
+    code += "                                  (*fsm.configuration().begin())->objectName();\n";
+    code += "            \n";
+    code += "            // Show command header for any input\n";
+    code += "            qDebug().noquote() << \"\\n\" + COMMAND_HEADER + line;\n";
     code += "            \n";
     code += "            if (line.contains('=')) {\n";
     code += "                int pos = line.indexOf('=');\n";
     code += "                QString name = line.left(pos);\n";
     code += "                QString value = line.mid(pos + 1);\n";
     code += "                \n";
-    code += "                debugPrint(\"Processing input: \" + ANSI_BOLD + name + ANSI_RESET + \" = \" + \n";
-    code += "                          ANSI_CYAN + value + ANSI_RESET);\n";
-    code += "                inputs[name] = value;\n";
-    code += "                logInputEvent(name, value);\n";
+    code += "                // Single consolidated message for input handling\n";
+    code += "                debugPrint(\"Received input in state \" + ANSI_GREEN + currentState + ANSI_RESET + \": \" + \n";
+    code += "                          ANSI_BOLD + name + ANSI_RESET + \" = \" + ANSI_CYAN + value + ANSI_RESET);\n";
     code += "                \n";
-    code += "                // Post input event to trigger transitions\n";
+    code += "                inputs[name] = value;\n";
     code += "                fsm.postEvent(new InputEvent(name, value));\n";
     code += "            } else if (line == \"exit\" || line == \"quit\") {\n";
     code += "                debugPrint(ANSI_BOLD + ANSI_RED + \"Exit command received. Terminating application...\" + ANSI_RESET);\n";
     code += "                app.quit();\n";
     code += "            } else if (line == \"status\") {\n";
-    code += "                // Enhanced status display\n";
-    code += "                debugPrint(DOUBLE_SEPARATOR);\n";
-    code += "                debugPrint(ANSI_BOLD + ANSI_BLUE + \"           SYSTEM STATUS           \" + ANSI_RESET);\n";
-    code += "                debugPrint(DOUBLE_SEPARATOR);\n";
+    code += "                // Enhanced status display with bullet points and consistent formatting\n";
+    code += "                qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+    code += "                qDebug().noquote() << \"[\" << timeMs << \"]\" << ANSI_BOLD + ANSI_OBLIVION_BLUE + \"SYSTEM STATUS\" + ANSI_RESET;\n";
+    code += "                qDebug().noquote() << SECTION_SEPARATOR;\n";
     code += "                \n";
-    code += "                if (!fsm.configuration().isEmpty()) {\n";
-    code += "                    QString currentState = (*fsm.configuration().begin())->objectName();\n";
-    code += "                    debugPrint(\"Current state: \" + ANSI_BOLD + ANSI_GREEN + currentState + ANSI_RESET);\n";
-    code += "                } else {\n";
-    code += "                    debugPrint(\"No active state\");\n";
-    code += "                }\n";
+    code += "                // Current state - always shown\n";
+    code += "                qDebug().noquote() << \"• Current state: \" + ANSI_BOLD + ANSI_VOID_PURPLE + currentState + ANSI_RESET;\n";
     code += "                \n";
-    code += "                // Print inputs\n";
+    code += "                // Print inputs with bullet points\n";
     code += "                if (!inputs.isEmpty()) {\n";
-    code += "                    debugPrint(SECTION_SEPARATOR);\n";
-    code += "                    debugPrint(ANSI_BOLD + \"INPUT VALUES:\" + ANSI_RESET);\n";
+    code += "                    qDebug().noquote() << \"\\n• Input values:\";\n";
     code += "                    for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {\n";
-    code += "                        debugPrint(\"  \" + ANSI_CYAN + it.key() + ANSI_RESET + \" = \" + \n";
-    code += "                                 (it.value().isEmpty() ? ANSI_YELLOW + \"<empty>\" + ANSI_RESET : it.value()));\n";
+    code += "                        qDebug().noquote() << \"  ◦ \" + ANSI_OBLIVION_BLUE + it.key() + ANSI_RESET + \" = \" + \n";
+    code += "                                        (it.value().isEmpty() ? ANSI_SILVER + \"<empty>\" + ANSI_RESET : it.value());\n";
     code += "                    }\n";
     code += "                }\n";
     code += "                \n";
-    code += "                // Print outputs\n";
+    code += "                // Print outputs with bullet points\n";
     code += "                if (!outputs.isEmpty()) {\n";
-    code += "                    debugPrint(SECTION_SEPARATOR);\n";
-    code += "                    debugPrint(ANSI_BOLD + \"OUTPUT VALUES:\" + ANSI_RESET);\n";
+    code += "                    qDebug().noquote() << \"\\n• Output values:\";\n";
     code += "                    for (auto it = outputs.constBegin(); it != outputs.constEnd(); ++it) {\n";
-    code += "                        debugPrint(\"  \" + ANSI_GREEN + it.key() + ANSI_RESET + \" = \" + \n";
-    code += "                                 (it.value().isEmpty() ? ANSI_YELLOW + \"<empty>\" + ANSI_RESET : it.value()));\n";
+    code += "                        qDebug().noquote() << \"  ◦ \" + ANSI_VOID_PURPLE + it.key() + ANSI_RESET + \" = \" + \n";
+    code += "                                        (it.value().isEmpty() ? ANSI_SILVER + \"<empty>\" + ANSI_RESET : it.value());\n";
     code += "                    }\n";
     code += "                }\n";
-    code += "                debugPrint(DOUBLE_SEPARATOR);\n";
+    code += "                qDebug().noquote() << SECTION_SEPARATOR;\n";
     code += "            } else if (line == \"help\") {\n";
-    code += "                // Enhanced help display\n";
-    code += "                qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
-    code += "                qDebug().noquote() << ANSI_BOLD + ANSI_BLUE + \"          AVAILABLE COMMANDS          \" + ANSI_RESET;\n";
-    code += "                qDebug().noquote() << DOUBLE_SEPARATOR;\n";
-    code += "                qDebug().noquote() << ANSI_BOLD + \"name=value\" + ANSI_RESET + \" - Set an input value\";\n";
-    code += "                qDebug().noquote() << ANSI_BOLD + \"status\" + ANSI_RESET + \"    - Show the current system state\";\n";
-    code += "                qDebug().noquote() << ANSI_BOLD + \"help\" + ANSI_RESET + \"      - Show this help message\";\n";
-    code += "                qDebug().noquote() << ANSI_BOLD + \"quit/exit\" + ANSI_RESET + \" - Exit the application\";\n";
-    code += "                qDebug().noquote() << DOUBLE_SEPARATOR + \"\\n\";\n";
+    code += "                // Help display with better spacing and bulletpoints\n";
+    code += "                qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+    code += "                qDebug().noquote() << \"[\" << timeMs << \"]\" << ANSI_BOLD + ANSI_OBLIVION_BLUE + \"AVAILABLE COMMANDS\" + ANSI_RESET;\n";
+    code += "                qDebug().noquote() << SECTION_SEPARATOR;\n";
+    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"name=value\").leftJustified(15) + ANSI_RESET + \"- Set an input value\";\n";
+    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"status\").leftJustified(15) + ANSI_RESET + \"- Show the current system state\";\n";
+    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"help\").leftJustified(15) + ANSI_RESET + \"- Show this help message\";\n";
+    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"quit/exit\").leftJustified(15) + ANSI_RESET + \"- Exit the application\";\n";
+    code += "                qDebug().noquote() << SECTION_SEPARATOR;\n";
     code += "            } else {\n";
-    code += "                debugPrint(ANSI_RED + \"Unknown command: \" + ANSI_BOLD + \"\\\"\" + line + \"\\\"\" + ANSI_RESET, 2);\n";
-    code += "                debugPrint(\"Type 'help' to see available commands\");\n";
+    code += "                debugPrint(\"Unknown command: \" + ANSI_BOLD + \"\\\"\" + line + \"\\\"\" + ANSI_RESET + \n";
+    code += "                          \". Type 'help' to see available commands.\", 2);\n";
     code += "            }\n";
     code += "        }\n";
     code += "        \n";
     code += "        // Re-enable the notifier\n";
     code += "        inputNotifier->setEnabled(true);\n";
     code += "    });\n\n";
-    
-    // Start the state machine with enhanced output
-    code += "    // Start the state machine\n";
+
+    // Start the state machine with cosmic void aesthetic
+    code += "    // Start the state machine with cosmic void aesthetic\n";
     code += "    debugPrint(DOUBLE_SEPARATOR);\n";
-    code += "    debugPrint(ANSI_BOLD + ANSI_GREEN + \"STARTING STATE MACHINE\" + ANSI_RESET);\n";
+    code += "    debugPrint(ANSI_BOLD + ANSI_VOID_PURPLE + \"INITIALIZING OBLIVION STATE MACHINE\" + ANSI_RESET);\n";
     code += "    fsm.start();\n";
-    code += "    debugPrint(\"State machine started successfully\");\n";
+    code += "    debugPrint(\"Transition engine activated successfully\");\n";
     code += "    debugPrint(DOUBLE_SEPARATOR);\n";
     code += "    qDebug().noquote() << \"\"; // Empty line for better readability\n\n";
     
