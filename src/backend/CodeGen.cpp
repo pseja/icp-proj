@@ -443,21 +443,16 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "        try {\n";
     code += "            m_conditionMet = m_condition();\n";
     code += "            \n";
-    code += "            // If condition failed, stop any running timer\n";
+    code += "            // If condition failed, stop any running timer and return false\n";
     code += "            if (!m_conditionMet) {\n";
-    code += "                if (m_timer && m_timer->isActive()) {\n";
-    code += "                    m_timer->stop();\n";
-    code += "                }\n";
+    code += "                cancelTimerIfActive();\n";
     code += "                return false;\n";
     code += "            }\n";
     code += "            \n";
     code += "            // Condition passed - if we have a delay, start the timer (if not already running)\n";
     code += "            if (m_delay > 0) {\n";
     code += "                if (m_timer && !m_timer->isActive()) {\n";
-    code += "                    debugPrint(\"Condition met for transition \" + \n";
-    code += "                              ANSI_CYAN + m_fromState + ANSI_RESET + \" → \" + \n";
-    code += "                              ANSI_GREEN + m_toState + ANSI_RESET + \n";
-    code += "                              \", starting \" + QString::number(m_delay) + \"ms delay timer\");\n";
+    code += "                    logTransitionStart();\n";
     code += "                    m_timer->start(m_delay);\n";
     code += "                }\n";
     code += "                return false; // Don't trigger yet, wait for timer\n";
@@ -518,6 +513,25 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    }\n\n";
     
     code += "private:\n";
+    code += "    /**\n";
+    code += "     * @brief Helper method to cancel the timer if it's active\n";
+    code += "     */\n";
+    code += "    void cancelTimerIfActive() {\n";
+    code += "        if (m_timer && m_timer->isActive()) {\n";
+    code += "            m_timer->stop();\n";
+    code += "        }\n";
+    code += "    }\n\n";
+    
+    code += "    /**\n";
+    code += "     * @brief Helper method to log transition start with consistent formatting\n";
+    code += "     */\n";
+    code += "    void logTransitionStart() {\n";
+    code += "        debugPrint(\"Condition met for transition \" + \n";
+    code += "                  ANSI_CYAN + m_fromState + ANSI_RESET + \" → \" + \n";
+    code += "                  ANSI_GREEN + m_toState + ANSI_RESET + \n";
+    code += "                  \", starting \" + QString::number(m_delay) + \"ms delay timer\");\n";
+    code += "    }\n\n";
+    
     code += "    std::function<bool()> m_condition;  ///< The condition to evaluate\n";
     code += "    int m_delay;                        ///< Delay in milliseconds (0 = no delay)\n";
     code += "    QString m_fromState;                ///< Source state name for logging\n";
