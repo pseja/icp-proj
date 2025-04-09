@@ -27,6 +27,18 @@ set(PROJECT_SOURCES
         src/frontend/mainwindow.ui
         src/backend/MockStateMachine.cpp
         src/backend/CodeGen.cpp
+        src/backend/fsm.cpp
+        src/backend/state.cpp
+        src/backend/transition.cpp
+        src/backend/variable.cpp
+        src/backend/logger.cpp
+        src/backend/xmlparser.cpp
+        src/backend/fsm.hpp
+        src/backend/state.hpp
+        src/backend/transition.hpp
+        src/backend/variable.hpp
+        src/backend/logger.hpp
+        src/backend/xmlparser.hpp
 )
 
 # Add executable target
