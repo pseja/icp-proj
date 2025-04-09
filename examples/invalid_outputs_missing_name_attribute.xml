@@ -1,0 +1,5 @@
+<automaton name="outputs only">
+    <outputs>
+        <output />
+    </outputs>
+</automaton>

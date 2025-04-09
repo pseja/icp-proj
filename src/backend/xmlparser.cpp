@@ -102,7 +102,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
             // Check if there are additional attributes besides "name"
             if (input_node.attributes().count() > 1)
             {
-                qCritical() << "The <input> element has additional attributes besides \"name\"";
+                qCritical() << "Invalid XML format: The <input> element has additional attributes besides \"name\"";
                 return false;
             }
 
@@ -127,9 +127,16 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         qInfo() << "Outputs:";
         while (!output_node.isNull())
         {
-            if (!output_node.hasAttribute("name"))
+            if (!output_node.hasAttribute("name") || output_node.attribute("name").isEmpty())
             {
-                qCritical() << "Invalid XML: <output> element has no \"name\" attribute";
+                qCritical() << "Invalid XML: <output> element has no \"name\" attribute or it's empty";
+                return false;
+            }
+
+            // Check if there are additional attributes besides "name"
+            if (output_node.attributes().count() > 1)
+            {
+                qCritical() << "Invalid XML format: The <output> element has additional attributes besides \"name\"";
                 return false;
             }
 
