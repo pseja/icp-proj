@@ -13,6 +13,8 @@
  */
 
 #include "xmlparser.hpp"
+#include <qglobal.h>
+#include <qnumeric.h>
 
 bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 {
@@ -228,20 +230,23 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         QDomElement delay_node = transition_node.firstChildElement("delay");
 
         QString condition_event;
+        QString condition_code;
         QString delay_variable_name;
         Variable *delay_variable = nullptr;
 
         if (!condition_node.isNull())
         {
             condition_event = condition_node.attribute("event");
-            qInfo() << "Condition event" << condition_event << "for transition from" << from_state_name << "to"
-                    << to_state_name;
+            condition_code = condition_node.text();
+            qInfo() << "Condition event" << condition_event << "and code" << condition_code << "for transition from"
+                    << from_state_name << "to" << to_state_name;
         }
 
         if (!delay_node.isNull())
         {
             delay_variable_name = delay_node.text();
             delay_variable = state_machine.getVariable(delay_variable_name);
+
             if (delay_variable == nullptr)
             {
                 qCritical() << "Invalid XML: Delay variable" << delay_variable_name << "not found";
@@ -258,10 +263,10 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
             continue;
         }
 
-        // TODO: Handle the case where delay is float/double etc.
         int delay_value = delay_variable ? delay_variable->getValue().toInt() : -1;
         qInfo() << "Delay value:" << delay_value;
-        state_machine.addTransition(from_state, to_state, condition_event, delay_value);
+        state_machine.addTransition(from_state, to_state, condition_event, condition_code, delay_value,
+                                    delay_variable_name);
 
         qInfo() << "Transition" << (condition_event.isEmpty() ? delay_variable_name : condition_event) << "from"
                 << from_state_name << "to" << to_state_name << "created";
@@ -271,5 +276,145 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     qInfo() << "Parsed" << state_machine.getTransitions().size() << "transitions";
 
+    return true;
+}
+
+bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
+{
+    qInfo() << "Starting to export FSM to XML file:" << file_path;
+    QDomDocument document;
+
+    qInfo() << "Creating root automaton node";
+    QDomElement root = document.createElement("automaton");
+    root.setAttribute("name", state_machine.getName());
+    qInfo() << "Set FSM name to:" << state_machine.getName();
+    document.appendChild(root);
+
+    if (!state_machine.getComment().isEmpty())
+    {
+        qInfo() << "Creating comment node";
+        QDomElement comment_node = document.createElement("comment");
+        comment_node.appendChild(document.createTextNode(state_machine.getComment()));
+        root.appendChild(comment_node);
+        qInfo() << "Set comment to:" << state_machine.getComment();
+    }
+
+    qInfo() << "Creating inputs node";
+    QDomElement inputs_node = document.createElement("inputs");
+    for (const auto &input : state_machine.getInputs())
+    {
+        qInfo() << "Creating input node";
+        QDomElement input_node = document.createElement("input");
+        input_node.setAttribute("name", input);
+        qInfo() << "Set input name to:" << input;
+        inputs_node.appendChild(input_node);
+    }
+    root.appendChild(inputs_node);
+
+    qInfo() << "Creating outputs node";
+    QDomElement outputs_node = document.createElement("outputs");
+    for (const auto &output : state_machine.getOutputs())
+    {
+        qInfo() << "Creating output node";
+        QDomElement output_node = document.createElement("output");
+        output_node.setAttribute("name", output);
+        qInfo() << "Set output name to:" << output;
+        outputs_node.appendChild(output_node);
+    }
+    root.appendChild(outputs_node);
+
+    qInfo() << "Creating variables node";
+    QDomElement variables_node = document.createElement("variables");
+    for (const auto &variable : state_machine.getVariables())
+    {
+        qInfo() << "Creating variable node";
+        QDomElement variable_node = document.createElement("variable");
+        variable_node.setAttribute("name", variable->getName());
+        variable_node.setAttribute("type", variable->getType());
+        variable_node.setAttribute("value", variable->getValue().toString());
+        qInfo() << "Set variable name to:" << variable->getName() << "type to:" << variable->getType()
+                << "and value to:" << variable->getValue().toString();
+        variables_node.appendChild(variable_node);
+    }
+    root.appendChild(variables_node);
+
+    qInfo() << "Creating states node";
+    QDomElement states_node = document.createElement("states");
+    for (const auto &state : state_machine.getStates())
+    {
+        qInfo() << "Creating state node";
+        QDomElement state_node = document.createElement("state");
+        state_node.setAttribute("name", state->getName());
+        qInfo() << "Set state name to:" << state->getName();
+        if (state->isInitial())
+        {
+            state_node.setAttribute("initial", "true");
+            qInfo() << "Set state" << state->getName() << "as initial";
+        }
+
+        if (!state->getCode().isEmpty())
+        {
+            qInfo() << "Creating code node";
+            QDomElement code_node = document.createElement("code");
+            code_node.appendChild(document.createTextNode(state->getCode()));
+            qInfo() << "Set code to:" << state->getCode();
+            state_node.appendChild(code_node);
+        }
+        states_node.appendChild(state_node);
+    }
+    root.appendChild(states_node);
+
+    qInfo() << "Creating transitions node";
+    QDomElement transitions_node = document.createElement("transitions");
+    QMultiMap<QString, Transition *> transitions = state_machine.getTransitions();
+    for (auto it = transitions.begin(); it != transitions.end(); it++)
+    {
+        QString from_state_name = it.key();
+        Transition *transition = it.value();
+
+        qInfo() << "Creating transition node";
+        QDomElement transition_node = document.createElement("transition");
+        transition_node.setAttribute("from", transition->getFrom()->getName());
+        transition_node.setAttribute("to", transition->getTo()->getName());
+        qInfo() << "Set transition from" << transition->getFrom()->getName() << "to" << transition->getTo()->getName();
+
+        if (!transition->getEvent().isEmpty())
+        {
+            qInfo() << "Creating condition node";
+            QDomElement condition_node = document.createElement("condition");
+            condition_node.setAttribute("event", transition->getEvent());
+            qInfo() << "Set condition event to:" << transition->getEvent();
+            condition_node.appendChild(document.createTextNode(transition->getCondition()));
+            qInfo() << "Set condition code to:" << transition->getCondition();
+            transition_node.appendChild(condition_node);
+        }
+
+        if (transition->getDelay() != -1)
+        {
+            qInfo() << "Creating delay node";
+            QDomElement delay_node = document.createElement("delay");
+            delay_node.appendChild(document.createTextNode(transition->getDelayVariableName()));
+            qInfo() << "Set delay to:" << transition->getDelayVariableName();
+            transition_node.appendChild(delay_node);
+        }
+
+        transitions_node.appendChild(transition_node);
+    }
+    root.appendChild(transitions_node);
+
+    qInfo() << "Exporting FSM to XML file:" << file_path;
+    QFile file(file_path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qCritical() << "Couldn't open file" << file_path;
+        return false;
+    }
+
+    qInfo() << "Writing XML content to file";
+    QTextStream stream(&file);
+    stream << document.toString(4); // 4 space indentation
+    file.close();
+
+    qInfo() << "Successully exported FSM to XML file:" << file_path;
     return true;
 }

@@ -15,6 +15,7 @@
 #include "logger.hpp"
 #include <QDomDocument>
 #include <QFile>
+#include <qdom.h>
 
 /**
  * @class XMLParser
