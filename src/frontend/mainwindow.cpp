@@ -3,6 +3,7 @@
 #include "src/frontend/StateItem.hpp"
 #include "src/frontend/ui_mainwindow.h"
 #include <qdialogbuttonbox.h>
+#include <qradiobutton.h>
 #include <qtextedit.h>
 #include <qvector.h>
 #include <QLineEdit>
@@ -33,8 +34,11 @@ void MainWindow::on_addStateButton_clicked() {
 
 void MainWindow::saveState() {
   if (selectedState) {
-    selectedState->setName(ui->lineEdit->text());
-    selectedState->setCodeSegment(ui->textEdit->toPlainText());
+    // qDebug() << "got pointer, trying to update name";
+    // selectedState->setName(ui->lineEdit->text());
+    // qDebug() << "trying to update code";
+    // selectedState->setCodeSegment(ui->textEdit->toPlainText());
+    selectedState->updateState(ui->lineEdit->text(), ui->textEdit->toPlainText(), ui->radioButton_3->isChecked());
   }
 }
 
@@ -44,11 +48,15 @@ void MainWindow::updateStateInfo(StateItem *state) {
   ui->groupBox->setEnabled(true);
   QLineEdit *lineEdit = ui->groupBox->findChild<QLineEdit *>("lineEdit");
   QTextEdit *textedit = ui->groupBox->findChild<QTextEdit *>("textEdit");
+  QRadioButton *radio = ui->groupBox->findChild<QRadioButton *>("radioButton_3");
   if (lineEdit) {
-    lineEdit->setText(selectedState->getName());
+    lineEdit->setText(selectedState->state->getName());
   }
   if (textedit) {
-    textedit->setText(selectedState->getCodeSegment());
+    textedit->setText(selectedState->state->getCode());
+  }
+  if (radio) {
+    radio->setChecked(selectedState->state->isInitial());
   }
 }
 

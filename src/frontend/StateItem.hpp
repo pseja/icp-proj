@@ -9,17 +9,19 @@
 #include <qgraphicsitem.h>
 #include <qobjectdefs.h>
 #include <QObject>
+#include "src/backend/state.hpp"
 
 class StateItem : public QObject, public QGraphicsEllipseItem {
   Q_OBJECT
   
 public:
     explicit StateItem(const QString &name, const QString &code = "", QGraphicsItem *parent = nullptr);
-
-    void setName(const QString &newName);
-    void setCodeSegment(const QString &newCode);
-    QString getCodeSegment();
-    QString getName();
+    State* state;
+    //void setName(const QString &newName);
+    //void setCodeSegment(const QString &newCode);
+    void updateState(const QString &newName, const QString &newCode, bool initial);
+    //QString getCodeSegment();
+    //QString getName();
 
 protected:
   void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
@@ -29,8 +31,6 @@ signals:
 
 private:
   QGraphicsTextItem *textItem;
-  QString stateName;
-  QString codeSegment;
 };
 
 #endif // STATEITEM_HPP

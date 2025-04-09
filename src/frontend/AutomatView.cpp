@@ -1,5 +1,6 @@
 #include "AutomatView.hpp"
 #include "StateItem.hpp"
+#include <algorithm>
 #include <asm-generic/errno.h>
 #include <qdebug.h>
 #include <qevent.h>
@@ -39,18 +40,18 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
 void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   QPointF scenePos = mapToScene(event->pos());
   qDebug() << "Kliknuto na souřadnice:" << scenePos;
-
+  qDebug() << "got possion\n";
   // Vytvoříme dočasný state jen pro kontrolu kolizí
   StateItem tempState(nullptr);
   tempState.setPos(scenePos);
-
+  
   // Zjistíme, jestli by se překrýval s jinými objekty
   for (QGraphicsItem *item : scene()->items()) {
     if (typeid(*item) == typeid(StateItem) && item->collidesWithItem(&tempState)) {
       return;
     }
   }
-  
+  qDebug() << "if it doesnt collide\n";
   StateItem *state = new StateItem(nullptr);
   state->setBrush(Qt::cyan);
   state->setPos(scenePos);

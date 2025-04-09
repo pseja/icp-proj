@@ -1,4 +1,5 @@
 #include "StateItem.hpp"
+#include "src/backend/state.hpp"
 #include <QGraphicsScene>
 #include <QDebug>
 #include <qglobal.h>
@@ -12,10 +13,12 @@ StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *pa
   setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
   setBrush(Qt::cyan);
 
+  state = new State("State");
   textItem = new QGraphicsTextItem(this);
   textItem->setDefaultTextColor(Qt::black);
-  stateName = "State";
-  textItem->setPlainText(stateName);
+  //state->setName("State");
+  //stateName = "State";
+  textItem->setPlainText(state->getName());
   
 
   QRectF bounds = boundingRect();
@@ -39,10 +42,11 @@ void StateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     }
 }
 
-void StateItem::setName(const QString &newName) { stateName = newName; textItem->setPlainText(newName);}
-void StateItem::setCodeSegment(const QString &newCode) {
-  codeSegment = newCode;
+void StateItem::updateState(const QString &newName, const QString &newCode, bool initial) {
+  state->setName(newName);
+  textItem->setPlainText(newName);
+  state->setCode(newCode);
+  state->setInitial(initial);
 }
-
-QString StateItem::getName() { return stateName; }
-QString StateItem::getCodeSegment() {return codeSegment;}
+//QString StateItem::getName() { return stateName; }
+//QString StateItem::getCodeSegment() {return codeSegment;}
