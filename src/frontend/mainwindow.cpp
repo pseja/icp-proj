@@ -17,8 +17,9 @@ MainWindow::MainWindow(QWidget *parent)
   setMinimumSize(800, 600);
   automatView = new AutomatView(this);
   automatView->setMinimumSize(400, 300);
-  
+
   automatView->setGeometry(360, 30, 1551, 561);
+  fsm = new FSM("Default FSM");
   // setCentralWidget(automatView);
   connect(automatView, &AutomatView::stateSelected, this,
           &MainWindow::updateStateInfo);

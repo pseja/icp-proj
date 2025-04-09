@@ -6,6 +6,7 @@
 #include <qvector.h>
 #include "AutomatView.hpp"
 #include "src/frontend/StateItem.hpp"
+#include "src/backend/fsm.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,9 +29,10 @@ private slots:
     void on_addStateButton_clicked();
 public slots:
     void handleStateDeleted();
-    
+
 
 private:
+  FSM *fsm;
   Ui::MainWindow *ui;
   AutomatView *automatView;
   StateItem *selectedState = nullptr;
