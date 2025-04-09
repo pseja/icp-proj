@@ -11,27 +11,6 @@ class Transition;
 class Variable;
 
 /**
- * @brief The StructuredTransition class represents a transition triplet
- * 
- * A transition triplet has the format: "input_event_name [ boolean_expression ] @ delay_in_ms"
- * where each part is optional.
- */
-class StructuredTransition {
-public:
-    QString trigger;    ///< Input event name (optional)
-    QString condition;  ///< Boolean expression (optional)
-    QString delay;      ///< Delay expression in ms (optional)
-
-    bool hasTrigger() const { return !trigger.isEmpty(); }
-    bool hasCondition() const { return !condition.isEmpty(); }
-    bool hasDelay() const { return !delay.isEmpty(); }
-    
-    QString toString() const;
-    static StructuredTransition fromString(const QString &tripletStr);
-    static StructuredTransition fromTransition(Transition* transition);
-};
-
-/**
  * @brief The CodeGen class generates C++ code from FSM instances
  */
 class CodeGen : public QObject
@@ -65,13 +44,6 @@ private:
     QString generateTransitionCode(Transition *transition,
                                 const State *sourceState, 
                                 const State *targetState);
-
-    /**
-     * @brief Convert a Transition object to a StructuredTransition representation
-     * @param transition The Transition object
-     * @return A StructuredTransition representation
-     */
-    StructuredTransition structuredTransitionFromTransition(Transition *transition);
 };
 
 #endif // CODEGEN_HPP

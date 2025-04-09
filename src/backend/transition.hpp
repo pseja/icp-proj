@@ -70,7 +70,7 @@ class Transition : public QObject
      * @brief Checks if the transition is delayed.
      * @return True if the transition is delayed, false otherwise.
      */
-    bool isDelayedTransition();
+    bool isDelayedTransition() const;
 
     /**
      * @brief Sets the source state of the transition.

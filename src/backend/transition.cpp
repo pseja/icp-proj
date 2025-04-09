@@ -1,4 +1,5 @@
 #include "transition.hpp"
+#include <QRegularExpression>
 
 Transition::Transition(State *from, State *to, QString condition, int delay)
     : from(from), to(to), condition(condition), delay(delay)
@@ -29,7 +30,7 @@ int Transition::getDelay()
     return delay;
 }
 
-bool Transition::isDelayedTransition()
+bool Transition::isDelayedTransition() const
 {
     return is_delayed_transition;
 }

@@ -7,94 +7,11 @@
 #include <QRegularExpression>
 
 /**
- * @brief Converts a structured transition to its string representation
- * @return String representation of the triplet
- */
-QString StructuredTransition::toString() const {
-    QString result;
-    
-    if (hasTrigger())
-        result += trigger;
-        
-    if (hasCondition())
-        result += " [ " + condition + " ]";
-        
-    if (hasDelay())
-        result += " @ " + delay;
-        
-    return result.trimmed();
-}
-
-/**
- * @brief Parses a triplet string into a structured transition
- * @param tripletStr The triplet string to parse
- * @return A StructuredTransition object
- */
-StructuredTransition StructuredTransition::fromString(const QString &tripletStr) {
-    StructuredTransition result;
-    QString str = tripletStr.trimmed();
-    
-    // Parse delay part (@ delay_in_ms)
-    static QRegularExpression delayRegex("@\\s*([^\\s]+)(?:\\s*|$)");
-    QRegularExpressionMatch delayMatch = delayRegex.match(str);
-    if (delayMatch.hasMatch()) {
-        result.delay = delayMatch.captured(1).trimmed();
-        str = str.left(delayMatch.capturedStart()).trimmed();
-    }
-    
-    // Parse condition part ([ boolean_expression ])
-    static QRegularExpression conditionRegex("\\[(.*)\\]");
-    QRegularExpressionMatch conditionMatch = conditionRegex.match(str);
-    if (conditionMatch.hasMatch()) {
-        result.condition = conditionMatch.captured(1).trimmed();
-        str = str.left(conditionMatch.capturedStart()).trimmed() + 
-              str.mid(conditionMatch.capturedEnd()).trimmed();
-    }
-    
-    // The remaining part (if any) is the trigger
-    if (!str.isEmpty()) {
-        result.trigger = str.trimmed();
-    }
-    
-    return result;
-}
-
-/**
- * @brief Creates a structured transition from a Transition object
- * @param transition The Transition to convert
- * @return A StructuredTransition object
- */
-StructuredTransition StructuredTransition::fromTransition(Transition* transition) {
-    StructuredTransition result;
-    
-    // Check if the transition has a condition (using !isEmpty() instead of hasCondition())
-    if (!transition->getCondition().isEmpty()) {
-        result.condition = transition->getCondition();
-    }
-    
-    // Check if it's a delayed transition
-    if (transition->isDelayedTransition()) {
-        result.delay = QString::number(transition->getDelay());
-    }
-        
-    return result;
-}
-
-/**
  * @brief Constructor for the CodeGen class
  * @param parent The parent QObject
  */
 CodeGen::CodeGen(QObject *parent) : QObject(parent)
 {
-}
-
-/**
- * @brief Convert a Transition to a StructuredTransition
- * @param transition The Transition object
- * @return A StructuredTransition representation
- */
-StructuredTransition CodeGen::structuredTransitionFromTransition(Transition *transition) {
-    return StructuredTransition::fromTransition(transition);
 }
 
 /**
@@ -377,7 +294,36 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     QString sourceLower = sourceName.toLower();
     QString targetLower = targetName.toLower();
     
-    if (transition->isDelayedTransition()) {
+    // Handle case with both condition and delay
+    if (transition->isDelayedTransition() && !transition->getCondition().isEmpty()) {
+        // Create a combined condition and delayed transition
+        code += "    // Create condition-delayed transition: " + sourceName + " → " + targetName + "\n";
+        code += "    DelayedStateTransition* " + sourceLower + "To" + targetName + "Delayed = new DelayedStateTransition(" + QString::number(transition->getDelay()) + ");\n";
+        
+        QString conditionCode = transition->getCondition();
+        code += "    // Setup condition check for the transition\n";
+        code += "    ConditionTransition* " + sourceLower + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
+        code += "        // Evaluate condition: " + conditionCode + "\n";
+        code += "        return " + conditionCode + ";\n";
+        code += "    });\n";
+        
+        code += "    // Chain the condition and delay: condition first, then delayed transition\n";
+        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Condition);\n";
+        code += "    " + sourceLower + "To" + targetName + "Condition->setTargetState(" + sourceLower + "State); // Stay in same state until delay\n";
+        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Delayed);\n";
+        code += "    " + sourceLower + "To" + targetName + "Delayed->setTargetState(" + targetLower + "State);\n";
+        
+        // Add documentation for timer start lambda
+        code += "    /**\n";
+        code += "     * @brief TimerStarter - Lambda that starts the delayed transition timer when condition is met\n";
+        code += "     */\n";
+        code += "    QObject::connect(" + sourceLower + "To" + targetName + "Condition, &QAbstractTransition::triggered, [=]() {\n";
+        code += "        // Start the timer when the condition is true\n";
+        code += "        debugPrint(\"Condition met, starting delay timer for \" + QString::number(" + QString::number(transition->getDelay()) + ") + \"ms\");\n";
+        code += "        " + sourceLower + "To" + targetName + "Delayed->start();\n";
+        code += "    });\n\n";
+    }
+    else if (transition->isDelayedTransition()) {
         // Create a delayed transition
         code += "    // Create delayed transition: " + sourceName + " → " + targetName + "\n";
         code += "    DelayedStateTransition* " + sourceLower + "To" + targetName + "Delayed = new DelayedStateTransition(" + QString::number(transition->getDelay()) + ");\n";
@@ -647,12 +593,24 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
             
             QString targetName = targetState->getName();
             
-            // Convert to structured transition for display
-            StructuredTransition triplet = structuredTransitionFromTransition(transition);
+            // Display the transition info with condition and/or delay
             code += "    // Create transition: " + sourceName + " → " + targetName;
-            if (!triplet.toString().isEmpty()) {
-                code += " (" + triplet.toString() + ")";
+            
+            QString condition = transition->getCondition();
+            bool hasDelay = transition->isDelayedTransition();
+            
+            if (!condition.isEmpty() || hasDelay) {
+                code += " (";
+                if (!condition.isEmpty()) {
+                    code += "[ " + condition + " ]";
+                }
+                if (hasDelay) {
+                    if (!condition.isEmpty()) code += " ";
+                    code += "@ " + QString::number(transition->getDelay());
+                }
+                code += ")";
             }
+            
             code += "\n";
             
             // Generate the transition code
