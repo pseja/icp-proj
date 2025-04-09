@@ -74,91 +74,82 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Fetch the inputs and outputs
     QDomElement inputs_node = root.firstChildElement("inputs");
-    if (inputs_node.isNull())
+    if (!inputs_node.isNull())
     {
-        qCritical() << "No <inputs> element found in XML";
-        return false;
-    }
-
-    // Fetch the inputs
-    QDomElement input_node = inputs_node.firstChildElement("input");
-    qInfo() << "Inputs:";
-    while (!input_node.isNull())
-    {
-        if (!input_node.hasAttribute("name"))
+        // Fetch the inputs
+        QDomElement input_node = inputs_node.firstChildElement("input");
+        qInfo() << "Inputs:";
+        while (!input_node.isNull())
         {
-            qCritical() << "Invalid XML: <input> element has no \"name\" attribute";
-            return false;
+            if (!input_node.hasAttribute("name"))
+            {
+                qCritical() << "Invalid XML: <input> element has no \"name\" attribute";
+                return false;
+            }
+
+            QString input_name = input_node.attribute("name");
+            state_machine.addInput(input_name);
+
+            qInfo() << input_name;
+
+            input_node = input_node.nextSiblingElement("input");
         }
-
-        QString input_name = input_node.attribute("name");
-        state_machine.addInput(input_name);
-
-        qInfo() << input_name;
-
-        input_node = input_node.nextSiblingElement("input");
     }
 
     // Fetch the outputs
     QDomElement outputs_node = root.firstChildElement("outputs");
-    if (outputs_node.isNull())
+    if (!outputs_node.isNull())
     {
-        qCritical() << "No <outputs> element found in XML";
-        return false;
-    }
-
-    QDomElement output_node = outputs_node.firstChildElement("output");
-    qInfo() << "Outputs:";
-    while (!output_node.isNull())
-    {
-        if (!output_node.hasAttribute("name"))
+        QDomElement output_node = outputs_node.firstChildElement("output");
+        qInfo() << "Outputs:";
+        while (!output_node.isNull())
         {
-            qCritical() << "Invalid XML: <output> element has no \"name\" attribute";
-            return false;
+            if (!output_node.hasAttribute("name"))
+            {
+                qCritical() << "Invalid XML: <output> element has no \"name\" attribute";
+                return false;
+            }
+
+            QString output_name = output_node.attribute("name");
+            state_machine.addOutput(output_name);
+            qInfo() << output_name;
+
+            output_node = output_node.nextSiblingElement("output");
         }
-
-        QString output_name = output_node.attribute("name");
-        state_machine.addOutput(output_name);
-        qInfo() << output_name;
-
-        output_node = output_node.nextSiblingElement("output");
     }
 
     QDomElement variables_node = root.firstChildElement("variables");
-    if (variables_node.isNull())
+    if (!variables_node.isNull())
     {
-        qCritical() << "No <variables> element found in XML";
-        return false;
-    }
-
-    QDomElement variable_node = variables_node.firstChildElement("variable");
-    if (variable_node.isNull())
-    {
-        qCritical() << "No <variable> element found in XML";
-        return false;
-    }
-
-    qInfo() << "Variables:";
-    while (!variable_node.isNull())
-    {
-        if (!variable_node.hasAttribute("name") || !variable_node.hasAttribute("type") ||
-            !variable_node.hasAttribute("value"))
+        QDomElement variable_node = variables_node.firstChildElement("variable");
+        if (variable_node.isNull())
         {
-            qCritical() << "Invalid XML: <variable> element is missing required attributes";
+            qCritical() << "No <variable> element found in XML";
             return false;
         }
 
-        QString variable_name = variable_node.attribute("name");
-        QString variable_type = variable_node.attribute("type");
-        QString variable_value = variable_node.attribute("value");
+        qInfo() << "Variables:";
+        while (!variable_node.isNull())
+        {
+            if (!variable_node.hasAttribute("name") || !variable_node.hasAttribute("type") ||
+                !variable_node.hasAttribute("value"))
+            {
+                qCritical() << "Invalid XML: <variable> element is missing required attributes";
+                return false;
+            }
 
-        state_machine.addVariable(variable_type, variable_name, variable_value);
+            QString variable_name = variable_node.attribute("name");
+            QString variable_type = variable_node.attribute("type");
+            QString variable_value = variable_node.attribute("value");
 
-        Variable *variable = state_machine.getVariable(variable_name);
+            state_machine.addVariable(variable_type, variable_name, variable_value);
 
-        qInfo() << variable->getType() << variable->getName() << variable->getValue().toString();
+            Variable *variable = state_machine.getVariable(variable_name);
 
-        variable_node = variable_node.nextSiblingElement("variable");
+            qInfo() << variable->getType() << variable->getName() << variable->getValue().toString();
+
+            variable_node = variable_node.nextSiblingElement("variable");
+        }
     }
 
     QDomElement states_node = root.firstChildElement("states");
