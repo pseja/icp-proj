@@ -52,6 +52,12 @@ void MainWindow::updateStateInfo(StateItem *state) {
   }
 }
 
+void MainWindow::handleStateDeleted() {
+  ui->lineEdit->clear();
+  ui->textEdit->clear();
+  ui->groupBox->setEnabled(false);
+  selectedState = nullptr;
+}
 
 void MainWindow::loadAutomat(const QVector<StateItem *> &states) {
   automatView->clearMask();

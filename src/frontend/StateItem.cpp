@@ -4,9 +4,11 @@
 #include <qglobal.h>
 #include <qgraphicsitem.h>
 #include <qnamespace.h>
+#include <qobject.h>
+#include <QObject>
 
 StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *parent)
-    : QGraphicsEllipseItem(-40, -40, 80, 80, parent) {
+    : QObject(), QGraphicsEllipseItem(-40, -40, 80, 80, parent) {
   setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
   setBrush(Qt::cyan);
 

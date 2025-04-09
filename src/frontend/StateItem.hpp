@@ -8,8 +8,9 @@
 #include <qglobal.h>
 #include <qgraphicsitem.h>
 #include <qobjectdefs.h>
+#include <QObject>
 
-class StateItem : public QGraphicsEllipseItem {
+class StateItem : public QObject, public QGraphicsEllipseItem {
   Q_OBJECT
   
 public:

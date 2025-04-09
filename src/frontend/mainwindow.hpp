@@ -2,6 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include <qobjectdefs.h>
 #include <qvector.h>
 #include "AutomatView.hpp"
 #include "src/frontend/StateItem.hpp"
@@ -19,11 +20,15 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    
 
 private slots:
     void saveState();
     void updateStateInfo(StateItem *state);
     void on_addStateButton_clicked();
+public slots:
+    void handleStateDeleted();
+    
 
 private:
   Ui::MainWindow *ui;
