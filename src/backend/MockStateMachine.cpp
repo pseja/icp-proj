@@ -23,6 +23,15 @@ FSM* createTOF5sMachine()
     
     // Add inputs and outputs
     fsm->addInput("in");
+    // fsm->addInput("in2");
+    // fsm->addInput("in3");
+    // fsm->addInput("in4");
+    // fsm->addInput("in5");
+    // fsm->addInput("in6");
+    // fsm->addInput("in7");
+    // fsm->addInput("in8");
+    // fsm->addInput("in9");
+    // fsm->addInput("in10");
     fsm->addOutput("out");
     
     // Add variables
