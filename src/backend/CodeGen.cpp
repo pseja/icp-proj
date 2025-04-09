@@ -146,6 +146,32 @@ QString CodeGen::generateHelperFunctions()
     code += "    outputs[port] = QString::number(value);\n";
     code += "    logOutputEvent(port, QString::number(value));\n";
     code += "}\n\n";
+
+    // Update function to clear trigger-type inputs dynamically
+    code += "/**\n";
+    code += " * @brief Clears trigger-type inputs after they've been processed\n";
+    code += " * @details Inputs that are used as triggers/events should be cleared after processing\n";
+    code += " *          so they don't repeatedly trigger on subsequent cycles\n";
+    code += " */\n";
+    code += "void clearTriggerInputs() {\n";
+    code += "    // For any input that has a value, clear it after processing\n";
+    code += "    QStringList inputsToReset;\n";
+    code += "    \n";
+    code += "    // First identify which inputs need clearing to avoid modifying while iterating\n";
+    code += "    for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {\n";
+    code += "        if (!it.value().isEmpty()) {\n";
+    code += "            inputsToReset << it.key();\n";
+    code += "        }\n";
+    code += "    }\n";
+    code += "    \n";
+    code += "    // Now clear the identified inputs\n";
+    code += "    if (!inputsToReset.isEmpty()) {\n";
+    code += "        \n";
+    code += "        for (const QString& input : inputsToReset) {\n";
+    code += "            inputs[input] = QString();\n";
+    code += "        }\n";
+    code += "    }\n";
+    code += "}\n\n";
     
     return code;
 }
@@ -215,23 +241,23 @@ QString CodeGen::generateRuntimeMonitoring()
     // Primary cosmic palette - deep space inspired
     code += "// Primary cosmic palette\n";
     code += "const QString DEEP_SPACE = \"\\033[38;5;17m\";       // Dark blue-black of deep space\n";
-    code += "const QString COSMIC_PURPLE = \"\\033[38;5;93m\";    // Rich cosmic purple\n";
-    code += "const QString NEBULA_BLUE = \"\\033[38;5;39m\";      // Bright nebula blue\n";
-    code += "const QString SPACE_TEAL = \"\\033[38;5;31m\";       // Deep space teal\n";
-    code += "const QString NEBULA_PINK = \"\\033[38;5;169m\";     // Bright nebula pink\n";
-    code += "const QString STARDUST = \"\\033[38;5;153m\";        // Light blue stardust\n";
-    code += "const QString STAR_WHITE = \"\\033[38;5;231m\";      // Bright star white\n";
-    code += "const QString COSMIC_DUST = \"\\033[38;5;102m\";     // Faded cosmic dust\n\n";
+    code += "const QString COSMIC_PURPLE = \"\\033[38;5;93m\";    // Rich cosmic purple, used for state names & headers\n";
+    code += "const QString NEBULA_BLUE = \"\\033[38;5;39m\";      // Bright nebula blue, used for transition info and info level logs\n";
+    code += "const QString SPACE_TEAL = \"\\033[38;5;31m\";       // Deep space teal, used for input values\n";
+    code += "const QString NEBULA_PINK = \"\\033[38;5;169m\";     // Bright nebula pink, used for output values\n";
+    code += "const QString STARDUST = \"\\033[38;5;153m\";        // Light blue stardust, used for variable values\n";
+    code += "const QString STAR_WHITE = \"\\033[38;5;231m\";      // Bright star white, used for command headers\n";
+    code += "const QString COSMIC_DUST = \"\\033[38;5;102m\";     // Faded cosmic dust, used for source states and notice level logs\n\n";
     
     // Accent colors - for special highlights and alerts
     code += "// Accent colors\n";
-    code += "const QString STELLAR_PURPLE = \"\\033[38;5;141m\";  // Bright stellar purple\n";
-    code += "const QString PULSAR_YELLOW = \"\\033[38;5;220m\";   // Pulsating yellow\n";
-    code += "const QString QUANTUM_GREEN = \"\\033[38;5;84m\";    // Quantum field green\n";
-    code += "const QString WARP_RED = \"\\033[38;5;196m\";        // Warp field red\n\n";
+    code += "const QString STELLAR_PURPLE = \"\\033[38;5;141m\";  // Bright stellar purple, used for section headers\n";
+    code += "const QString PULSAR_YELLOW = \"\\033[38;5;220m\";   // Pulsating yellow, used for warnings\n";
+    code += "const QString QUANTUM_GREEN = \"\\033[38;5;84m\";    // Quantum field green, used for target states and success messages\n";
+    code += "const QString WARP_RED = \"\\033[38;5;196m\";        // Warp field red, used for error messages\n\n";
 
-    // Semantic color mappings - function-based color assignments
-    code += "// Semantic color mappings\n";
+    // Semantic color mappings
+    code += "// Semantic color mappings - function-based color assignments\n";
     code += "const QString COLOR_STATE = COSMIC_PURPLE;        // State names & headers\n";
     code += "const QString COLOR_TRANSITION = NEBULA_BLUE;     // Transition information\n";
     code += "const QString COLOR_SOURCE = COSMIC_DUST;         // Source states\n";
@@ -247,20 +273,6 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "const QString COLOR_SUCCESS = QUANTUM_GREEN;      // Success messages\n";
     code += "const QString COLOR_HEADER = STELLAR_PURPLE;      // Section headers\n\n";
 
-    // Box drawing characters
-    code += "// Box drawing characters for terminal UI\n";
-    code += "const QString BOX_TL = \"╭\";  // Top left corner\n";
-    code += "const QString BOX_TR = \"╮\";  // Top right corner\n";
-    code += "const QString BOX_BL = \"╰\";  // Bottom left corner\n";
-    code += "const QString BOX_BR = \"╯\";  // Bottom right corner\n";
-    code += "const QString BOX_H = \"─\";   // Horizontal line\n";
-    code += "const QString BOX_V = \"│\";   // Vertical line\n";
-    code += "const QString BOX_VR = \"├\";  // Vertical and right\n";
-    code += "const QString BOX_VL = \"┤\";  // Vertical and left\n";
-    code += "const QString BOX_HU = \"┴\";  // Horizontal and up\n";
-    code += "const QString BOX_HD = \"┬\";  // Horizontal and down\n";
-    code += "const QString BOX_VH = \"┼\";  // Vertical and horizontal\n\n";
-    
     // Symbols for marking elements
     code += "// Symbols for marking elements\n";
     code += "const QString SYM_BULLET = \"•\";       // Primary bullet point\n";
@@ -317,7 +329,7 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "void logInputEvent(const QString& input, const QString& value) {\n";
     code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
     code += "    qDebug().noquote() << \"[\" << timeMs << \"]\"\n";
-    code += "             << COLOR_INPUT + BOX_VR + \" INPUT\" + ANSI_RESET + \": \"\n";
+    code += "             << COLOR_INPUT + SYM_BULLET + \" INPUT\" + ANSI_RESET + \": \"\n";
     code += "             << \"  \" + ANSI_BOLD + input + ANSI_RESET \n";
     code += "             << \" = \" \n";
     code += "             << COLOR_VALUE + value + ANSI_RESET;\n";
@@ -332,9 +344,9 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "void logOutputEvent(const QString& output, const QString& value) {\n";
     code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
     code += "    qDebug().noquote() << \"[\" << timeMs << \"]\"\n";
-    code += "             << COLOR_OUTPUT + BOX_VR + \" OUT \" + ANSI_RESET + \": \"\n";
-    code += "             << \"  \" + ANSI_BOLD + output + ANSI_RESET \n";
-    code += "             << \" = \" \n";
+    code += "             << COLOR_OUTPUT + SYM_BULLET + \" OUT \" + ANSI_RESET + \": \"\n";
+    code += "             << \"\" + ANSI_BOLD + output + ANSI_RESET \n";
+    code += "             << \"=\" \n";
     code += "             << COLOR_VALUE + value + ANSI_RESET;\n";
     code += "}\n\n";
     
@@ -355,6 +367,39 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "        default: prefix = \"DEBUG: \";\n";
     code += "    }\n";
     code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" << prefix << message;\n";
+    code += "}\n\n";
+
+    // Add the showHelp function to display commands and valid inputs
+    code += "/**\n";
+    code += " * @brief Displays all available commands and valid inputs in a formatted way\n";
+    code += " * @param validInputs Set of valid input names for this state machine\n";
+    code += " * @param helpLines List of command descriptions to display\n";
+    code += " */\n";
+    code += "void showHelp(const QSet<QString>& validInputs, const QStringList& helpLines) {\n";
+    code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+    code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" << ANSI_BOLD + NEBULA_BLUE + \"AVAILABLE COMMANDS\" + ANSI_RESET;\n";
+    code += "    qDebug().noquote() << SECTION_SEPARATOR;\n";
+    code += "    \n";
+    code += "    // Display command help lines\n";
+    code += "    for (const QString& line : helpLines) {\n";
+    code += "        qDebug().noquote() << line;\n";
+    code += "    }\n";
+    code += "    \n";
+    code += "    // Display valid inputs section if there are any\n";
+    code += "    if (!validInputs.isEmpty()) {\n";
+    code += "        qDebug().noquote() << \"\\n\" + ANSI_BOLD + STELLAR_PURPLE + \"VALID INPUTS:\" + ANSI_RESET;\n";
+    code += "        \n";
+    code += "        // Sort inputs for a more predictable display\n";
+    code += "        QStringList sortedInputs = validInputs.values();\n";
+    code += "        sortedInputs.sort();\n";
+    code += "        \n";
+    code += "        // Display inputs as a simple list\n";
+    code += "        for (const QString& input : sortedInputs) {\n";
+    code += "            qDebug().noquote() << \"  \" + SPACE_TEAL + input + ANSI_RESET;\n";
+    code += "        }\n";
+    code += "    }\n";
+    code += "    \n";
+    code += "    qDebug().noquote() << SECTION_SEPARATOR;\n";
     code += "}\n\n";
 
     return code;
@@ -632,9 +677,8 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "int main(int argc, char *argv[]) {\n";
     code += "    QCoreApplication app(argc, argv);\n";
     code += "    \n";
-    code += "    // Application header with cosmic void visualization\n";
     code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + COLOR_HEADER + SYM_STAR + \" \" + SYM_STAR + \" \" + SYM_STAR + \"  COSMIC VOID STATE MACHINE  \" + SYM_STAR + \" \" + SYM_STAR + \" \" + SYM_STAR + ANSI_RESET;\n";
+    code += "    qDebug().noquote() << ANSI_BOLD + COLOR_HEADER + SYM_STAR + \" \" + SYM_STAR + \" \" + SYM_STAR + \"  OBLIVION STATE MACHINE  \" + SYM_STAR + \" \" + SYM_STAR + \" \" + SYM_STAR + ANSI_RESET;\n";
     code += "    qDebug().noquote() << COLOR_TRANSITION + \"     Navigating the infinite expanse of software states\" + ANSI_RESET;\n";
     code += "    qDebug().noquote() << DOUBLE_SEPARATOR + \"\\n\";\n";
     code += "    \n";
@@ -662,7 +706,24 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
         code += "    outputs[QStringLiteral(\"" + output.trimmed() + "\")] = QString();\n";
     }
     code += "\n";
+
+    // Create a global set for valid input names to use for validation
+    code += "    // Create a set of valid input names for validation\n";
+    code += "    QSet<QString> validInputNames;\n";
+    for (const QString& input : inputNames) {
+        code += "    validInputNames.insert(QStringLiteral(\"" + input.trimmed() + "\"));\n";
+    }
+    code += "\n";
     
+    code += "    // Define help text once to avoid duplication\n";
+    code += "    const QStringList helpLines = {\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"input_name=value\").leftJustified(26) + ANSI_RESET + \"- Set an input value\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"input_name\").leftJustified(26) + ANSI_RESET + \"- Set an input with default value 'true'\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"status\").leftJustified(26) + ANSI_RESET + \"- Show the current system state\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"help\").leftJustified(26) + ANSI_RESET + \"- Show this help message\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"quit/exit\").leftJustified(26) + ANSI_RESET + \"- Exit the application\"\n";
+    code += "    };\n\n";
+
     // Create the state machine object
     code += "    // Create state machine\n";
     code += "    QStateMachine fsm;\n";
@@ -682,7 +743,7 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
         code += "    " + stateLower + "State->setObjectName(\"" + stateName + "\");\n";
         code += "    debugPrint(\"  Created state: \" + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET);\n";
         
-        // Add onEntry code if available
+        // Add onEntry code if available and clear trigger inputs after execution
         QString onEntry = state->getCode();
         if (!onEntry.isEmpty()) {
             code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
@@ -691,13 +752,17 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
             code += "        debugPrint(SECTION_SEPARATOR);\n";
             code += "        debugPrint(\"Executing onEntry action for state: \" + ANSI_BOLD + \"" + stateName + "\" + ANSI_RESET);\n";
             code += "        " + onEntry + "\n";
+            code += "        // Clear trigger inputs after they've been processed\n";
+            code += "        clearTriggerInputs();\n";
             code += "        debugPrint(SECTION_SEPARATOR);\n";
             code += "    });\n";
         } else {
-            // Even if no onEntry code, still provide visual feedback for state entry
+            // Even if no onEntry code, still provide visual feedback and clear triggers
             code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
             code += "        debugPrint(DOUBLE_SEPARATOR);\n";
             code += "        debugPrint(STATE_HEADER + ANSI_BOLD + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
+            code += "        // Clear trigger inputs even if no actions are performed\n";
+            code += "        clearTriggerInputs();\n";
             code += "        debugPrint(SECTION_SEPARATOR);\n";
             code += "    });\n";
         }
@@ -752,15 +817,10 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
         }
     }
     
-    // Rest of the main function (command handling, etc.)
+    // Use the showHelp function at application startup
     code += "    // Print application usage help\n";
-    code += "    debugPrint(\"Available Commands:\");\n";
-    code += "    debugPrint(SECTION_SEPARATOR);\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"name=value\").leftJustified(15) + ANSI_RESET + \"- Set an input value\";\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"status\").leftJustified(15) + ANSI_RESET + \"- Show the current system state\";\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"help\").leftJustified(15) + ANSI_RESET + \"- Show this help message\";\n";
-    code += "    qDebug().noquote() << ANSI_BOLD + QString(\"quit/exit\").leftJustified(15) + ANSI_RESET + \"- Exit the application\";\n";
-    code += "    debugPrint(SECTION_SEPARATOR + \"\\n\");\n\n";
+    code += "    showHelp(validInputNames, helpLines);\n";
+    code += "    qDebug().noquote() << \"\";\n\n";
 
     // Add terminal input setup
     code += "    // Setup input handling from the terminal\n";
@@ -775,7 +835,7 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    int terminalFd = fileno(terminalInput);\n";
     code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n\n";
     
-    // Updated input handler with streamlined logging and reduced repetition
+    // Updated input handler with input validation
     code += "    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {\n";
     code += "        // Read from the terminal\n";
     code += "        char buffer[1024];\n";
@@ -795,9 +855,18 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            qDebug().noquote() << \"\\n\" + COMMAND_HEADER + line;\n";
     code += "            \n";
     code += "            if (line.contains('=')) {\n";
+    code += "                // Process input with explicit value (name=value format)\n";
     code += "                int pos = line.indexOf('=');\n";
     code += "                QString name = line.left(pos);\n";
     code += "                QString value = line.mid(pos + 1);\n";
+    code += "                \n";
+    code += "                // Validate input name\n";
+    code += "                if (!validInputNames.contains(name)) {\n";
+    code += "                    debugPrint(\"Unknown input: '\" + ANSI_BOLD + name + ANSI_RESET + \"'. Valid inputs are: \" + \n";
+    code += "                               validInputNames.values().join(\", \"), 2);\n";
+    code += "                    inputNotifier->setEnabled(true);\n";
+    code += "                    return;\n";
+    code += "                }\n";
     code += "                \n";
     code += "                // Single consolidated message for input handling\n";
     code += "                debugPrint(\"Received input in state \" + COSMIC_PURPLE + currentState + ANSI_RESET + \": \" + \n";
@@ -836,18 +905,26 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "                }\n";
     code += "                qDebug().noquote() << SECTION_SEPARATOR;\n";
     code += "            } else if (line == \"help\") {\n";
-    code += "                // Help display with better spacing and bulletpoints\n";
-    code += "                qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "                qDebug().noquote() << \"[\" << timeMs << \"]\" << ANSI_BOLD + COLOR_INFO + \"AVAILABLE COMMANDS\" + ANSI_RESET;\n";
-    code += "                qDebug().noquote() << SECTION_SEPARATOR;\n";
-    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"name=value\").leftJustified(15) + ANSI_RESET + \"- Set an input value\";\n";
-    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"status\").leftJustified(15) + ANSI_RESET + \"- Show the current system state\";\n";
-    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"help\").leftJustified(15) + ANSI_RESET + \"- Show this help message\";\n";
-    code += "                qDebug().noquote() << \"• \" + ANSI_BOLD + QString(\"quit/exit\").leftJustified(15) + ANSI_RESET + \"- Exit the application\";\n";
-    code += "                qDebug().noquote() << SECTION_SEPARATOR;\n";
+    code += "                // Show help using the dedicated function\n";
+    code += "                showHelp(validInputNames, helpLines);\n";
     code += "            } else {\n";
-    code += "                debugPrint(\"Unknown command: \" + ANSI_BOLD + \"\\\"\" + line + \"\\\"\" + ANSI_RESET + \n";
-    code += "                          \". Type 'help' to see available commands.\", 2);\n";
+    code += "                // Treat the entire line as a standalone input event\n";
+    code += "                QString name = line;\n";
+    code += "                QString defaultValue = \"true\";\n";
+    code += "                \n";
+    code += "                // Validate input name\n";
+    code += "                if (!validInputNames.contains(name)) {\n";
+    code += "                    debugPrint(\"Unknown input: '\" + ANSI_BOLD + name + ANSI_RESET + \"'. Valid inputs are: \" + \n";
+    code += "                               validInputNames.values().join(\", \"), 2);\n";
+    code += "                    inputNotifier->setEnabled(true);\n";
+    code += "                    return;\n";
+    code += "                }\n";
+    code += "                \n";
+    code += "                debugPrint(\"Received standalone input in state \" + COSMIC_PURPLE + currentState + ANSI_RESET + \": \" + \n";
+    code += "                          ANSI_BOLD + name + ANSI_RESET + \" (default value: \" + STARDUST + defaultValue + ANSI_RESET + \")\");\n";
+    code += "                \n";
+    code += "                inputs[name] = defaultValue;\n";
+    code += "                fsm.postEvent(new InputEvent(name, defaultValue));\n";
     code += "            }\n";
     code += "        }\n";
     code += "        \n";
@@ -855,8 +932,6 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "        inputNotifier->setEnabled(true);\n";
     code += "    });\n\n";
 
-    // Start the state machine with cosmic void aesthetic
-    code += "    // Start the state machine with cosmic void aesthetic\n";
     code += "    debugPrint(ANSI_BOLD + COLOR_HEADER + \"INITIALIZING STATE MACHINE\" + ANSI_RESET);\n";
     code += "    fsm.start();\n";
     code += "    debugPrint(COLOR_SUCCESS + SYM_SUCCESS + \" Transition engine activated successfully\" + ANSI_RESET);\n";
