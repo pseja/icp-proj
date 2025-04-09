@@ -93,9 +93,16 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         qInfo() << "Inputs:";
         while (!input_node.isNull())
         {
-            if (!input_node.hasAttribute("name"))
+            if (!input_node.hasAttribute("name") || input_node.attribute("name").isEmpty())
             {
-                qCritical() << "Invalid XML: <input> element has no \"name\" attribute";
+                qCritical() << "Invalid XML format: <input> element has no \"name\" attribute or it's empty";
+                return false;
+            }
+
+            // Check if there are additional attributes besides "name"
+            if (input_node.attributes().count() > 1)
+            {
+                qCritical() << "The <input> element has additional attributes besides \"name\"";
                 return false;
             }
 

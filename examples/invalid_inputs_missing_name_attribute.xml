@@ -1,0 +1,5 @@
+<automaton name="inputs only">
+    <inputs>
+        <input />
+    </inputs>
+</automaton>
