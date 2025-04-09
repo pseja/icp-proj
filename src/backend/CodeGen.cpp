@@ -1,6 +1,84 @@
 #include "CodeGen.hpp"
-#include <QFinalState>
+#include "fsm.hpp"
+#include "state.hpp"
+#include "transition.hpp"
+#include "variable.hpp"
 #include <QDebug>
+#include <QRegularExpression>
+
+/**
+ * @brief Converts a structured transition to its string representation
+ * @return String representation of the triplet
+ */
+QString StructuredTransition::toString() const {
+    QString result;
+    
+    if (hasTrigger())
+        result += trigger;
+        
+    if (hasCondition())
+        result += " [ " + condition + " ]";
+        
+    if (hasDelay())
+        result += " @ " + delay;
+        
+    return result.trimmed();
+}
+
+/**
+ * @brief Parses a triplet string into a structured transition
+ * @param tripletStr The triplet string to parse
+ * @return A StructuredTransition object
+ */
+StructuredTransition StructuredTransition::fromString(const QString &tripletStr) {
+    StructuredTransition result;
+    QString str = tripletStr.trimmed();
+    
+    // Parse delay part (@ delay_in_ms)
+    static QRegularExpression delayRegex("@\\s*([^\\s]+)(?:\\s*|$)");
+    QRegularExpressionMatch delayMatch = delayRegex.match(str);
+    if (delayMatch.hasMatch()) {
+        result.delay = delayMatch.captured(1).trimmed();
+        str = str.left(delayMatch.capturedStart()).trimmed();
+    }
+    
+    // Parse condition part ([ boolean_expression ])
+    static QRegularExpression conditionRegex("\\[(.*)\\]");
+    QRegularExpressionMatch conditionMatch = conditionRegex.match(str);
+    if (conditionMatch.hasMatch()) {
+        result.condition = conditionMatch.captured(1).trimmed();
+        str = str.left(conditionMatch.capturedStart()).trimmed() + 
+              str.mid(conditionMatch.capturedEnd()).trimmed();
+    }
+    
+    // The remaining part (if any) is the trigger
+    if (!str.isEmpty()) {
+        result.trigger = str.trimmed();
+    }
+    
+    return result;
+}
+
+/**
+ * @brief Creates a structured transition from a Transition object
+ * @param transition The Transition to convert
+ * @return A StructuredTransition object
+ */
+StructuredTransition StructuredTransition::fromTransition(Transition* transition) {
+    StructuredTransition result;
+    
+    // Check if the transition has a condition (using !isEmpty() instead of hasCondition())
+    if (!transition->getCondition().isEmpty()) {
+        result.condition = transition->getCondition();
+    }
+    
+    // Check if it's a delayed transition
+    if (transition->isDelayedTransition()) {
+        result.delay = QString::number(transition->getDelay());
+    }
+        
+    return result;
+}
 
 /**
  * @brief Constructor for the CodeGen class
@@ -11,25 +89,34 @@ CodeGen::CodeGen(QObject *parent) : QObject(parent)
 }
 
 /**
+ * @brief Convert a Transition to a StructuredTransition
+ * @param transition The Transition object
+ * @return A StructuredTransition representation
+ */
+StructuredTransition CodeGen::structuredTransitionFromTransition(Transition *transition) {
+    return StructuredTransition::fromTransition(transition);
+}
+
+/**
  * @brief Generates complete C++ code from a state machine
  * 
  * This is the main entry point for code generation. It orchestrates the 
  * generation process by calling the specialized generation methods for
  * different parts of the code.
  * 
- * @param machine The state machine to generate code from
+ * @param fsm The state machine to generate code from
  * @return Generated C++ code as a QString
  */
-QString CodeGen::generateCode(QStateMachine *machine)
+QString CodeGen::generateCode(FSM *fsm)
 {
     QString code;
 
     // Generate file header with automaton info
     code += "/**\n";
-    code += " * Generated Finite State Machine: " + machine->objectName() + "\n";
+    code += " * Generated Finite State Machine: " + fsm->getName() + "\n";
     
     // Add description if available
-    QString description = machine->property("description").toString();
+    QString description = fsm->getComment();
     if (!description.isEmpty()) {
         code += " * Description: " + description + "\n";
     }
@@ -40,22 +127,14 @@ QString CodeGen::generateCode(QStateMachine *machine)
 
     // Generate the various code sections
     code += generateHeaders();
-    code += generateVariableDeclarations(machine);
+    code += generateVariableDeclarations(fsm);
     code += generateRuntimeMonitoring();
-
-    // Get the flat list of states from the machine (excluding QFinalState)
-    QList<QState*> realStates;
-    for (QState* state : machine->findChildren<QState*>()) {
-        if (!qobject_cast<QFinalState*>(state)) {
-            realStates.append(state);
-        }
-    }
-    
     code += generateHelperFunctions();
-    code += generateQStateMachineMain(machine, realStates);
+    code += generateQStateMachineMain(fsm);
 
     return code;
 }
+
 /**
  * @brief Generates standard C++ header includes
  * 
@@ -156,12 +235,12 @@ QString CodeGen::generateHelperFunctions()
  * @brief Generates global variable declarations
  * 
  * Creates declarations for core state machine variables and any custom
- * variables defined in the state machine properties.
+ * variables defined in the state machine.
  * 
- * @param machine State machine containing property definitions
+ * @param fsm State machine containing variable definitions
  * @return Code section as QString
  */
-QString CodeGen::generateVariableDeclarations(QStateMachine *machine)
+QString CodeGen::generateVariableDeclarations(FSM *fsm)
 {
     QString code;
     
@@ -173,11 +252,16 @@ QString CodeGen::generateVariableDeclarations(QStateMachine *machine)
     code += "QMap<QString, QString> inputs;      // Map of input names to values\n";
     code += "QMap<QString, QString> outputs;     // Map of output names to values\n\n";
     
-    // Extract custom variables from machine properties
-    QVariant vars = machine->property("variables");
-    if (vars.isValid() && vars.canConvert<QString>()) {
-        code += "// Custom variables for " + machine->objectName() + "\n";
-        code += vars.toString() + "\n\n";
+    // Extract custom variables from FSM
+    QMap<QString, Variable*> variables = fsm->getVariables();
+    if (!variables.isEmpty()) {
+        code += "// Custom variables for " + fsm->getName() + "\n";
+        
+        for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
+            Variable* var = it.value();
+            code += var->getType() + " " + var->getName() + " = " + var->getValue().toString() + ";\n";
+        }
+        code += "\n";
     }
     
     return code;
@@ -278,17 +362,69 @@ QString CodeGen::generateRuntimeMonitoring()
 }
 
 /**
+ * @brief Generate code for a transition
+ * @param transition The transition
+ * @param sourceState Source state
+ * @param targetState Target state
+ * @return Generated C++ code for the transition
+ */
+QString CodeGen::generateTransitionCode(Transition *transition, 
+                                     const State *sourceState, 
+                                     const State *targetState) {
+    QString code;
+    QString sourceName = const_cast<State*>(sourceState)->getName();
+    QString targetName = const_cast<State*>(targetState)->getName();
+    QString sourceLower = sourceName.toLower();
+    QString targetLower = targetName.toLower();
+    
+    if (transition->isDelayedTransition()) {
+        // Create a delayed transition
+        code += "    // Create delayed transition: " + sourceName + " → " + targetName + "\n";
+        code += "    DelayedStateTransition* " + sourceLower + "To" + targetName + "Delayed = new DelayedStateTransition(" + QString::number(transition->getDelay()) + ");\n";
+        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Delayed);\n";
+        code += "    " + sourceLower + "To" + targetName + "Delayed->setTargetState(" + targetLower + "State);\n";
+        
+        // Add documentation for timer start lambda
+        code += "    /**\n";
+        code += "     * @brief TimerStarter - Lambda that starts the delayed transition timer\n";
+        code += "     */\n";
+        code += "    QObject::connect(" + sourceLower + "State, &QState::entered, [=]() {\n";
+        code += "        // Start the timer when entering the state\n";
+        code += "        " + sourceLower + "To" + targetName + "Delayed->start();\n";
+        code += "    });\n\n";
+    } 
+    else if (!transition->getCondition().isEmpty()) {
+        code += "    // Create condition transition: " + sourceName + " → " + targetName + "\n";
+        
+        // Add documentation for condition lambda
+        code += "    /**\n";
+        code += "     * @brief TransitionCondition - Lambda for evaluating the transition condition\n";
+        code += "     */\n";
+        
+        QString conditionCode = transition->getCondition();
+        
+        code += "    ConditionTransition* " + sourceLower + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
+        code += "        // Evaluate condition: " + conditionCode + "\n";
+        code += "        return " + conditionCode + ";\n";
+        code += "    });\n";
+        code += "    " + sourceLower + "State->addTransition(" + sourceLower + "To" + targetName + "Condition);\n";
+        code += "    " + sourceLower + "To" + targetName + "Condition->setTargetState(" + targetLower + "State);\n\n";
+    }
+    
+    return code;
+}
+
+/**
  * @brief Generates a main function that uses QStateMachine
  * 
  * Creates the main function that uses Qt's built-in QStateMachine rather
  * than a manual switch-case approach. This leverages Qt's state machine framework
  * for cleaner code and better integration with Qt's event system.
  * 
- * @param machine State machine containing the initial state
- * @param states List of all states in the machine
+ * @param fsm FSM containing the states and transitions
  * @return Code section as QString
  */
-QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<QState*>& states)
+QString CodeGen::generateQStateMachineMain(FSM *fsm)
 {
     QString code;
     
@@ -298,11 +434,10 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
     code += " ******************************************************************************/\n\n";
 
     // Get the initial state
-    QState *initial = qobject_cast<QState*>(machine->initialState());
-    if (!initial && !states.isEmpty()) {
-        initial = states.first();
-    }
-    QString initialStateName = initial ? initial->objectName() : "UNKNOWN";
+    State *initial = fsm->getInitialState();
+    QMap<QString, State*> allStates = fsm->getStates();
+    
+    QString initialStateName = initial ? initial->getName() : "UNKNOWN";
 
     // Add custom color constants for enhanced formatting
     code += "// Enhanced UI formatting constants\n";
@@ -432,11 +567,11 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
     code += "    qDebug().noquote() << DOUBLE_SEPARATOR + \"\\n\";\n";
     code += "    \n";
     code += "    debugPrint(\"Starting FSM application with QStateMachine\");\n";
-    code += "    debugPrint(\"State machine name: \" + ANSI_BOLD + ANSI_GREEN + \"" + machine->objectName() + "\" + ANSI_RESET);\n";
+    code += "    debugPrint(\"State machine name: \" + ANSI_BOLD + ANSI_GREEN + \"" + fsm->getName() + "\" + ANSI_RESET);\n";
     
     // Extract and initialize inputs/outputs
-    QStringList inputNames = machine->property("inputs").toString().split(",", Qt::SkipEmptyParts);
-    QStringList outputNames = machine->property("outputs").toString().split(",", Qt::SkipEmptyParts);
+    QSet<QString> inputNames = fsm->getInputs();
+    QSet<QString> outputNames = fsm->getOutputs();
     
     code += "    // Initialize inputs and outputs\n";
     for (const QString& input : inputNames) {
@@ -451,21 +586,26 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
     // Create the state machine object
     code += "    // Create state machine\n";
     code += "    QStateMachine fsm;\n";
-    code += "    fsm.setObjectName(\"" + machine->objectName() + "\");\n\n";
+    code += "    fsm.setObjectName(\"" + fsm->getName() + "\");\n\n";
     
     // Enhanced state creation display
     code += "    // Create all states\n";
     code += "    debugPrint(\"Creating states...\");\n";
-    for (QState* state : states) {
-        QString stateName = state->objectName();
-        code += "    QState* " + stateName.toLower() + "State = new QState(&fsm);\n";
-        code += "    " + stateName.toLower() + "State->setObjectName(\"" + stateName + "\");\n";
+
+    // Iterate through states using the map from FSM
+    for (auto it = allStates.begin(); it != allStates.end(); ++it) {
+        State* state = it.value();
+        QString stateName = state->getName();
+        QString stateLower = stateName.toLower();
+        
+        code += "    QState* " + stateLower + "State = new QState(&fsm);\n";
+        code += "    " + stateLower + "State->setObjectName(\"" + stateName + "\");\n";
         code += "    debugPrint(\"  Created state: \" + ANSI_CYAN + \"" + stateName + "\" + ANSI_RESET);\n";
         
         // Add onEntry code if available
-        QString onEntry = state->property("on_entry_code").toString();
+        QString onEntry = state->getCode();
         if (!onEntry.isEmpty()) {
-            code += "    QObject::connect(" + stateName.toLower() + "State, &QState::entered, []() {\n";
+            code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
             code += "        debugPrint(DOUBLE_SEPARATOR);\n";
             code += "        debugPrint(STATE_HEADER + ANSI_BOLD + ANSI_GREEN + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
             code += "        debugPrint(SECTION_SEPARATOR);\n";
@@ -475,7 +615,7 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
             code += "    });\n";
         } else {
             // Even if no onEntry code, still provide visual feedback for state entry
-            code += "    QObject::connect(" + stateName.toLower() + "State, &QState::entered, []() {\n";
+            code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
             code += "        debugPrint(DOUBLE_SEPARATOR);\n";
             code += "        debugPrint(STATE_HEADER + ANSI_BOLD + ANSI_GREEN + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
             code += "        debugPrint(SECTION_SEPARATOR);\n";
@@ -492,76 +632,35 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
     // Create transitions between states
     code += "    // Create transitions between states\n";
     code += "    debugPrint(\"Setting up transitions...\");\n";
-    for (QState* sourceState : states) {
-        QString sourceName = sourceState->objectName();
-        QList<QAbstractTransition*> transitions = sourceState->transitions();
+    
+    // Iterate through all states and their transitions
+    for (auto stateIt = allStates.begin(); stateIt != allStates.end(); ++stateIt) {
+        State* sourceState = stateIt.value();
+        QString sourceName = sourceState->getName();
         
-        for (QAbstractTransition* transition : transitions) {
-            QState* targetState = qobject_cast<QState*>(transition->targetState());
+        // Get all transitions from this state
+        QList<Transition*> transitions = fsm->getTransitionsFrom(sourceState);
+        
+        for (Transition* transition : transitions) {
+            State* targetState = transition->getTo();
             if (!targetState) continue;
             
-            QString targetName = targetState->objectName();
-            bool isDelayed = transition->property("is_delayed_transition").toBool();
+            QString targetName = targetState->getName();
             
-            if (isDelayed) {
-                // Create a delayed transition
-                QString delayMs = transition->property("delay_ms").toString();
-                code += "    // Create delayed transition: " + sourceName + " → " + targetName + "\n";
-                code += "    DelayedStateTransition* " + sourceName.toLower() + "To" + targetName + "Delayed = new DelayedStateTransition(" + delayMs + ");\n";
-                code += "    " + sourceName.toLower() + "State->addTransition(" + sourceName.toLower() + "To" + targetName + "Delayed);\n";
-                code += "    " + sourceName.toLower() + "To" + targetName + "Delayed->setTargetState(" + targetName.toLower() + "State);\n";
-                
-                // Add documentation for timer start lambda
-                code += "    /**\n";
-                code += "     * @brief TimerStarter - Lambda that starts the delayed transition timer\n";
-                code += "     *\n";
-                code += "     * Detailed Description:\n";
-                code += "     *   This lambda is connected to the state's entered signal and starts the timer\n";
-                code += "     *   for the delayed transition when the source state is entered.\n";
-                code += "     *\n";
-                code += "     * Capture List:\n";
-                code += "     *   - " + sourceName.toLower() + "To" + targetName + "Delayed (by value): The delayed transition object\n";
-                code += "     *     that contains the timer to be started.\n";
-                code += "     *\n";
-                code += "     * Returns:\n";
-                code += "     *   void - This lambda is used for its side effect of starting the timer.\n";
-                code += "     */\n";
-                code += "    QObject::connect(" + sourceName.toLower() + "State, &QState::entered, [=]() {\n";
-                code += "        // Start the timer when entering the state\n";
-                code += "        " + sourceName.toLower() + "To" + targetName + "Delayed->start();\n";
-                code += "    });\n\n";
-            } else {
-                // Create a condition-based transition
-                QString condition = transition->property("condition_code").toString();
-                if (!condition.isEmpty()) {
-                    code += "    // Create condition transition: " + sourceName + " → " + targetName + "\n";
-                    
-                    // Add documentation for condition lambda
-                    code += "    /**\n";
-                    code += "     * @brief TransitionCondition - Lambda for evaluating the transition condition\n";
-                    code += "     *\n";
-                    code += "     * Detailed Description:\n";
-                    code += "     *   This lambda evaluates whether the transition from " + sourceName + " to " + targetName + "\n";
-                    code += "     *   should be taken based on the specified condition.\n";
-                    code += "     *\n";
-                    code += "     * Returns:\n";
-                    code += "     *   bool - True if the transition should occur, False otherwise.\n";
-                    code += "     *\n";
-                    code += "     * Condition:\n";
-                    code += "     *   " + condition + "\n";
-                    code += "     */\n";
-                    code += "    ConditionTransition* " + sourceName.toLower() + "To" + targetName + "Condition = new ConditionTransition([]() -> bool {\n";
-                    code += "        // Evaluate condition: " + condition + "\n";
-                    code += "        return " + condition + ";\n";
-                    code += "    });\n";
-                    code += "    " + sourceName.toLower() + "State->addTransition(" + sourceName.toLower() + "To" + targetName + "Condition);\n";
-                    code += "    " + sourceName.toLower() + "To" + targetName + "Condition->setTargetState(" + targetName.toLower() + "State);\n\n";
-                }
+            // Convert to structured transition for display
+            StructuredTransition triplet = structuredTransitionFromTransition(transition);
+            code += "    // Create transition: " + sourceName + " → " + targetName;
+            if (!triplet.toString().isEmpty()) {
+                code += " (" + triplet.toString() + ")";
             }
+            code += "\n";
+            
+            // Generate the transition code
+            code += generateTransitionCode(transition, sourceState, targetState);
         }
     }
     
-    // Add an enhanced command prompt and help display
+    // Rest of the main function (command handling, etc.)
     code += "    // Print application usage help\n";
     code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
     code += "    qDebug().noquote() << ANSI_BOLD + ANSI_BLUE + \"          AVAILABLE COMMANDS          \" + ANSI_RESET;\n";
@@ -584,24 +683,9 @@ QString CodeGen::generateQStateMachineMain(QStateMachine *machine, const QList<Q
     code += "    int terminalFd = fileno(terminalInput);\n";
     code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n";
     
-    // Add proper documentation for the input handler lambda
+    // Input handler lambda
     code += "    /**\n";
     code += "     * @brief TerminalInputHandler - Lambda that processes user input from the terminal\n";
-    code += "     *\n";
-    code += "     * Detailed Description:\n";
-    code += "     *   This lambda function is triggered when user input is available from the terminal.\n";
-    code += "     *   It processes commands like input value assignments, status requests, help\n";
-    code += "     *   commands, and application exit commands.\n";
-    code += "     *\n";
-    code += "     * Capture List:\n";
-    code += "     *   - inputNotifier (by reference): Socket notifier that needs to be re-enabled\n";
-    code += "     *     after processing input.\n";
-    code += "     *   - app (by reference): Application object needed for quitting the app.\n";
-    code += "     *   - fsm (by reference): State machine to post events to and retrieve status from.\n";
-    code += "     *   - terminalInput (by value): File handle for reading from terminal.\n";
-    code += "     *\n";
-    code += "     * Returns:\n";
-    code += "     *   void - This lambda is used for its side effects of processing input.\n";
     code += "     */\n";
     code += "    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {\n";
     code += "        // Read from the terminal\n";

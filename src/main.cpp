@@ -1,10 +1,7 @@
 #include "frontend/mainwindow.hpp"
 #include "backend/CodeGen.hpp"
 #include "backend/MockStateMachine.hpp"
-#include <QStateMachine>
-#include <QState>
-#include <QFinalState>
-#include <QAbstractTransition>
+#include "backend/fsm.hpp"
 #include <QApplication>
 #include <QFile>
 #include <QTextStream>
@@ -14,12 +11,12 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     
-    // Create the mock state machine
-    QStateMachine* machine = createTOF5sMachine();
+    // Create the mock state machine using the FSM wrapper class
+    FSM* fsm = createTOF5sMachine();
     
     // Generate the code using CodeGen
     CodeGen codeGen;
-    QString generatedCode = codeGen.generateCode(machine);
+    QString generatedCode = codeGen.generateCode(fsm);
     
     // Save the generated code to a file
     QFile file("TOF5s_generated.cpp");
@@ -33,7 +30,7 @@ int main(int argc, char *argv[])
     }
     
     // Clean up
-    delete machine;
+    delete fsm;
     
     return 0;
 }

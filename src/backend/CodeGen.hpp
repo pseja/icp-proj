@@ -2,76 +2,76 @@
 #define CODEGEN_HPP
 
 #include <QObject>
-#include <QStateMachine>
-#include <QState>
 #include <QString>
-#include <QAbstractTransition>
+
+// Forward declarations
+class FSM;
+class State;
+class Transition;
+class Variable;
 
 /**
- * @class CodeGen
- * @brief Generates C++ code from a Qt state machine model
+ * @brief The StructuredTransition class represents a transition triplet
  * 
- * The CodeGen class transforms a QStateMachine into a standalone C++ application
- * that can execute the state machine logic using Qt's built-in state machine framework.
+ * A transition triplet has the format: "input_event_name [ boolean_expression ] @ delay_in_ms"
+ * where each part is optional.
+ */
+class StructuredTransition {
+public:
+    QString trigger;    ///< Input event name (optional)
+    QString condition;  ///< Boolean expression (optional)
+    QString delay;      ///< Delay expression in ms (optional)
+
+    bool hasTrigger() const { return !trigger.isEmpty(); }
+    bool hasCondition() const { return !condition.isEmpty(); }
+    bool hasDelay() const { return !delay.isEmpty(); }
+    
+    QString toString() const;
+    static StructuredTransition fromString(const QString &tripletStr);
+    static StructuredTransition fromTransition(Transition* transition);
+};
+
+/**
+ * @brief The CodeGen class generates C++ code from FSM instances
  */
 class CodeGen : public QObject
 {
     Q_OBJECT
 
 public:
-    /**
-     * @brief Constructor
-     * @param parent The parent QObject (default: nullptr)
-     */
     explicit CodeGen(QObject *parent = nullptr);
 
     /**
-     * @brief Generates complete C++ code from a state machine
-     * @param machine The state machine to generate code from
-     * @return Generated C++ code as a QString
+     * @brief Generates C++ code from a state machine
+     * @param fsm The state machine to generate code from
+     * @return Generated C++ code
      */
-    QString generateCode(QStateMachine *machine);
+    QString generateCode(FSM *fsm);
 
 private:
-    /**
-     * @brief Generates standard header includes
-     * @return Code section as QString
-     */
     QString generateHeaders();
-    
-    /**
-     * @brief Generates helper functions for FSM operations
-     * @return Code section as QString
-     */
-    QString generateHelperFunctions();
-    
-    /**
-     * @brief Generates global variable declarations
-     * @param machine State machine containing property definitions
-     * @return Code section as QString
-     */
-    QString generateVariableDeclarations(QStateMachine *machine);
-    
-    /**
-     * @brief Generates monitoring and debugging functions
-     * @return Code section as QString
-     */
+    QString generateVariableDeclarations(FSM *fsm);
     QString generateRuntimeMonitoring();
+    QString generateHelperFunctions();
+    QString generateQStateMachineMain(FSM *fsm);
     
     /**
-     * @brief Generates state enum and string conversion
-     * @param states List of states to include in the enum
-     * @return Code section as QString
+     * @brief Generate transition code based on a transition
+     * @param transition The transition to generate code for
+     * @param sourceState The source state
+     * @param targetState The target state
+     * @return Generated C++ code for the transition
      */
-    QString generateStateEnum(const QList<QState*>& states);
-    
+    QString generateTransitionCode(Transition *transition,
+                                const State *sourceState, 
+                                const State *targetState);
+
     /**
-     * @brief Generates a main function that uses QStateMachine
-     * @param machine State machine containing the initial state
-     * @param states List of all states in the machine
-     * @return Code section as QString
+     * @brief Convert a Transition object to a StructuredTransition representation
+     * @param transition The Transition object
+     * @return A StructuredTransition representation
      */
-    QString generateQStateMachineMain(QStateMachine *machine, const QList<QState*>& states);
+    StructuredTransition structuredTransitionFromTransition(Transition *transition);
 };
 
 #endif // CODEGEN_HPP
