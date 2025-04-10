@@ -9,8 +9,10 @@
 #include <qgraphicsscene.h>
 #include <qgraphicssceneevent.h>
 #include <qgraphicsview.h>
+#include <qline.h>
 #include <qlist.h>
 #include <qnamespace.h>
+#include <qpen.h>
 #include <qpoint.h>
 #include <typeinfo>
 #include "mainwindow.hpp"
@@ -51,8 +53,14 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   QList<QGraphicsItem *> clicked = scene()->selectedItems();
   for (QGraphicsItem *item : clicked) {
     if (typeid(*item) == typeid(StateItem)) {
-      qDebug() << "creating transition";
+      StateItem *state = dynamic_cast<StateItem *>(item);
+      transitionStart = state;
+
+      templine = scene()->addLine(QLineF(scenePos, scenePos),
+                                  QPen(Qt::black, 2, Qt::DashLine));
+      return;
     }
+
   }
 
   StateItem tempState(nullptr);
@@ -84,6 +92,11 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
 }
 
 void AutomatView::mouseMoveEvent(QMouseEvent *event) {
+  if (templine) {
+    QPointF scenePos = mapToScene(event->pos());
+    QLineF newLine(templine->line().p1(), scenePos);
+    templine->setLine(newLine);
+  }
   QGraphicsView::mouseMoveEvent(event);
 }
 

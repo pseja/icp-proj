@@ -9,6 +9,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsSceneMouseEvent>
+#include <cstddef>
 #include <qevent.h>
 #include <qglobal.h>
 #include <qgraphicsitem.h>
@@ -34,7 +35,10 @@ protected:
   void mouseDoubleClickEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
-//private:
+
+private:
+  StateItem *transitionStart = nullptr;
+  QGraphicsLineItem *templine = nullptr;
 //  QGraphicsScene *scene;
 };
 
