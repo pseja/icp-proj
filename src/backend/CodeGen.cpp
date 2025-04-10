@@ -505,7 +505,25 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     
     QString initialStateName = initial ? initial->getName() : "UNKNOWN";
 
-    // Define the classes needed for QStateMachine
+    code += "/**\n";
+    code += " * @brief Custom event for input changes\n";
+    code += " */\n";
+    code += "class InputEvent : public QEvent {\n";
+    code += "public:\n";
+    code += "    static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2);\n\n";
+    
+    code += "    InputEvent(const QString& name, const QString& value) \n";
+    code += "        : QEvent(InputChangedType), m_name(name), m_value(value) {}\n\n";
+    
+    code += "    QString name() const { return m_name; }\n";
+    code += "    QString value() const { return m_value; }\n\n";
+    
+    code += "private:\n";
+    code += "    QString m_name;\n";
+    code += "    QString m_value;\n";
+    code += "};\n\n";
+
+    // Then define the classes needed for QStateMachine
     code += "/**\n";
     code += " * @brief Unified transition class handling both conditions and delays\n";
     code += " */\n";
@@ -551,8 +569,12 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            return true;\n";
     code += "        }\n";
     code += "        \n";
-    code += "        // For all other events, we check the condition\n";
+    code += "        // Check for input events specifically\n";
+    code += "        bool isInputEvent = event->type() == InputEvent::InputChangedType;\n";
+    code += "        \n";
+    code += "        // For input events or other events, evaluate the condition\n";
     code += "        try {\n";
+    code += "            // Evaluate the condition\n";
     code += "            m_conditionMet = m_condition();\n";
     code += "            \n";
     code += "            // If condition failed, stop any running timer and return false\n";
@@ -651,24 +673,6 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    QString m_conditionStr;             ///< Condition string for logging\n";
     code += "    QTimer* m_timer;                    ///< Timer for delayed transitions\n";
     code += "    bool m_conditionMet;                ///< Tracks whether the condition was met\n";
-    code += "};\n\n";
-
-    code += "/**\n";
-    code += " * @brief Custom event for input changes\n";
-    code += " */\n";
-    code += "class InputEvent : public QEvent {\n";
-    code += "public:\n";
-    code += "    static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2);\n\n";
-    
-    code += "    InputEvent(const QString& name, const QString& value) \n";
-    code += "        : QEvent(InputChangedType), m_name(name), m_value(value) {}\n\n";
-    
-    code += "    QString name() const { return m_name; }\n";
-    code += "    QString value() const { return m_value; }\n\n";
-    
-    code += "private:\n";
-    code += "    QString m_name;\n";
-    code += "    QString m_value;\n";
     code += "};\n\n";
 
     code += "/**\n";
@@ -835,7 +839,7 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    int terminalFd = fileno(terminalInput);\n";
     code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n\n";
     
-    // Updated input handler with input validation
+    // Updated input handler with input validation and event posting
     code += "    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {\n";
     code += "        // Read from the terminal\n";
     code += "        char buffer[1024];\n";
@@ -872,7 +876,9 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "                debugPrint(\"Received input in state \" + COSMIC_PURPLE + currentState + ANSI_RESET + \": \" + \n";
     code += "                          ANSI_BOLD + name + ANSI_RESET + \" = \" + STARDUST + value + ANSI_RESET);\n";
     code += "                \n";
+    code += "                // Store input value and post the input event to trigger transitions\n";
     code += "                inputs[name] = value;\n";
+    code += "                logInputEvent(name, value);\n";
     code += "                fsm.postEvent(new InputEvent(name, value));\n";
     code += "            } else if (line == \"exit\" || line == \"quit\") {\n";
     code += "                debugPrint(ANSI_BOLD + COLOR_ERROR + \"Exit command received. Terminating application...\" + ANSI_RESET);\n";
@@ -923,7 +929,9 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "                debugPrint(\"Received standalone input in state \" + COSMIC_PURPLE + currentState + ANSI_RESET + \": \" + \n";
     code += "                          ANSI_BOLD + name + ANSI_RESET + \" (default value: \" + STARDUST + defaultValue + ANSI_RESET + \")\");\n";
     code += "                \n";
+    code += "                // Store input value and post the input event to trigger transitions\n";
     code += "                inputs[name] = defaultValue;\n";
+    code += "                logInputEvent(name, defaultValue);\n";
     code += "                fsm.postEvent(new InputEvent(name, defaultValue));\n";
     code += "            }\n";
     code += "        }\n";
