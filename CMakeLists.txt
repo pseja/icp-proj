@@ -47,32 +47,68 @@ add_executable(icp-proj ${PROJECT_SOURCES})
 # Link required Qt5 modules
 target_link_libraries(icp-proj PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Scxml Qt5::Qml Qt5::Xml Qt5::Test)
 
+# Define the path for the generated file
+set(GENERATED_FILE_PATH "${CMAKE_SOURCE_DIR}/generated/*_generated.cpp")
+
 # Generate FSM code
 add_custom_command(
-    OUTPUT ${CMAKE_SOURCE_DIR}/TOF5s_generated.cpp
+    OUTPUT ${GENERATED_FILE_PATH}
     COMMAND $<TARGET_FILE:icp-proj>
     DEPENDS icp-proj
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Generating FSM code"
 )
 
-# The test executable
-add_executable(TOF5s_test EXCLUDE_FROM_ALL ${CMAKE_SOURCE_DIR}/TOF5s_generated.cpp)
-set_target_properties(TOF5s_test PROPERTIES AUTOMOC ON)
-target_link_libraries(TOF5s_test PRIVATE Qt5::Core Qt5::Widgets Qt5::Gui)
+# Directory for generated files
+set(GENERATED_DIR "${CMAKE_SOURCE_DIR}/generated")
+file(MAKE_DIRECTORY ${GENERATED_DIR})
 
-# Make the test dependent on the generated code
-add_dependencies(TOF5s_test icp-proj)
-add_custom_target(generate_fsm DEPENDS ${CMAKE_SOURCE_DIR}/TOF5s_generated.cpp)
-add_dependencies(TOF5s_test generate_fsm)
-
-# Simple test target
-add_custom_target(test
-    COMMAND $<TARGET_FILE:TOF5s_test>
-    DEPENDS TOF5s_test
+# Generate FSM code target
+add_custom_target(generate_fsm
+    COMMAND $<TARGET_FILE:icp-proj>
+    DEPENDS icp-proj
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Running FSM test"
+    COMMENT "Generating FSM code"
 )
+
+# Create a 'gen' target that depends on generate_fsm
+add_custom_target(gen
+    DEPENDS generate_fsm
+    COMMENT "Generating FSM code"
+)
+
+# Find all generated FSM files after generation
+add_custom_target(fsm_build ALL
+    COMMAND ${CMAKE_COMMAND} -E echo "Building FSM executables"
+    DEPENDS generate_fsm
+)
+
+# Dynamic approach to find and compile FSMs
+add_custom_command(
+    TARGET fsm_build
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND}
+        -DGENERATED_DIR=${GENERATED_DIR}
+        -DCMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DQTCORE_LIBRARY=$<TARGET_FILE:Qt5::Core>
+        -DQTGUI_LIBRARY=$<TARGET_FILE:Qt5::Gui>
+        -DQTWIDGETS_LIBRARY=$<TARGET_FILE:Qt5::Widgets>
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compile_fsm.cmake
+    COMMENT "Compiling FSM executables"
+)
+
+# Run the FSM executable
+add_custom_target(run
+    COMMAND ${CMAKE_COMMAND} -E echo "Running FSM" 
+    COMMAND ${CMAKE_COMMAND} -E env "${CMAKE_CURRENT_BINARY_DIR}/fsm"
+    DEPENDS fsm_build
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running FSM"
+)
+
+# Add generated directory to clean files
+set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_SOURCE_DIR}/generated")
 
 # Install the target
 install(TARGETS icp-proj

@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include <QDir>
 
 int main(int argc, char *argv[])
 {
@@ -18,15 +19,25 @@ int main(int argc, char *argv[])
     CodeGen codeGen;
     QString generatedCode = codeGen.generateCode(fsm);
     
-    // Save the generated code to a file
-    QFile file("TOF5s_generated.cpp");
+    // Get the machine name for the filename
+    QString machineName = fsm->getName();
+    
+    // Create the generated directory if it doesn't exist
+    QDir dir;
+    if (!dir.exists("generated")) {
+        dir.mkdir("generated");
+    }
+    
+    // Save the generated code to a file in the generated directory
+    QString filePath = QString("generated/%1_generated.cpp").arg(machineName);
+    QFile file(filePath);
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
         out << generatedCode;
         file.close();
-        qDebug() << "Generated code saved to TOF5s_generated.cpp";
+        qDebug() << "Generated code saved to" << filePath;
     } else {
-        qDebug() << "Failed to save generated code to file";
+        qDebug() << "Failed to save generated code to file" << filePath;
     }
     
     // Clean up
