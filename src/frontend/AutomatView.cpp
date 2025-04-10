@@ -42,12 +42,19 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
   }
 }
 
-
 void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   QPointF scenePos = mapToScene(event->pos());
   qDebug() << "Kliknuto na souřadnice:" << scenePos;
   qDebug() << "got possion\n";
   // Vytvoříme dočasný state jen pro kontrolu kolizí
+
+  QList<QGraphicsItem *> clicked = scene()->selectedItems();
+  for (QGraphicsItem *item : clicked) {
+    if (typeid(*item) == typeid(StateItem)) {
+      qDebug() << "creating transition";
+    }
+  }
+
   StateItem tempState(nullptr);
   tempState.setPos(scenePos);
   
