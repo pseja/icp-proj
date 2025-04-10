@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::updateStateInfo);
   connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,
           &MainWindow::saveState);
+  connect(automatView, &AutomatView::addState, this, &MainWindow::addState);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -73,4 +74,8 @@ void MainWindow::loadAutomat(const QVector<StateItem *> &states) {
   for (StateItem *state : states) {
     //automatView->addState(state);
   }
+}
+
+void MainWindow::addState(StateItem *StateItem) {
+  fsm->addState(StateItem->state);
 }

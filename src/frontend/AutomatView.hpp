@@ -3,6 +3,8 @@
 
 #include "src/frontend/StateItem.hpp"
 //#include "src/frontend/mainwindow.hpp"
+//#include "src/frontend/mainwindow.hpp"
+//#include "src/frontend/mainwindow.hpp"
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
@@ -25,6 +27,7 @@ public:
 
 signals:
   void stateSelected(StateItem *state);
+  void addState(StateItem *state);
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;

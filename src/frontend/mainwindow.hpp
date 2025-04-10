@@ -29,14 +29,13 @@ private slots:
     void on_addStateButton_clicked();
 public slots:
     void handleStateDeleted();
-
+    void addState(StateItem *state);
 
 private:
   FSM *fsm;
   Ui::MainWindow *ui;
   AutomatView *automatView;
   StateItem *selectedState = nullptr;
-  void addState(StateItem *state);
   void loadAutomat(const QVector<StateItem *> &states);
 };
 #endif // MAINWINDOW_HPP

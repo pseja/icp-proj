@@ -19,6 +19,7 @@ AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
   setMinimumSize(400, 300); // Nastav minimální velikost
   setScene(new QGraphicsScene(this));
   setRenderHint(QPainter::Antialiasing);
+
 }
 
 void AutomatView::mousePressEvent(QMouseEvent *event) {
@@ -58,7 +59,8 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   state->setFlags(QGraphicsItem::ItemIsSelectable |
                   QGraphicsItem::ItemIsMovable);
   scene()->addItem(state);
-
+  emit addState(state);
+  //couldnt find a better place to put it in
   MainWindow *mainWin = qobject_cast<MainWindow *>(window());
   if (mainWin) {
     connect(state, &StateItem::stateDeleted, mainWin, &MainWindow::handleStateDeleted);
