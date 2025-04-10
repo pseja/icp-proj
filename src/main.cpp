@@ -1,6 +1,6 @@
 #include "frontend/mainwindow.hpp"
 #include "backend/CodeGen.hpp"
-#include "backend/MockStateMachine.hpp"
+#include "backend/xmlparser.hpp"
 #include "backend/fsm.hpp"
 #include <QApplication>
 #include <QFile>
@@ -12,15 +12,18 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     
-    // Create the mock state machine using the FSM wrapper class
-    FSM* fsm = createTOF5sMachine();
+    // Create an FSM object
+    FSM fsm;
     
-    // Generate the code using CodeGen
+    // Parse the XML file directly into the FSM object
+    if (!XMLParser::XMLtoFSM("examples/TOF5s.xml", fsm)) {
+        qDebug() << "Failed to parse XML file";
+        return 1;
+    }
+    
+    // Generate code from the FSM
     CodeGen codeGen;
-    QString generatedCode = codeGen.generateCode(fsm);
-    
-    // Get the machine name for the filename
-    QString machineName = fsm->getName();
+    QString generatedCode = codeGen.generateCode(&fsm);
     
     // Create the generated directory if it doesn't exist
     QDir dir;
@@ -28,8 +31,8 @@ int main(int argc, char *argv[])
         dir.mkdir("generated");
     }
     
-    // Save the generated code to a file in the generated directory
-    QString filePath = QString("generated/%1_generated.cpp").arg(machineName);
+    // Save the generated code to a file
+    QString filePath = QString("generated/%1_generated.cpp").arg(fsm.getName());
     QFile file(filePath);
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
@@ -39,9 +42,6 @@ int main(int argc, char *argv[])
     } else {
         qDebug() << "Failed to save generated code to file" << filePath;
     }
-    
-    // Clean up
-    delete fsm;
     
     return 0;
 }
