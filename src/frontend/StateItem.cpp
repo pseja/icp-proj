@@ -4,13 +4,14 @@
 #include <QDebug>
 #include <qglobal.h>
 #include <qgraphicsitem.h>
+#include <qgraphicssceneevent.h>
 #include <qnamespace.h>
 #include <qobject.h>
 #include <QObject>
 
 StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *parent)
     : QObject(), QGraphicsEllipseItem(-40, -40, 80, 80, parent) {
-  setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+  setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemSendsGeometryChanges);
   setBrush(Qt::cyan);
 
   state = new State("State");
@@ -50,3 +51,9 @@ void StateItem::updateState(const QString &newName, const QString &newCode, bool
 }
 //QString StateItem::getName() { return stateName; }
 //QString StateItem::getCodeSegment() {return codeSegment;}
+
+void StateItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+  QGraphicsEllipseItem::mouseMoveEvent(event);
+  emit positionChanged();
+  qDebug() << "debugging -> draging onto: " << event->pos();
+}

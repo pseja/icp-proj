@@ -29,7 +29,7 @@ signals:
 private:
   StateItem *fromState;
   StateItem *toState;
-  QGraphicsTextItem *label = nullptr;
+  QGraphicsTextItem *label;
 };
 
 #endif // STATEITEM_HPP

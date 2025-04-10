@@ -1,4 +1,5 @@
 #include "TransitionItem.hpp"
+#include "src/frontend/StateItem.hpp"
 #include <QPen>
 #include <QPainter>
 #include <qline.h>
@@ -11,14 +12,20 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
     setZValue(-1); // aby šipka byla pod stavy
     fromState = startState;
     toState = endState;
+    label = new QGraphicsTextItem("Transition", this);
     qDebug() << "updating possition";
     // Linka mezi pozicemi stavů
     updatePosition();
     qDebug() << "possition updated";
     // Volitelné: zobrazit název/kód přechodu
-    label = new QGraphicsTextItem("Transition");
+    
     label->setDefaultTextColor(Qt::darkRed);
     label->setPos((fromState->pos() + toState->pos()) / 2); // uprostřed čáry
+
+    connect(fromState, &StateItem::positionChanged, this,
+            &TransitionItem::updatePosition);
+    connect(toState, &StateItem::positionChanged, this,
+            &TransitionItem::updatePosition);
 }
 
 void TransitionItem::updatePosition() {
@@ -29,7 +36,6 @@ void TransitionItem::updatePosition() {
       label->setPos((fromState->pos() + toState->pos()) / 2);
       qDebug() << "label set";
     }
-    qDebug() << "label not set";
   }
 }
 

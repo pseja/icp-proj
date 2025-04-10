@@ -25,6 +25,10 @@ AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
   setScene(new QGraphicsScene(this));
   setRenderHint(QPainter::Antialiasing);
   setDragMode(QGraphicsView::RubberBandDrag);
+  scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
+  scene()->setSceneRect(rect()); // důležité: nastav scény velikost podle view
+  scene()->installEventFilter(this);  // pro ladění pohybů, pokud chceš
+  //setAcceptHoverEvents(true);
 }
 
 
@@ -67,7 +71,12 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
   }
 }
 
-void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
+void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
+
+  //auto ellipse = scene()->addEllipse(-20, -20, 40, 40, QPen(Qt::red), QBrush(Qt::yellow));
+  //ellipse->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+
+  
   QPointF scenePos = mapToScene(event->pos());
   qDebug() << "Kliknuto na souřadnice:" << scenePos;
   qDebug() << "got possion\n";
@@ -120,6 +129,7 @@ void AutomatView::mouseMoveEvent(QMouseEvent *event) {
     QLineF newLine(templine->line().p1(), scenePos);
     templine->setLine(newLine);
   }
+  
   QGraphicsView::mouseMoveEvent(event);
 }
 
