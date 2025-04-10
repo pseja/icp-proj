@@ -179,9 +179,10 @@ void FSM::addTransition(Transition *new_transition)
     to_transition_map.insert(new_transition->getTo()->getName(), new_transition);
 }
 
-void FSM::addTransition(State *from, State *to, QString condition, int delay)
+void FSM::addTransition(State *from, State *to, QString event, QString condition, int delay,
+                        QString delay_variable_name)
 {
-    Transition *new_transition = new Transition(from, to, condition, delay);
+    Transition *new_transition = new Transition(from, to, event, condition, delay, delay_variable_name);
     from_transition_map.insert(from->getName(), new_transition);
     to_transition_map.insert(to->getName(), new_transition);
 }

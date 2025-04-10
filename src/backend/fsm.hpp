@@ -233,8 +233,11 @@ class FSM : public QStateMachine
      * @brief Adds a transition to the finite state machine with specific attributes.
      * @param from A pointer to the source state.
      * @param to A pointer to the target state.
+     * @param event The event that triggers the transition.
      * @param condition The condition for the transition.
      * @param delay The delay (in milliseconds) before the transition occurs. Default is -1 (no delay).
+     * @param delay_variable_name The name of the variable that holds the delay value.
      */
-    void addTransition(State *from, State *to, QString condition, int delay = -1);
+    void addTransition(State *from, State *to, QString event, QString condition, int delay = -1,
+                       QString delay_variable_name = "");
 };

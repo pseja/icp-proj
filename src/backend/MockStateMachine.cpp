@@ -56,17 +56,17 @@ FSM* createTOF5sMachine()
     
     // Add transitions
     // IDLE → ACTIVE: when in=1
-    fsm->addTransition(idle, active, "defined(\"in\") && atoi_safe(valueof(\"in\")) == 1");
+    fsm->addTransition(idle, active, "in", "defined(\"in\") && atoi_safe(valueof(\"in\")) == 1");
     
     // ACTIVE → TIMING: when in=0
-    fsm->addTransition(active, timing, "defined(\"in\") && atoi_safe(valueof(\"in\")) == 0");
+    fsm->addTransition(active, timing, "in", "defined(\"in\") && atoi_safe(valueof(\"in\")) == 0");
     
     // TIMING → ACTIVE: when in=1
-    fsm->addTransition(timing, active, "defined(\"in\") && atoi_safe(valueof(\"in\")) == 1");
+    fsm->addTransition(timing, active, "in", "defined(\"in\") && atoi_safe(valueof(\"in\")) == 1");
     
     // TIMING → IDLE: after timeout ms (delayed transition)
     // Using the timeout variable value (5000) directly since we can't pass a string
-    fsm->addTransition(timing, idle, "", 5000);
+    fsm->addTransition(timing, idle, "", "", 5000, "timeout");
 
     // Add debug output to verify transitions are set correctly
     qDebug() << "Created delayed transition with timeout: 5000ms";
