@@ -8,6 +8,7 @@
 #include <qgraphicsitem.h>
 #include <qgraphicsscene.h>
 #include <qgraphicssceneevent.h>
+#include <qgraphicsview.h>
 #include <qlist.h>
 #include <qnamespace.h>
 #include <qpoint.h>
@@ -19,24 +20,28 @@ AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
   setMinimumSize(400, 300); // Nastav minimální velikost
   setScene(new QGraphicsScene(this));
   setRenderHint(QPainter::Antialiasing);
-
+  setDragMode(QGraphicsView::RubberBandDrag);
 }
 
+
 void AutomatView::mousePressEvent(QMouseEvent *event) {
-  QPointF scenePos = mapToScene(event->pos());
-  QList<QGraphicsItem *> clicked = scene()->items(scenePos);
+  QGraphicsView::mousePressEvent(event);
+  
+  //QPointF scenePos = mapToScene(event->pos());
+  QList<QGraphicsItem *> clicked = scene()->selectedItems();
 
   for (QGraphicsItem *item : clicked) {
     if (typeid(*item) == typeid(StateItem)) {
-        scene()->clearSelection();
+        //scene()->clearSelection();
       
-        item->setSelected(true);
+        //item->setSelected(true);
         StateItem *state = dynamic_cast<StateItem *>(item);
         emit stateSelected(state);
-        return;
+        break;
     }
   }
 }
+
 
 void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   QPointF scenePos = mapToScene(event->pos());
@@ -52,6 +57,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
       return;
     }
   }
+  
   qDebug() << "if it doesnt collide\n";
   StateItem *state = new StateItem(nullptr);
   state->setBrush(Qt::cyan);
@@ -60,6 +66,8 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
                   QGraphicsItem::ItemIsMovable);
   scene()->addItem(state);
   emit addState(state);
+
+
   //couldnt find a better place to put it in
   MainWindow *mainWin = qobject_cast<MainWindow *>(window());
   if (mainWin) {
@@ -67,3 +75,12 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event){
   }
   //state->setSelected(true);
 }
+
+void AutomatView::mouseMoveEvent(QMouseEvent *event) {
+  QGraphicsView::mouseMoveEvent(event);
+}
+
+void AutomatView::mouseReleaseEvent(QMouseEvent *event) {
+  QGraphicsView::mouseReleaseEvent(event);
+}
+
