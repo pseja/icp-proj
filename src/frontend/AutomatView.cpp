@@ -28,6 +28,25 @@ AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
 
 void AutomatView::mousePressEvent(QMouseEvent *event) {
   QGraphicsView::mousePressEvent(event);
+
+  if (transitionStart && templine) {
+    QPointF scenePos = mapToScene(event->pos());
+    QList<QGraphicsItem *> clicked = scene()->items(scenePos);
+
+    for (QGraphicsItem *item : clicked) {
+      StateItem *endstate = dynamic_cast<StateItem *>(item);
+      if (endstate != transitionStart) {
+        qDebug() << "creating transition";
+      }
+      break;
+    }
+    scene()->removeItem(templine);
+    delete templine;
+    templine = nullptr;
+    transitionStart = nullptr;
+
+  }
+
   
   //QPointF scenePos = mapToScene(event->pos());
   QList<QGraphicsItem *> clicked = scene()->selectedItems();
