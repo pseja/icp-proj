@@ -2,6 +2,7 @@
 #include "StateItem.hpp"
 #include <algorithm>
 #include <asm-generic/errno.h>
+#include <linux/limits.h>
 #include <qdebug.h>
 #include <qevent.h>
 #include <qglobal.h>
@@ -16,6 +17,7 @@
 #include <qpoint.h>
 #include <typeinfo>
 #include "mainwindow.hpp"
+#include "TransitionItem.hpp"
 
 // implementace automat platna
 AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
@@ -35,16 +37,18 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
 
     for (QGraphicsItem *item : clicked) {
       StateItem *endstate = dynamic_cast<StateItem *>(item);
-      if (endstate != transitionStart) {
+      if (endstate && endstate != transitionStart) {
         qDebug() << "creating transition";
+        TransitionItem *transition = new TransitionItem(transitionStart, endstate, nullptr);
+        qDebug() << "transition created";
+        scene()->addItem(transition);
+        break;
       }
-      break;
     }
     scene()->removeItem(templine);
     delete templine;
     templine = nullptr;
     transitionStart = nullptr;
-
   }
 
   

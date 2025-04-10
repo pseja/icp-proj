@@ -31,6 +31,7 @@ set(PROJECT_SOURCES
         src/frontend/mainwindow.ui
         src/frontend/AutomatView.cpp
         src/frontend/StateItem.cpp
+        src/frontend/TransitionItem.cpp
         src/backend/xmlparser.cpp
         src/backend/logger.cpp
         src/backend/fsm.cpp
