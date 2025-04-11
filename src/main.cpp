@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     FSM fsm;
     
     // Parse the XML file directly into the FSM object
-    if (!XMLParser::XMLtoFSM("examples/TOF5s.xml", fsm)) {
+    if (!XMLParser::XMLtoFSM("examples/TOF5.xml", fsm)) {
         qDebug() << "Failed to parse XML file";
         return 1;
     }
