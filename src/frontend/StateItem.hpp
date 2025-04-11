@@ -24,7 +24,7 @@ public:
                      bool initial);
     //QString getCodeSegment();
     //QString getName();
-
+      
 protected:
   void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
   void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;

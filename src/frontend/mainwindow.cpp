@@ -1,12 +1,18 @@
 #include "mainwindow.hpp"
 #include "AutomatView.hpp"
 #include "src/frontend/StateItem.hpp"
+#include "src/frontend/TransitionItem.hpp"
 #include "src/frontend/ui_mainwindow.h"
 #include <qdialogbuttonbox.h>
+#include <qgraphicsitem.h>
+#include <qlist.h>
+#include <qlistwidget.h>
 #include <qradiobutton.h>
 #include <qtextedit.h>
 #include <qvector.h>
 #include <QLineEdit>
+#include <qgraphicsitem.h>
+#include <QListWidget>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -60,11 +66,32 @@ void MainWindow::updateStateInfo(StateItem *state) {
   if (radio) {
     radio->setChecked(selectedState->state->isInitial());
   }
+
+  QList<QGraphicsItem *> items = automatView->scene()->items();
+  for (QGraphicsItem *item : items) {
+    qDebug() << "starting for in items: " << item;
+    if (typeid(*item) == typeid(TransitionItem)) {
+      qDebug() << "found transition item!";
+      TransitionItem *trans = dynamic_cast<TransitionItem *>(item);
+      if (trans->getFrom() == state || trans->getTo() == state) {
+        qDebug() << "found match!";
+        QString direction = (trans->getFrom() == state) ? "→" : "←";
+        QString label = QString(trans->getFrom()->state->getName() + direction +
+                                trans->getTo()->state->getName() + " : " +
+                                trans->transition->getEvent());
+        QListWidget *widget =
+            ui->groupBox->findChild<QListWidget *>("listWidget");
+        widget->clear();
+        widget->addItem(label);
+      }
+    }
+  }
 }
 
 void MainWindow::handleStateDeleted() {
   ui->lineEdit->clear();
   ui->textEdit->clear();
+  ui->listWidget->clear();
   ui->groupBox->setEnabled(false);
   selectedState = nullptr;
 }

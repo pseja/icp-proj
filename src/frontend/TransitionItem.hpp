@@ -19,6 +19,8 @@ public:
     explicit TransitionItem(StateItem *fromState, StateItem *toState, QGraphicsItem *parent = nullptr);
     Transition *transition;
     void updatePosition();
+    StateItem* getFrom();
+    StateItem* getTo();
 
 protected:
 //  void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;

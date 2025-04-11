@@ -43,7 +43,9 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
       StateItem *endstate = dynamic_cast<StateItem *>(item);
       if (endstate && endstate != transitionStart) {
         qDebug() << "creating transition";
-        TransitionItem *transition = new TransitionItem(transitionStart, endstate, nullptr);
+        TransitionItem *transition =
+            new TransitionItem(transitionStart, endstate, nullptr);
+        
         qDebug() << "transition created";
         scene()->addItem(transition);
         break;
