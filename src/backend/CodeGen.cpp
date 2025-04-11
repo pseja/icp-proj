@@ -154,7 +154,39 @@ QString CodeGen::generateHelperFunctions()
     code += "    \n";
     code += "    return QDateTime::currentDateTime().toMSecsSinceEpoch() - stateEntryTime;\n";
     code += "}\n\n";
-    
+
+    code += "// Shared event flags for tracking input calls\n";
+    code += "QMap<QString, bool>& getEventFlags() {\n";
+    code += "    static QMap<QString, bool>* flags = new QMap<QString, bool>();\n";
+    code += "    return *flags;\n";
+    code += "}\n\n";
+
+    code += "/**\n";
+    code += " * @brief Checks if an input was called as an event (regardless of value)\n";
+    code += " * @param input Input name to check\n";
+    code += " * @return True if the input was triggered as an event\n";
+    code += " */\n";
+    code += "bool called(const QString &input) {\n";
+    code += "    // Access shared event flags\n";
+    code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
+    code += "    \n";
+    code += "    bool result = eventFlags.value(input, false);\n";
+    code += "    debugPrint(\"[DEBUG] called('\" + input + \"') returning \" + (result ? \"true\" : \"false\"));\n";
+    code += "    eventFlags[input] = false;  // Reset after checking (one-shot events)\n";
+    code += "    return result;\n";
+    code += "}\n\n";
+
+    code += "/**\n";
+    code += " * @brief Sets the trigger flag for an input\n";
+    code += " * @param input Input name to mark as called\n";
+    code += " */\n";
+    code += "void setInputCalled(const QString &input) {\n";
+    code += "    // Access the same shared event flags\n";
+    code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
+    code += "    debugPrint(\"[DEBUG] Setting input called flag for '\" + input + \"'\");\n";
+    code += "    eventFlags[input] = true;\n";
+    code += "}\n\n";
+
     return code;
 }
 
@@ -370,6 +402,21 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     static int transitionCounter = 0;
     QString transName = sourceLower + "To" + targetName + "Transition" + QString::number(++transitionCounter);
     
+    // For self-transitions (same source and target), add protection against infinite loops
+    QString eventName = transition->getEvent().trimmed();
+    if (sourceState == targetState && !eventName.isEmpty()) {
+        // Only generate a self-transition that requires the specific event
+        if (!condition.isEmpty()) {
+            condition = "called(\"" + eventName + "\") && (" + condition + ")";
+        } else {
+            condition = "called(\"" + eventName + "\")";
+        }
+        hasCondition = true;
+        
+        // Add extra logging for this specific type of transition
+        code += "    // DEBUG: Creating self-transition for event: " + eventName + "\n";
+    }
+
     code += "    // Create transition: " + sourceName + " → " + targetName;
     
     if (hasCondition || hasDelay) {
@@ -435,15 +482,17 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "public:\n";
     code += "    static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2);\n\n";
     
-    code += "    InputEvent(const QString& name, const QString& value) \n";
-    code += "        : QEvent(InputChangedType), m_name(name), m_value(value) {}\n\n";
+    code += "    InputEvent(const QString& name, const QString& value, bool isCallMode = false) \n";
+    code += "        : QEvent(InputChangedType), m_name(name), m_value(value), m_isCallMode(isCallMode) {}\n\n";
     
     code += "    QString name() const { return m_name; }\n";
-    code += "    QString value() const { return m_value; }\n\n";
+    code += "    QString value() const { return m_value; }\n";
+    code += "    bool isCallMode() const { return m_isCallMode; }\n\n";
     
     code += "private:\n";
     code += "    QString m_name;\n";
     code += "    QString m_value;\n";
+    code += "    bool m_isCallMode;  // True if this was a pure event call without value assignment\n";
     code += "};\n\n";
 
     code += "/**\n";
@@ -490,8 +539,17 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            return true;\n";
     code += "        }\n";
     code += "        \n";
+    code += "        // Process input events to track what was called\n";
+    code += "        if (event->type() == InputEvent::InputChangedType) {\n";
+    code += "            InputEvent* inputEvent = static_cast<InputEvent*>(event);\n";
+    code += "            // Mark this input as having been called\n";
+    code += "            debugPrint(\"[DEBUG] Process event for input: \" + inputEvent->name());\n";
+    code += "            setInputCalled(inputEvent->name());\n";
+    code += "        }\n";
+    code += "        \n";
     code += "        try {\n";
     code += "            m_conditionMet = m_condition();\n";
+    code += "            debugPrint(\"[DEBUG] Evaluating transition from \" + m_fromState + \" to \" + m_toState + \": \" + (m_conditionMet ? \"true\" : \"false\"));\n";
     code += "            \n";
     code += "            if (!m_conditionMet) {\n";
     code += "                cancelTimerIfActive();\n";
@@ -748,13 +806,21 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "                }\n";
     code += "                \n";
     code += "                if (!value.isEmpty()) {\n";
+    code += "                    // SET mode: store the new value and trigger event\n";
+    code += "                    debugPrint(\"[DEBUG] SET MODE for '\" + name + \"' with value '\" + value + \"'\");\n";
     code += "                    inputs[name] = value;\n";
     code += "                    logInputEvent(name, value);\n";
-    code += "                    fsm.postEvent(new InputEvent(name, value));\n";
+    code += "                    fsm.postEvent(new InputEvent(name, value, false));\n";
     code += "                } else {\n";
+    code += "                    // CALL mode: treat as pure event without changing stored value\n";
     code += "                    QString lastValue = inputs.contains(name) ? inputs[name] : QString();\n";
+    code += "                    debugPrint(\"[DEBUG] CALL MODE for '\" + name + \"' with existing value '\" + lastValue + \"'\");\n";
     code += "                    logInputEvent(name, lastValue);\n";
-    code += "                    fsm.postEvent(new InputEvent(name, lastValue));\n";
+    code += "                    \n";
+    code += "                    // Mark this input as having been called for event-based transitions\n";
+    code += "                    setInputCalled(name);\n";
+    code += "                    \n";
+    code += "                    fsm.postEvent(new InputEvent(name, lastValue, true));\n";
     code += "                }\n";
     code += "            } else {\n";
     code += "                debugPrint(\"Unrecognized command: \" + ANSI_BOLD + WARP_RED + inputLine + ANSI_RESET, 3);\n";
