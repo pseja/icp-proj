@@ -141,19 +141,20 @@ QString CodeGen::generateHelperFunctions()
     code += " * @return Milliseconds elapsed since entering the current state\n";
     code += " */\n";
     code += "int elapsed() {\n";
-    code += "    static qint64 stateEntryTime = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "    static QState* lastState = nullptr;\n";
     code += "    \n";
-    code += "    QState* currentState = fsm.configuration().isEmpty() ? nullptr : \n";
-    code += "        static_cast<QState*>(*fsm.configuration().begin());\n";
+    code += "    if (fsm.configuration().isEmpty()) { return 0; } // Not started or no active state\n";
     code += "    \n";
-    code += "    if (currentState != lastState) {\n";
-    code += "        stateEntryTime = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "        lastState = currentState;\n";
+    code += "    QState* currentState = static_cast<QState*>(*fsm.configuration().begin());\n";
+    code += "    \n";
+    code += "    qint64 entryTime = currentState->property(\"entryTime\").toLongLong();\n";
+    code += "    if (entryTime == 0) { \n";
+    code += "       // If property not set yet (should be unlikely after start), return 0 or handle appropriately\n";
+    code += "       return 0; \n";
     code += "    }\n";
     code += "    \n";
-    code += "    return QDateTime::currentDateTime().toMSecsSinceEpoch() - stateEntryTime;\n";
+    code += "    return QDateTime::currentDateTime().toMSecsSinceEpoch() - entryTime;\n";
     code += "}\n\n";
+
 
     code += "// Shared event flags for tracking input calls\n";
     code += "QMap<QString, bool>& getEventFlags() {\n";
@@ -535,12 +536,9 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            return true;\n";
     code += "        }\n";
     code += "        \n";
-    code += "        // Process input events to track what was called\n";
-    code += "        if (event->type() == InputEvent::InputChangedType) {\n";
-    code += "            InputEvent* inputEvent = static_cast<InputEvent*>(event);\n";
-    code += "            // Mark this input as having been called\n";
-    code += "            setInputCalled(inputEvent->name());\n";
-    code += "        }\n";
+    code += "        // if (event->type() == InputEvent::InputChangedType) {\n";
+    code += "        //     InputEvent* inputEvent = static_cast<InputEvent*>(event);\n";
+    code += "        // }\n";
     code += "        \n";
     code += "        // Always re-evaluate the condition when any event occurs\n";
     code += "        try {\n";
@@ -611,6 +609,7 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "private:\n";
     code += "    void cancelTimerIfActive() {\n";
     code += "        if (m_timer && m_timer->isActive()) {\n";
+    code += "            debugPrint(\"Cancelling timer for transition \" + m_fromState + \" → \" + m_toState);\n";
     code += "            m_timer->stop();\n";
     code += "        }\n";
     code += "    }\n\n";
