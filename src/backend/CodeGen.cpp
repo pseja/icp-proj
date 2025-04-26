@@ -412,9 +412,6 @@ QString CodeGen::generateTransitionCode(Transition *transition,
             condition = "called(\"" + eventName + "\")";
         }
         hasCondition = true;
-        
-        // Add extra logging for this specific type of transition
-        code += "    // DEBUG: Creating self-transition for event: " + eventName + "\n";
     }
 
     code += "    // Create transition: " + sourceName + " → " + targetName;
@@ -733,25 +730,6 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
             if (!targetState) continue;
             
             QString targetName = targetState->getName();
-            
-            code += "    // Create transition: " + sourceName + " → " + targetName;
-            
-            QString condition = transition->getCondition();
-            bool hasDelay = transition->isDelayedTransition();
-            
-            if (!condition.isEmpty() || hasDelay) {
-                code += " (";
-                if (!condition.isEmpty()) {
-                    code += "[ " + condition + " ]";
-                }
-                if (hasDelay) {
-                    if (!condition.isEmpty()) code += " ";
-                    code += "@ " + QString::number(transition->getDelay());
-                }
-                code += ")";
-            }
-            
-            code += "\n";
             
             code += generateTransitionCode(transition, sourceState, targetState);
         }
