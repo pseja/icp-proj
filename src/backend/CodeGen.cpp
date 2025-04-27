@@ -68,6 +68,7 @@ QString CodeGen::generateHeaders()
     code += "#include <stdio.h>\n";
     code += "#include <unistd.h>\n";
     code += "#include <csignal>\n";
+    code += "#include <functional>\n";
     code += "\n";
     
     return code;
@@ -397,11 +398,11 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     
     int delay = transition->isDelayedTransition() ? transition->getDelay() : 0;
     bool hasCondition = !condition.isEmpty();
-    bool hasDelay = delay > 0;
-    
+    bool hasDelay = delay > 0 || (!transition->getDelayVariableName().isEmpty() && transition->isDelayedTransition());
+
     static int transitionCounter = 0;
     QString transName = sourceLower + "To" + targetName + "Transition" + QString::number(++transitionCounter);
-    
+
     // For self-transitions (same source and target), add protection against infinite loops
     QString eventName = transition->getEvent().trimmed();
     if (sourceState == targetState && !eventName.isEmpty()) {
@@ -415,7 +416,6 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     }
 
     code += "    // Create transition: " + sourceName + " → " + targetName;
-    
     if (hasCondition || hasDelay) {
         code += " (";
         if (hasCondition) {
@@ -423,14 +423,27 @@ QString CodeGen::generateTransitionCode(Transition *transition,
         }
         if (hasDelay) {
             if (hasCondition) code += " ";
-            code += "@ " + QString::number(delay) + "ms";
+            if (!transition->getDelayVariableName().isEmpty())
+                code += "@ " + transition->getDelayVariableName();
+            else
+                code += "@ " + QString::number(delay) + "ms";
         }
         code += ")";
     }
     code += "\n";
-    
+
+    // Compute delay provider lambda
+    QString delayProvider;
+    if (transition->isDelayedTransition() && !transition->getDelayVariableName().isEmpty()) {
+        const QString varName = transition->getDelayVariableName();
+        delayProvider = "[]() -> int { return " + varName + "; }";
+    } else if (hasDelay) {
+        delayProvider = "[]() -> int { return " + QString::number(delay) + "; }";
+    } else {
+        delayProvider = "[]() -> int { return 0; }";
+    }
+
     code += "    UnifiedTransition* " + transName + " = new UnifiedTransition(";
-    
     if (hasCondition) {
         code += "[]() -> bool {\n";
         code += "        return " + condition + ";\n";
@@ -438,19 +451,14 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     } else {
         code += "[]() { return true; }"; 
     }
-    
-    code += ", " + QString::number(delay);
+    code += ", " + delayProvider;
     code += ", \"" + sourceName + "\", \"" + targetName + "\"";
-    
     if (hasCondition) {
         code += ", \"" + condition.replace("\"", "\\\"") + "\"";
     }
-    
     code += ");\n";
-    
     code += "    " + sourceLower + "State->addTransition(" + transName + ");\n";
     code += "    " + transName + "->setTargetState(" + targetLower + "State);\n\n";
-    
     return code;
 }
 
@@ -500,64 +508,54 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    /**\n";
     code += "     * @brief Constructor for a unified transition that handles both conditions and delays\n";
     code += "     * @param condition A lambda function that evaluates to a boolean\n";
-    code += "     * @param delayMs Delay in milliseconds before triggering the transition (0 = no delay)\n";
+    code += "     * @param delayFn A lambda function that returns the delay in milliseconds (live value)\n";
     code += "     * @param fromState Source state name (for logging)\n";
     code += "     * @param toState Target state name (for logging)\n";
     code += "     * @param conditionStr String representation of the condition (for logging)\n";
     code += "     */\n";
     code += "    explicit UnifiedTransition(std::function<bool()> condition = []() { return true; },\n";
-    code += "                             int delayMs = 0,\n";
+    code += "                             std::function<int()> delayFn = []() { return 0; },\n";
     code += "                             const QString& fromState = QString(),\n";
     code += "                             const QString& toState = QString(),\n";
     code += "                             const QString& conditionStr = QString())\n";
     code += "        : m_condition(std::move(condition)),\n";
-    code += "          m_delay(delayMs),\n";
+    code += "          m_delayFn(std::move(delayFn)),\n";
     code += "          m_fromState(fromState),\n";
     code += "          m_toState(toState),\n";
     code += "          m_conditionStr(conditionStr),\n";
-    code += "          m_timer(nullptr),\n";
+    code += "          m_timer(new QTimer(this)),\n";
     code += "          m_conditionMet(false)\n";
     code += "    {\n";
-    code += "        if (m_delay > 0) {\n";
-    code += "            m_timer = new QTimer(this);\n";
-    code += "            m_timer->setSingleShot(true);\n";
-    code += "            connect(m_timer, &QTimer::timeout, this, &UnifiedTransition::triggerTransition);\n";
-    code += "        }\n";
+    code += "        m_timer->setSingleShot(true);\n";
+    code += "        connect(m_timer, &QTimer::timeout, this, &UnifiedTransition::triggerTransition);\n";
     code += "    }\n\n";
-    
+    code += "    // Deprecated: int delayMs overload for backward compatibility\n";
+    code += "    explicit UnifiedTransition(std::function<bool()> condition,\n";
+    code += "                             int delayMs,\n";
+    code += "                             const QString& fromState = {},\n";
+    code += "                             const QString& toState = {},\n";
+    code += "                             const QString& conditionStr = {})\n";
+    code += "        : UnifiedTransition(std::move(condition), [delayMs]() { return delayMs; }, fromState, toState, conditionStr) {}\n\n";
     code += "protected:\n";
-    code += "    /**\n";
-    code += "     * @brief Tests whether the transition should be triggered\n";
-    code += "     * @param event The event triggering the transition\n";
-    code += "     * @return True if the transition should occur, false otherwise\n";
-    code += "     */\n";
     code += "    bool eventTest(QEvent* event) override {\n";
     code += "        if (event->type() == QEvent::User + 1 && m_conditionMet) {\n";
     code += "            return true;\n";
     code += "        }\n";
-    code += "        \n";
-    code += "        // if (event->type() == InputEvent::InputChangedType) {\n";
-    code += "        //     InputEvent* inputEvent = static_cast<InputEvent*>(event);\n";
-    code += "        // }\n";
-    code += "        \n";
-    code += "        // Always re-evaluate the condition when any event occurs\n";
     code += "        try {\n";
     code += "            m_conditionMet = m_condition();\n";
     code += "            debugPrint(\"Evaluating transition from \" + m_fromState + \" to \" + m_toState + \": \" + (m_conditionMet ? \"true\" : \"false\"), 4);\n";
-    code += "            \n";
     code += "            if (!m_conditionMet) {\n";
     code += "                cancelTimerIfActive();\n";
     code += "                return false;\n";
     code += "            }\n";
-    code += "            \n";
-    code += "            if (m_delay > 0) {\n";
+    code += "            const int effDelay = m_delayFn();\n";
+    code += "            if (effDelay > 0) {\n";
     code += "                if (m_timer && !m_timer->isActive()) {\n";
-    code += "                    logTransitionStart();\n";
-    code += "                    m_timer->start(m_delay);\n";
+    code += "                    logTransitionStart(effDelay);\n";
+    code += "                    m_timer->start(effDelay);\n";
     code += "                }\n";
     code += "                return false;\n";
     code += "            }\n";
-    code += "            \n";
     code += "            return m_conditionMet;\n";
     code += "        } catch (const std::exception& e) {\n";
     code += "            debugPrint(\"Error evaluating transition condition: \" + QString::fromStdString(e.what()), 3);\n";
@@ -567,32 +565,23 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            return false;\n";
     code += "        }\n";
     code += "    }\n\n";
-    
-    code += "    /**\n";
-    code += "     * @brief Logs the transition when it occurs\n";
-    code += "     * @param event The event triggering the transition\n";
-    code += "     */\n";
     code += "    void onTransition(QEvent* event) override {\n";
     code += "        Q_UNUSED(event);\n";
-    code += "        \n";
     code += "        debugPrint(DOUBLE_SEPARATOR);\n";
-    code += "        debugPrint(\"Transition: \" + \n";
-    code += "                  ANSI_BOLD + COSMIC_DUST + m_fromState + ANSI_RESET + \n";
-    code += "                  \" \" + SYM_ARROW + \" \" + \n";
+    code += "        debugPrint(\"Transition: \" +\n";
+    code += "                  ANSI_BOLD + COSMIC_DUST + m_fromState + ANSI_RESET +\n";
+    code += "                  \" \" + SYM_ARROW + \" \" +\n";
     code += "                  ANSI_BOLD + QUANTUM_GREEN + m_toState + ANSI_RESET);\n";
-    code += "        \n";
     code += "        if (!m_conditionStr.isEmpty()) {\n";
     code += "            debugPrint(\"  Condition satisfied: \" + COLOR_NOTICE + m_conditionStr + ANSI_RESET);\n";
     code += "        }\n";
-    code += "        \n";
-    code += "        if (m_delay > 0) {\n";
-    code += "            debugPrint(\"  Delay completed: \" + COLOR_VALUE + QString::number(m_delay) + \"ms\" + ANSI_RESET);\n";
+    code += "        int effDelay = m_delayFn();\n";
+    code += "        if (effDelay > 0) {\n";
+    code += "            debugPrint(\"  Delay completed: \" + COLOR_VALUE + QString::number(effDelay) + \"ms\" + ANSI_RESET);\n";
     code += "        }\n";
     code += "        debugPrint(SECTION_SEPARATOR);\n";
-    code += "        \n";
     code += "        m_conditionMet = false;\n";
     code += "    }\n\n";
-    
     code += "private slots:\n";
     code += "    void triggerTransition() {\n";
     code += "        if (m_condition()) {\n";
@@ -600,12 +589,11 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            machine()->postEvent(customEvent);\n";
     code += "        } else {\n";
     code += "            m_conditionMet = false;\n";
-    code += "            debugPrint(\"Condition no longer valid after delay for transition \" + \n";
-    code += "                      m_fromState + \" → \" + m_toState + \n";
+    code += "            debugPrint(\"Condition no longer valid after delay for transition \" +\n";
+    code += "                      m_fromState + \" → \" + m_toState +\n";
     code += "                      \", not triggering\");\n";
     code += "        }\n";
     code += "    }\n\n";
-    
     code += "private:\n";
     code += "    void cancelTimerIfActive() {\n";
     code += "        if (m_timer && m_timer->isActive()) {\n";
@@ -613,21 +601,19 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            m_timer->stop();\n";
     code += "        }\n";
     code += "    }\n\n";
-    
-    code += "    void logTransitionStart() {\n";
-    code += "        debugPrint(\"Condition met for transition \" + \n";
-    code += "                  COSMIC_DUST + m_fromState + ANSI_RESET + \" \" + SYM_ARROW + \" \" + \n";
-    code += "                  QUANTUM_GREEN + m_toState + ANSI_RESET + \n";
-    code += "                  \", starting \" + STARDUST + QString::number(m_delay) + \"ms\" + ANSI_RESET + \" delay timer\");\n";
+    code += "    void logTransitionStart(int effDelay) {\n";
+    code += "        debugPrint(\"Condition met for transition \" +\n";
+    code += "                  COSMIC_DUST + m_fromState + ANSI_RESET + \" \" + SYM_ARROW + \" \" +\n";
+    code += "                  QUANTUM_GREEN + m_toState + ANSI_RESET +\n";
+    code += "                  \", starting \" + STARDUST + QString::number(effDelay) + \"ms\" + ANSI_RESET + \" delay timer\");\n";
     code += "    }\n\n";
-    
-    code += "    std::function<bool()> m_condition;  ///< The condition to evaluate\n";
-    code += "    int m_delay;                        ///< Delay in milliseconds (0 = no delay)\n";
-    code += "    QString m_fromState;                ///< Source state name for logging\n";
-    code += "    QString m_toState;                  ///< Target state name for logging\n";
-    code += "    QString m_conditionStr;             ///< Condition string for logging\n";
-    code += "    QTimer* m_timer;                    ///< Timer for delayed transitions\n";
-    code += "    bool m_conditionMet;                ///< Tracks whether the condition was met\n";
+    code += "    std::function<bool()> m_condition;\n";
+    code += "    std::function<int()> m_delayFn;\n";
+    code += "    QString m_fromState;\n";
+    code += "    QString m_toState;\n";
+    code += "    QString m_conditionStr;\n";
+    code += "    QTimer* m_timer;\n";
+    code += "    bool m_conditionMet;\n";
     code += "};\n\n";
 
     code += "/**\n";
