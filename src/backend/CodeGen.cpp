@@ -244,12 +244,11 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "const QString COSMIC_PURPLE = \"\\033[38;5;93m\";    // Rich cosmic purple, used for state names & headers\n";
     code += "const QString NEBULA_BLUE = \"\\033[38;5;39m\";      // Bright nebula blue, used for transition info and info level logs\n";
     code += "const QString SPACE_TEAL = \"\\033[38;5;31m\";       // Deep space teal, used for input values\n";
-    code += "const QString NEBULA_PINK = \"\\033[38;5;169m\";     // Bright nebula pink, used for output values\n";
     code += "const QString STARDUST = \"\\033[38;5;153m\";        // Light blue stardust, used for variable values\n";
     code += "const QString STAR_WHITE = \"\\033[38;5;231m\";      // Bright star white, used for command headers\n";
-    code += "const QString COSMIC_DUST = \"\\033[38;5;102m\";     // Faded cosmic dust, used for source states and notice level logs\n\n";
-    
-    code += "// Accent colors - for special highlights and alerts\n";
+    code += "const QString COSMIC_DUST = \"\\033[38;5;102m\";     // Faded cosmic dust, used for source states and notice level logs\n";
+    code += "const QString TIMEOUT_STARTED = \"\\033[38;5;177m\";    // Light purple for timeout started\n";
+    code += "const QString TIMEOUT_EXPIRED = \"\\033[38;5;213m\";    // Pink for timeout expired\n";
     code += "const QString STELLAR_PURPLE = \"\\033[38;5;141m\";  // Bright stellar purple, used for section headers\n";
     code += "const QString PULSAR_YELLOW = \"\\033[38;5;220m\";   // Pulsating yellow, used for warnings\n";
     code += "const QString QUANTUM_GREEN = \"\\033[38;5;84m\";    // Quantum field green, used for target states and success messages\n";
@@ -260,8 +259,6 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "const QString COLOR_TRANSITION = NEBULA_BLUE;     // Transition information\n";
     code += "const QString COLOR_SOURCE = COSMIC_DUST;         // Source states\n";
     code += "const QString COLOR_TARGET = QUANTUM_GREEN;       // Target states\n";
-    code += "const QString COLOR_INPUT = SPACE_TEAL;           // Input values\n";
-    code += "const QString COLOR_OUTPUT = NEBULA_PINK;         // Output values\n";
     code += "const QString COLOR_COMMAND = STAR_WHITE;         // Command headers\n";
     code += "const QString COLOR_VALUE = STARDUST;             // Variable values\n";
     code += "const QString COLOR_INFO = NEBULA_BLUE;           // Info level logs\n";
@@ -273,12 +270,10 @@ QString CodeGen::generateRuntimeMonitoring()
 
     code += "// Symbols for marking elements\n";
     code += "const QString SYM_BULLET = \"•\";       // Primary bullet point\n";
-    code += "const QString SYM_BULLET_2 = \"◦\";     // Secondary bullet point\n";
     code += "const QString SYM_STAR = \"✧\";         // Star/asterisk \n";
     code += "const QString SYM_TRIANGLE = \"▶\";     // Triangle pointer\n";
     code += "const QString SYM_ARROW = \"→\";        // Right arrow\n";
     code += "const QString SYM_SUCCESS = \"✓\";      // Success checkmark\n";
-    code += "const QString SYM_ERROR = \"✗\";        // Error symbol\n\n";
 
     code += "// Formatted UI strings for console output\n";
     code += "const QString STATE_HEADER = ANSI_BOLD + COLOR_STATE + \"════════ STATE: \" + ANSI_RESET;\n";
@@ -287,18 +282,24 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "const QString DOUBLE_SEPARATOR = COLOR_TRANSITION + \"═══════════════════════════════════════════════════\" + ANSI_RESET;\n\n";
 
     code += "/**\n";
-    code += " * @brief Logs state transitions for monitoring\n";
-    code += " * @param fromState Source state name\n";
-    code += " * @param toState Target state name\n";
+    code += " * @brief Prints a user-facing log message with formatted time (HH:mm:ss.zzz)\n";
+    code += " * @param message Log message to display\n";
     code += " */\n";
-    code += "void logStateChange(const QString& fromState, const QString& toState) {\n";
-    code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "    qDebug().noquote() << \"\";\n";
-    code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" \n";
-    code += "             << ANSI_BOLD + COLOR_TRANSITION + \"STATE CHANGE\" + ANSI_RESET + \": \"\n";
-    code += "             << COLOR_SOURCE + fromState + ANSI_RESET \n";
-    code += "             << \" \" + SYM_ARROW + \" \" \n";
-    code += "             << ANSI_BOLD + COLOR_TARGET + toState + ANSI_RESET;\n";
+    code += "void log(const QString& message) {\n";
+    code += "    QString timeStr = QDateTime::currentDateTime().toString(\"HH:mm:ss.zzz\");\n";
+    code += "    qDebug().noquote() << \"[\" << timeStr << \"]\" << message;\n";
+    code += "}\n\n";
+
+    code += "/**\n";
+    code += " * @brief Logs state transitions for monitoring\n";
+    code += " * @param stateName State name being entered\n";
+    code += " */\n";
+    code += "void logStateChange(const QString& stateName) {\n";
+    code += "    log(DOUBLE_SEPARATOR);\n";
+    code += "    log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + stateName + ANSI_RESET + \" ENTERED\");\n";
+    code += "    log(SECTION_SEPARATOR);\n";
+    code += "    log(\"Executing onEntry action for state: \" + ANSI_BOLD + stateName + ANSI_RESET);\n";
+    code += "    log(SECTION_SEPARATOR);\n";
     code += "}\n\n";
     
     code += "/**\n";
@@ -307,27 +308,17 @@ QString CodeGen::generateRuntimeMonitoring()
     code += " * @param value Input value\n";
     code += " */\n";
     code += "void logInputEvent(const QString& input, const QString& value) {\n";
-    code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "    qDebug().noquote() << \"[\" << timeMs << \"]\"\n";
-    code += "             << COLOR_INPUT + SYM_BULLET + \" INPUT\" + ANSI_RESET + \": \"\n";
-    code += "             << \"  \" + ANSI_BOLD + input + ANSI_RESET \n";
-    code += "             << \" = \" \n";
-    code += "             << COLOR_VALUE + value + ANSI_RESET;\n";
+    code += "    log(\"Input value: \" + ANSI_BOLD + input + ANSI_RESET + \" = \" + COLOR_VALUE + value + ANSI_RESET);\n";
     code += "}\n\n";
 
     
     code += "/**\n";
-    code += " * @brief Logs output values for monitoring\n";
+    code += " * @brief Logs output values for monitoring in a formatted, multi-line style\n";
     code += " * @param output Output name\n";
     code += " * @param value Output value\n";
     code += " */\n";
     code += "void logOutputEvent(const QString& output, const QString& value) {\n";
-    code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "    qDebug().noquote() << \"[\" << timeMs << \"]\"\n";
-    code += "             << COLOR_OUTPUT + SYM_BULLET + \" OUT \" + ANSI_RESET + \": \"\n";
-    code += "             << \"\" + ANSI_BOLD + output + ANSI_RESET \n";
-    code += "             << \"=\" \n";
-    code += "             << COLOR_VALUE + value + ANSI_RESET;\n";
+    code += "    log(\"Output value: \" + ANSI_BOLD + output + ANSI_RESET + \" = \" + COLOR_VALUE + value + ANSI_RESET);\n";
     code += "}\n\n";
     
     code += "/**\n";
@@ -342,41 +333,26 @@ QString CodeGen::generateRuntimeMonitoring()
     code += "}\n\n";
 
     code += "/**\n";
-    code += " * @brief Prints a user-facing log message with timestamp (vital to UX)\n";
-    code += " * @param message Log message to display\n";
-    code += " */\n";
-    code += "void log(const QString& message) {\n";
-    code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "    QString prefix = COLOR_HEADER + SYM_BULLET + \" LOG\" + ANSI_RESET + \": \";\n";
-    code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" << prefix << message;\n";
-    code += "}\n\n";
-
-    code += "/**\n";
     code += " * @brief Displays all available commands and valid inputs in a formatted way\n";
     code += " * @param validInputs Set of valid input names for this state machine\n";
     code += " * @param helpLines List of command descriptions to display\n";
     code += " */\n";
     code += "void showHelp(const QSet<QString>& validInputs, const QStringList& helpLines) {\n";
-    code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-    code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" << ANSI_BOLD + NEBULA_BLUE + \"AVAILABLE COMMANDS\" + ANSI_RESET;\n";
-    code += "    qDebug().noquote() << SECTION_SEPARATOR;\n";
-    code += "    \n";
+    code += "    log(DOUBLE_SEPARATOR);\n";
+    code += "    log(ANSI_BOLD + NEBULA_BLUE + \"AVAILABLE COMMANDS:\" + ANSI_RESET);\n";
     code += "    for (const QString& line : helpLines) {\n";
-    code += "        qDebug().noquote() << line;\n";
+    code += "        log(line);\n";
     code += "    }\n";
-    code += "    \n";
+    code += "    log(SECTION_SEPARATOR);\n";
     code += "    if (!validInputs.isEmpty()) {\n";
-    code += "        qDebug().noquote() << \"\\n\" + ANSI_BOLD + STELLAR_PURPLE + \"VALID INPUTS:\" + ANSI_RESET;\n";
-    code += "        \n";
+    code += "        log(ANSI_BOLD + STELLAR_PURPLE + \"VALID INPUTS:\" + ANSI_RESET);\n";
     code += "        QStringList sortedInputs = validInputs.values();\n";
     code += "        sortedInputs.sort();\n";
-    code += "        \n";
     code += "        for (const QString& input : sortedInputs) {\n";
-    code += "            qDebug().noquote() << \"  \" + SPACE_TEAL + input + ANSI_RESET;\n";
+    code += "            log(\"  \" + SPACE_TEAL + input + ANSI_RESET);\n";
     code += "        }\n";
     code += "    }\n";
-    code += "    \n";
-    code += "    qDebug().noquote() << SECTION_SEPARATOR;\n";
+    code += "    log(SECTION_SEPARATOR);\n";
     code += "}\n\n";
 
     return code;
@@ -534,13 +510,6 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "        m_timer->setSingleShot(true);\n";
     code += "        connect(m_timer, &QTimer::timeout, this, &UnifiedTransition::triggerTransition);\n";
     code += "    }\n\n";
-    code += "    // Deprecated: int delayMs overload for backward compatibility\n";
-    code += "    explicit UnifiedTransition(std::function<bool()> condition,\n";
-    code += "                             int delayMs,\n";
-    code += "                             const QString& fromState = {},\n";
-    code += "                             const QString& toState = {},\n";
-    code += "                             const QString& conditionStr = {})\n";
-    code += "        : UnifiedTransition(std::move(condition), [delayMs]() { return delayMs; }, fromState, toState, conditionStr) {}\n\n";
     code += "protected:\n";
     code += "    bool eventTest(QEvent* event) override {\n";
     code += "        if (event->type() == QEvent::User + 1 && m_conditionMet) {\n";
@@ -579,10 +548,11 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "private slots:\n";
     code += "    void triggerTransition() {\n";
     code += "        if (m_condition()) {\n";
-    code += "            log(QString(\"Timeout expired for transition %1 → %2 (delay: %3 ms)\")\n";
-    code += "                .arg(m_fromState)\n";
-    code += "                .arg(m_toState)\n";
-    code += "                .arg(m_delayFn()));\n";
+    code += "            log(TIMEOUT_EXPIRED + ANSI_BOLD + SYM_TRIANGLE + \" Timeout expired\" + ANSI_RESET + \" for transition \" +\n";
+    code += "                COLOR_SOURCE + m_fromState + ANSI_RESET +\n";
+    code += "                COLOR_TRANSITION + \" → \" +\n";
+    code += "                COLOR_TARGET + m_toState + ANSI_RESET +\n";
+    code += "                ANSI_RESET + \" (delay: \" + ANSI_BOLD + QString::number(m_delayFn()) + \" ms)\" + ANSI_RESET);\n";
     code += "            QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1));\n";
     code += "            machine()->postEvent(customEvent);\n";
     code += "        } else {\n";
@@ -601,10 +571,11 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "        }\n";
     code += "    }\n\n";
     code += "    void logTransitionStart(int effDelay) {\n";
-    code += "        log(QString(\"Timeout started for transition %1 → %2 (delay: %3 ms)\")\n";
-    code += "            .arg(m_fromState)\n";
-    code += "            .arg(m_toState)\n";
-    code += "            .arg(effDelay));\n";
+    code += "        log(TIMEOUT_STARTED + ANSI_BOLD + SYM_TRIANGLE + \" Timeout started\" + ANSI_RESET + \" for transition \" +\n";
+    code += "            COLOR_SOURCE + m_fromState + ANSI_RESET +\n";
+    code += "            COLOR_TRANSITION + \" → \" +\n";
+    code += "            COLOR_TARGET + m_toState + ANSI_RESET +\n";
+    code += "            ANSI_RESET + \" (delay: \" + ANSI_BOLD + QString::number(effDelay) + \" ms)\" + ANSI_RESET);\n";
     code += "        debug(\"Condition met for transition \" +\n";
     code += "              COSMIC_DUST + m_fromState + ANSI_RESET + \" \" + SYM_ARROW + \" \" +\n";
     code += "              QUANTUM_GREEN + m_toState + ANSI_RESET +\n";
@@ -661,10 +632,11 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     
     code += "    const QStringList helpLines = {\n";
     code += "        \"• \" + ANSI_BOLD + QString(\"input_name=value\").leftJustified(26) + ANSI_RESET + \"- Set an input value\",\n";
-    code += "        \"• \" + ANSI_BOLD + QString(\"input_name\").leftJustified(26) + ANSI_RESET + \"- Set an input with default value 'true'\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"input_name\").leftJustified(26) + ANSI_RESET + \"- Call an input\",\n";
     code += "        \"• \" + ANSI_BOLD + QString(\"status\").leftJustified(26) + ANSI_RESET + \"- Show the current system state\",\n";
     code += "        \"• \" + ANSI_BOLD + QString(\"help\").leftJustified(26) + ANSI_RESET + \"- Show this help message\",\n";
-    code += "        \"• \" + ANSI_BOLD + QString(\"quit/exit\").leftJustified(26) + ANSI_RESET + \"- Exit the application\"\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"quit/exit\").leftJustified(26) + ANSI_RESET + \"- Exit the application\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"debugon/debugoff\").leftJustified(26) + ANSI_RESET + \"- Turn debug statements on/off\"\n";
     code += "    };\n\n";
 
     code += "    fsm.setObjectName(\"" + fsm->getName() + "\");\n\n";
@@ -742,29 +714,29 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            \n";
     code += "            if (inputLine.isEmpty()) return;\n";
     code += "            \n";
-    code += "            if (inputLine == \"quit\" || inputLine == \"exit\") {\n";
+    code += "            if (inputLine == \"/quit\" || inputLine == \"/exit\") {\n";
     code += "                log(\"Exit command received. Terminating application.\");\n";
     code += "                QCoreApplication::quit();\n";
     code += "                return;\n";
     code += "            }\n";
     code += "            \n";
-    code += "            if (inputLine == \"help\") {\n";
+    code += "            if (inputLine == \"/help\") {\n";
     code += "                showHelp(validInputNames, helpLines);\n";
     code += "                return;\n";
     code += "            }\n";
     code += "            \n";
-    code += "            if (inputLine == \"status\") {\n";
+    code += "            if (inputLine == \"/status\") {\n";
     code += "                QString currentState = fsm.configuration().isEmpty() ? \"UNKNOWN\" : (*fsm.configuration().begin())->objectName();\n";
     code += "                log(\"Current state: \" + ANSI_BOLD + COLOR_STATE + currentState + ANSI_RESET);\n";
     code += "                return;\n";
     code += "            }\n";
     code += "            \n";
-    code += "            if (inputLine == \"debugon\") {\n";
+    code += "            if (inputLine == \"/debugon\") {\n";
     code += "                debugEnabled = true;\n";
     code += "                log(\"Debug output enabled.\");\n";
     code += "                return;\n";
     code += "            }\n";
-    code += "            if (inputLine == \"debugoff\") {\n";
+    code += "            if (inputLine == \"/debugoff\") {\n";
     code += "                debugEnabled = false;\n";
     code += "                log(\"Debug output disabled.\");\n";
     code += "                return;\n";
