@@ -633,10 +633,10 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    const QStringList helpLines = {\n";
     code += "        \"• \" + ANSI_BOLD + QString(\"input_name=value\").leftJustified(26) + ANSI_RESET + \"- Set an input value\",\n";
     code += "        \"• \" + ANSI_BOLD + QString(\"input_name\").leftJustified(26) + ANSI_RESET + \"- Call an input\",\n";
-    code += "        \"• \" + ANSI_BOLD + QString(\"status\").leftJustified(26) + ANSI_RESET + \"- Show the current system state\",\n";
-    code += "        \"• \" + ANSI_BOLD + QString(\"help\").leftJustified(26) + ANSI_RESET + \"- Show this help message\",\n";
-    code += "        \"• \" + ANSI_BOLD + QString(\"quit/exit\").leftJustified(26) + ANSI_RESET + \"- Exit the application\",\n";
-    code += "        \"• \" + ANSI_BOLD + QString(\"debugon/debugoff\").leftJustified(26) + ANSI_RESET + \"- Turn debug statements on/off\"\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"/status\").leftJustified(26) + ANSI_RESET + \"- Show the current system state\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"/help\").leftJustified(26) + ANSI_RESET + \"- Show this help message\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"/quit /exit\").leftJustified(26) + ANSI_RESET + \"- Exit the application\",\n";
+    code += "        \"• \" + ANSI_BOLD + QString(\"/debugon /debugoff\").leftJustified(26) + ANSI_RESET + \"- Turn debug statements on/off\"\n";
     code += "    };\n\n";
 
     code += "    fsm.setObjectName(\"" + fsm->getName() + "\");\n\n";
