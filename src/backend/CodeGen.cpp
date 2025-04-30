@@ -308,10 +308,17 @@ QString CodeGen::generateRuntimeMonitoring() {
 
   code += "/**\n";
   code += " * @brief Displays all available commands and valid inputs\n";
+  code += " * @param fsmName Name of the FSM\n";
+  code += " * @param fsmDescription Description of the FSM\n";
   code += " * @param validInputs Set of valid input names\n";
   code += " * @param helpLines List of command descriptions to display\n";
   code += " */\n";
-  code += "void showHelp(const QSet<QString>& validInputs, const QStringList& helpLines) {\n";
+  code += "void showHelp(const QString& fsmName, const QString& fsmDescription, const QSet<QString>& validInputs, const QStringList& helpLines) {\n";
+  code += "    log(DOUBLE_SEPARATOR);\n";
+  code += "    log(ANSI_BOLD + COLOR_HEADER + \"Machine: \" + ANSI_RESET + COLOR_STATE + fsmName + ANSI_RESET);\n";
+  code += "    if (!fsmDescription.isEmpty()) {\n";
+  code += "        log(fsmDescription);\n";
+  code += "    }\n";
   code += "    log(DOUBLE_SEPARATOR);\n";
   code += "    log(ANSI_BOLD + NEBULA_BLUE + \"AVAILABLE COMMANDS:\" + ANSI_RESET);\n";
   code += "    for (const QString& line : helpLines) {\n";
@@ -349,33 +356,28 @@ QString CodeGen::generateTransitionCode(Transition* transition,
   QString targetLower = targetName.toLower();
 
   QString condition = transition->getCondition();
+  QString event = transition->getEvent();
 
   int delay = transition->isDelayedTransition() ? transition->getDelay() : 0;
   bool hasCondition = !condition.isEmpty();
+  bool hasEvent = !event.isEmpty();
   bool hasDelay = delay > 0 || (!transition->getDelayVariableName().isEmpty() && transition->isDelayedTransition());
 
   static int transitionCounter = 0;
   QString transName = sourceLower + "To" + targetName + "Transition" + QString::number(++transitionCounter);
 
-  // For self-transitions (same source and target)
-  QString eventName = transition->getEvent().trimmed();
-  if (sourceState == targetState && !eventName.isEmpty()) {
-    if (!condition.isEmpty()) {
-      condition = "called(\"" + eventName + "\") && (" + condition + ")";
-    } else {
-      condition = "called(\"" + eventName + "\")";
-    }
-    hasCondition = true;
-  }
-
   code += "    // Create transition: " + sourceName + " → " + targetName;
-  if (hasCondition || hasDelay) {
+  if (hasEvent || hasCondition || hasDelay) {
     code += " (";
+    if (hasEvent) {
+      code += "event: " + event;
+    }
     if (hasCondition) {
+      if (hasEvent) code += ", ";
       code += "[ " + condition + " ]";
     }
     if (hasDelay) {
-      if (hasCondition) code += " ";
+      if (hasEvent || hasCondition) code += " ";
       if (!transition->getDelayVariableName().isEmpty())
         code += "@ " + transition->getDelayVariableName();
       else
@@ -396,7 +398,15 @@ QString CodeGen::generateTransitionCode(Transition* transition,
   }
 
   code += "    UnifiedTransition* " + transName + " = new UnifiedTransition(";
-  if (hasCondition) {
+  if (hasEvent && hasCondition) {
+    code += "[]() -> bool {\n";
+    code += "        return called(\"" + event + "\") && (" + condition + ");\n";
+    code += "    }";
+  } else if (hasEvent) {
+    code += "[]() -> bool {\n";
+    code += "        return called(\"" + event + "\");\n";
+    code += "    }";
+  } else if (hasCondition) {
     code += "[]() -> bool {\n";
     code += "        return " + condition + ";\n";
     code += "    }";
@@ -495,10 +505,10 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "            }\n";
   code += "            return m_conditionMet;\n";
   code += "        } catch (const std::exception& e) {\n";
-  code += "            debug(\"Error evaluating transition condition: \" + QString::fromStdString(e.what()));\n";
+  code += "            log(\"Error evaluating transition condition: \" + QString::fromStdString(e.what()));\n";
   code += "            return false;\n";
   code += "        } catch (...) {\n";
-  code += "            debug(\"Unknown error evaluating transition condition\");\n";
+  code += "            log(\"Unknown error evaluating transition condition\");\n";
   code += "            return false;\n";
   code += "        }\n";
   code += "    }\n\n";
@@ -578,6 +588,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "    // Initialize inputs and outputs\n";
   for (const QString& input : inputNames) {
     code += "    inputs[QStringLiteral(\"" + input.trimmed() + "\")] = QString();\n";
+    code += "    getEventFlags()[QStringLiteral(\"" + input.trimmed() + "\")] = false;\n";
   }
 
   for (const QString& output : outputNames) {
@@ -601,6 +612,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "    };\n\n";
 
   code += "    fsm.setObjectName(\"" + fsm->getName() + "\");\n\n";
+  code += "    fsm.setProperty(\"description\", \"" + fsm->getComment() + "\");\n\n";
 
   code += "    debug(\"Creating states...\");\n";
 
@@ -654,7 +666,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
     }
   }
 
-  code += "    showHelp(validInputNames, helpLines);\n";
+  code += "    showHelp(fsm.objectName(), fsm.property(\"description\").toString(), validInputNames, helpLines);\n";
   code += "    qDebug().noquote() << \"\";\n\n";
 
   code += "    FILE* terminalInput = fdopen(dup(STDIN_FILENO), \"r\");\n";
@@ -680,7 +692,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "            }\n";
   code += "            \n";
   code += "            if (inputLine == \"/help\") {\n";
-  code += "                showHelp(validInputNames, helpLines);\n";
+  code += "                showHelp(fsm.objectName(), fsm.property(\"description\").toString(), validInputNames, helpLines);\n";
   code += "                return;\n";
   code += "            }\n";
   code += "            \n";
