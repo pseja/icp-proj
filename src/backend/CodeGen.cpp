@@ -424,9 +424,6 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     }
     code += ", " + delayProvider;
     code += ", \"" + sourceName + "\", \"" + targetName + "\"";
-    if (hasCondition) {
-        code += ", \"" + condition.replace("\"", "\\\"") + "\"";
-    }
     code += ");\n";
     code += "    " + sourceLower + "State->addTransition(" + transName + ");\n";
     code += "    " + transName + "->setTargetState(" + targetLower + "State);\n\n";
@@ -458,17 +455,15 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "public:\n";
     code += "    static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2);\n\n";
     
-    code += "    InputEvent(const QString& name, const QString& value, bool isCallMode = false) \n";
-    code += "        : QEvent(InputChangedType), m_name(name), m_value(value), m_isCallMode(isCallMode) {}\n\n";
+    code += "    InputEvent(const QString& name, const QString& value) \n";
+    code += "        : QEvent(InputChangedType), m_name(name), m_value(value) {}\n\n";
     
     code += "    QString name() const { return m_name; }\n";
-    code += "    QString value() const { return m_value; }\n";
-    code += "    bool isCallMode() const { return m_isCallMode; }\n\n";
+    code += "    QString value() const { return m_value; }\n\n";
     
     code += "private:\n";
     code += "    QString m_name;\n";
     code += "    QString m_value;\n";
-    code += "    bool m_isCallMode;  // True if this was a pure event call without value assignment\n";
     code += "};\n\n";
 
     code += "/**\n";
@@ -482,18 +477,15 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "     * @param delayFn A lambda function that returns the delay in milliseconds (live value)\n";
     code += "     * @param fromState Source state name (for logging)\n";
     code += "     * @param toState Target state name (for logging)\n";
-    code += "     * @param conditionStr String representation of the condition (for logging)\n";
     code += "     */\n";
     code += "    explicit UnifiedTransition(std::function<bool()> condition = []() { return true; },\n";
     code += "                             std::function<int()> delayFn = []() { return 0; },\n";
     code += "                             const QString& fromState = QString(),\n";
-    code += "                             const QString& toState = QString(),\n";
-    code += "                             const QString& conditionStr = QString())\n";
+    code += "                             const QString& toState = QString())\n";
     code += "        : m_condition(std::move(condition)),\n";
     code += "          m_delayFn(std::move(delayFn)),\n";
     code += "          m_fromState(fromState),\n";
     code += "          m_toState(toState),\n";
-    code += "          m_conditionStr(conditionStr),\n";
     code += "          m_timer(new QTimer(this)),\n";
     code += "          m_conditionMet(false)\n";
     code += "    {\n";
@@ -575,7 +567,6 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "    std::function<int()> m_delayFn;\n";
     code += "    QString m_fromState;\n";
     code += "    QString m_toState;\n";
-    code += "    QString m_conditionStr;\n";
     code += "    QTimer* m_timer;\n";
     code += "    bool m_conditionMet;\n";
     code += "    bool m_timerArmed = false;\n";
@@ -748,14 +739,14 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "                    debug(\"[DEBUG] SET MODE for '\" + name + \"' with value '\" + value + \"'\");\n";
     code += "                    inputs[name] = value;\n";
     code += "                    logInputEvent(name, value);\n";
-    code += "                    fsm.postEvent(new InputEvent(name, value, false));\n";
+    code += "                    fsm.postEvent(new InputEvent(name, value));\n";
     code += "                } else {\n";
     code += "                    // CALL mode: treat as pure event without changing stored value\n";
     code += "                    QString lastValue = inputs.contains(name) ? inputs[name] : QString();\n";
     code += "                    logInputEvent(name, lastValue);\n";
     code += "                    // Mark this input as having been called for event-based transitions\n";
     code += "                    setInputCalled(name);\n";
-    code += "                    fsm.postEvent(new InputEvent(name, lastValue, true));\n";
+    code += "                    fsm.postEvent(new InputEvent(name, lastValue));\n";
     code += "                }\n";
     code += "            } else {\n";
     code += "                log(\"Unrecognized command: \" + ANSI_BOLD + WARP_RED + inputLine + ANSI_RESET);\n";
