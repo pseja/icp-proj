@@ -99,23 +99,14 @@ QString CodeGen::generateHelperFunctions()
     code += "}\n\n";
     
     code += "/**\n";
-    code += " * @brief Safely converts a string to an integer\n";
+    code += " * @brief Converts a string to an integer safely (returns 0 if conversion fails)\n";
     code += " * @param str String to convert\n";
     code += " * @return Integer value, or 0 if conversion fails\n";
     code += " */\n";
-    code += "int atoi_safe(const QString &str) {\n";
+    code += "int atoi(const QString &str) {\n";
     code += "    bool ok = false;\n";
     code += "    int value = str.toInt(&ok);\n";
     code += "    return ok ? value : 0;\n";
-    code += "}\n\n";
-    
-    code += "/**\n";
-    code += " * @brief Direct replacement for C's atoi that handles QString inputs\n";
-    code += " * @param str String to convert\n";
-    code += " * @return Integer value or 0 if conversion fails\n";
-    code += " */\n";
-    code += "int atoi(const QString &str) {\n";
-    code += "    return atoi_safe(str);\n";
     code += "}\n\n";
     
     code += "/**\n";
@@ -375,7 +366,6 @@ QString CodeGen::generateTransitionCode(Transition *transition,
     QString targetLower = targetName.toLower();
     
     QString condition = transition->getCondition();
-    condition = condition.replace("atoi(", "atoi_safe(");
     
     int delay = transition->isDelayedTransition() ? transition->getDelay() : 0;
     bool hasCondition = !condition.isEmpty();
@@ -524,10 +514,10 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     code += "            }\n";
     code += "            const int effDelay = m_delayFn();\n";
     code += "            if (effDelay > 0) {\n";
-    code += "                if (!m_timerArmed) {\n";                      // ← NEW
+    code += "                if (!m_timerArmed) {\n";
     code += "                    logTransitionStart(effDelay);\n";
     code += "                    m_timer->start(effDelay);\n";
-    code += "                    m_timerArmed = true;                     // ← NEW\n";
+    code += "                    m_timerArmed = true;\n";
     code += "                }\n";
     code += "                return false;\n";
     code += "            }\n";
@@ -654,8 +644,7 @@ QString CodeGen::generateQStateMachineMain(FSM *fsm)
     
         QString onEntry = state->getCode();
         if (!onEntry.isEmpty()) {
-            onEntry = onEntry.replace("atoi(", "atoi_safe(");
-            
+
             code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
             code += "        log(DOUBLE_SEPARATOR);\n";
             code += "        log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
