@@ -119,11 +119,13 @@ QString CodeGen::generateHelperFunctions() {
   code += "/**\n";
   code += " * @brief Sends an output value to a specific port\n";
   code += " * @param port Output port name\n";
-  code += " * @param value Integer value to send\n";
+  code += " * @param value Value to send\n";
   code += " */\n";
-  code += "void output(const QString &port, int value) {\n";
-  code += "    outputs[port] = QString::number(value);\n";
-  code += "    logOutputEvent(port, QString::number(value));\n";
+  code += "template<typename T>\n";
+  code += "void output(const QString &port, const T& value) {\n";
+  code += "    debug(QString(\"output('%1', %2)\").arg(port).arg(QVariant(value).toString()));\n";
+  code += "    outputs[port] = QString::fromUtf8(QVariant(value).toString().toUtf8());\n";
+  code += "    logOutputEvent(port, outputs[port]);\n";
   code += "}\n\n";
 
   code += "/**\n";
@@ -131,20 +133,18 @@ QString CodeGen::generateHelperFunctions() {
   code += " * @return Milliseconds elapsed since entering the current state\n";
   code += " */\n";
   code += "int elapsed() {\n";
-  code += "    static QString lastStateName;\n";
-  code += "    static qint64 entryTime = 0;\n";
   code += "    if (fsm.configuration().isEmpty()) { return 0; }\n";
   code += "    QState* currentState = static_cast<QState*>(*fsm.configuration().begin());\n";
-  code += "    QString currentStateName = currentState->objectName();\n";
-  code += "    qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-  code += "    if (lastStateName != currentStateName) {\n";
-  code += "        entryTime = now;\n";
-  code += "        lastStateName = currentStateName;\n";
-  code += "    }\n";
-  code += "    if (entryTime == 0) {\n";
+  code += "    QVariant entryTimeVar = currentState->property(\"entryTime\");\n";
+  code += "    if (!entryTimeVar.isValid() || !entryTimeVar.canConvert<qint64>()) {\n";
+  code += "        debug(\"elapsed(): entryTime property is invalid or not a qint64\");\n";
   code += "        return 0;\n";
   code += "    }\n";
-  code += "    return now - entryTime;\n";
+  code += "    qint64 entryTime = entryTimeVar.toLongLong();\n";
+  code += "    qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+  code += "    int diff = static_cast<int>(now - entryTime);\n";
+  code += "    debug(QString(\"elapsed(): entryTime=%1, now=%2, diff=%3\").arg(entryTime).arg(now).arg(diff));\n";
+  code += "    return diff;\n";
   code += "}\n\n";
 
   code += "// Shared event flags for tracking input calls\n";
@@ -173,6 +173,43 @@ QString CodeGen::generateHelperFunctions() {
   code += "void setInputCalled(const QString &input) {\n";
   code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
   code += "    eventFlags[input] = true;\n";
+  code += "}\n\n";
+
+  code += "/******************************************************************************\n";
+  code += " * Timer management for delayed transitions\n";
+  code += " ******************************************************************************/\n\n";
+
+  code += "QMap<QString, QTimer*>& getGlobalTimers() {\n";
+  code += "    static QMap<QString, QTimer*> timers;\n";
+  code += "    return timers;\n";
+  code += "}\n\n";
+
+  code += "void registerTimer(const QString& transitionId, QTimer* timer) {\n";
+  code += "    debug(QString(\"registerTimer('%1')\").arg(transitionId));\n";
+  code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
+  code += "    if (timers.contains(transitionId)) {\n";
+  code += "        QTimer* oldTimer = timers[transitionId];\n";
+  code += "        if (oldTimer && oldTimer->isActive()) {\n";
+  code += "            debug(QString(\"Stopping old timer for '%1'\").arg(transitionId));\n";
+  code += "            oldTimer->stop();\n";
+  code += "        }\n";
+  code += "    }\n";
+  code += "    timers[transitionId] = timer;\n";
+  code += "    debug(QString(\"Timer registered for '%1'\").arg(transitionId));\n";
+  code += "}\n\n";
+
+  code += "void unregisterTimer(const QString& transitionId) {\n";
+  code += "    debug(QString(\"unregisterTimer('%1')\").arg(transitionId));\n";
+  code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
+  code += "    if (timers.contains(transitionId)) {\n";
+  code += "        QTimer* timer = timers[transitionId];\n";
+  code += "        if (timer && timer->isActive()) {\n";
+  code += "            debug(QString(\"Stopping timer for '%1'\").arg(transitionId));\n";
+  code += "            timer->stop();\n";
+  code += "        }\n";
+  code += "        timers.remove(transitionId);\n";
+  code += "        debug(QString(\"Timer unregistered for '%1'\").arg(transitionId));\n";
+  code += "    }\n";
   code += "}\n\n";
 
   return code;
@@ -205,7 +242,6 @@ QString CodeGen::generateVariableDeclarations(FSM* fsm) {
     }
     code += "\n";
   }
-
   return code;
 }
 
@@ -490,6 +526,9 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "        m_timer->setSingleShot(true);\n";
   code += "        connect(m_timer, &QTimer::timeout, this, &UnifiedTransition::triggerTransition);\n";
   code += "    }\n\n";
+  code += "    void resetTimerArmed() { m_timerArmed = false; }\n";
+  code += "    QString fromStateName() const { return m_fromState; }\n";
+  code += "    QString toStateName() const { return m_toState; }\n\n";
   code += "protected:\n";
   code += "    bool eventTest(QEvent* event) override {\n";
   code += "        if (event->type() == QEvent::User + 1 && m_timerExpired) {\n";
@@ -586,6 +625,33 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "    bool m_timerExpired = false;\n";
   code += "};\n\n";
 
+  code += "void clearTimersForState(const QString& stateName) {\n";
+  code += "    debug(QString(\"clearTimersForState('%1')\").arg(stateName));\n";
+  code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
+  code += "    QList<QString> toRemove;\n";
+  code += "    for (auto it = timers.begin(); it != timers.end(); ++it) {\n";
+  code += "        if (it.key().startsWith(stateName + \"->\")) {\n";
+  code += "            if (it.value() && it.value()->isActive()) {\n";
+  code += "                debug(QString(\"Stopping timer for transition '%1'\").arg(it.key()));\n";
+  code += "                it.value()->stop();\n";
+  code += "            }\n";
+  code += "            toRemove.append(it.key());\n";
+  code += "        }\n";
+  code += "    }\n";
+  code += "    for (const QString& key : toRemove) {\n";
+  code += "        timers.remove(key);\n";
+  code += "        debug(QString(\"Timer cleared for transition '%1'\").arg(key));\n";
+  code += "    }\n";
+  code += "    // Reset m_timerArmed for all UnifiedTransitions from this state\n";
+  code += "    for (QAbstractTransition* t : fsm.findChildren<QAbstractTransition*>()) {\n";
+  code += "        auto ut = dynamic_cast<UnifiedTransition*>(t);\n";
+  code += "        if (ut && ut->fromStateName() == stateName) {\n";
+  code += "            ut->resetTimerArmed();\n";
+  code += "            debug(QString(\"[clearTimersForState] Reset m_timerArmed for transition from '%1' to '%2'\").arg(ut->fromStateName()).arg(ut->toStateName()));\n";
+  code += "        }\n";
+  code += "    }\n";
+  code += "}\n\n";
+
   code += "/**\n";
   code += " * @brief Main function that uses QStateMachine for state management\n";
   code += " */\n";
@@ -641,6 +707,8 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
 
   code += "    debug(\"Creating states...\");\n";
 
+  code += "    // Global variable to track the last entered state\n";
+  code += "    static QString globalPrevStateName;\n";
   for (auto it = allStates.begin(); it != allStates.end(); ++it) {
     State* state = it.value();
     QString stateName = state->getName();
@@ -648,26 +716,29 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
 
     code += "    QState* " + stateLower + "State = new QState(&fsm);\n";
     code += "    " + stateLower + "State->setObjectName(\"" + stateName + "\");\n";
-    code += "    debug(\"  Created state: \" + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET);\n";
 
     QString onEntry = state->getCode();
+    code += "    QObject::connect(" + stateLower + "State, &QState::entered, [=]() {\n";
+    code += "        QString prevStateName = globalPrevStateName;\n";
+    code += "        QString currentStateName = \"" + stateName + "\";\n";
+    code += "        if (prevStateName != currentStateName) {\n";
+    code += "            qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+    code += "            " + stateLower + "State->setProperty(\"entryTime\", QVariant::fromValue(now));\n";
+    code += "        }\n";
+    code += "        globalPrevStateName = currentStateName;\n";
+    code += "        log(DOUBLE_SEPARATOR);\n";
+    code += "        log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
+    code += "        log(SECTION_SEPARATOR);\n";
     if (!onEntry.isEmpty()) {
-      code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
-      code += "        log(DOUBLE_SEPARATOR);\n";
-      code += "        log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
-      code += "        log(SECTION_SEPARATOR);\n";
       code += "        log(\"Executing onEntry action for state: \" + ANSI_BOLD + \"" + stateName + "\" + ANSI_RESET);\n";
       code += "        " + onEntry + "\n";
-      code += "        log(SECTION_SEPARATOR);\n";
-      code += "    });\n";
-    } else {
-      code += "    QObject::connect(" + stateLower + "State, &QState::entered, []() {\n";
-      code += "        log(DOUBLE_SEPARATOR);\n";
-      code += "        log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
-      code += "        log(SECTION_SEPARATOR);\n";
-      code += "    });\n";
     }
-    code += "\n";
+    code += "        log(SECTION_SEPARATOR);\n";
+    code += "    });\n\n";
+
+    code += "    QObject::connect(" + stateLower + "State, &QState::exited, []() {\n";
+    code += "        clearTimersForState(\"" + stateName + "\");\n";
+    code += "    });\n\n";
   }
 
   code += "    fsm.setInitialState(" + initialStateName.toLower() + "State);\n";
