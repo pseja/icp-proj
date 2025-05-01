@@ -142,8 +142,8 @@ QString CodeGen::generateHelperFunctions() {
 
   code += "// Shared event flags for tracking input calls\n";
   code += "QMap<QString, bool>& getEventFlags() {\n";
-  code += "    static QMap<QString, bool>* flags = new QMap<QString, bool>();\n";
-  code += "    return *flags;\n";
+  code += "    static QMap<QString, bool> flags;\n";
+  code += "    return flags;\n";
   code += "}\n\n";
 
   code += "/**\n";
@@ -594,8 +594,9 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "    debug(\"State machine name: \" + ANSI_BOLD + COLOR_STATE + \"" + fsm->getName() + "\" + ANSI_RESET);\n";
 
   code += "    std::signal(SIGINT, [](int) {\n";
-  code += "        qDebug().noquote() << \"\";\n";
-  code += "        debug(ANSI_BOLD + COLOR_ERROR + \"Interrupt received. Exiting gracefully...\" + ANSI_RESET);\n";
+  code += "        log(DOUBLE_SEPARATOR);\n";
+  code += "        log(ANSI_BOLD + COLOR_WARNING + \"SIGINT (Ctrl+C) received. Exiting application.\" + ANSI_RESET);\n";
+  code += "        log(DOUBLE_SEPARATOR);\n";
   code += "        QCoreApplication::quit();\n";
   code += "    });\n\n";
 
@@ -759,6 +760,15 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "            } else {\n";
   code += "                log(\"Unrecognized command: \" + ANSI_BOLD + WARP_RED + inputLine + ANSI_RESET);\n";
   code += "            }\n";
+  code += "        } else {\n";
+  code += "            log(DOUBLE_SEPARATOR);\n";
+  code += "            log(ANSI_BOLD + COLOR_WARNING + \"EOF (Ctrl+D) received. Exiting application.\" + ANSI_RESET);\n";
+  code += "            log(DOUBLE_SEPARATOR);\n";
+  code += "            if (terminalInput) {\n";
+  code += "                fclose(terminalInput);\n";
+  code += "                terminalInput = nullptr;\n";
+  code += "            }\n";
+  code += "            QCoreApplication::quit();\n";
   code += "        }\n";
   code += "    });\n\n";
 
@@ -766,12 +776,6 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "    fsm.start();\n";
   code += "    debug(COLOR_SUCCESS + SYM_SUCCESS + \" Transition engine activated successfully\" + ANSI_RESET);\n";
   code += "    qDebug().noquote() << \"\";\n\n";
-
-  code += "    QObject::connect(&app, &QCoreApplication::aboutToQuit, [terminalInput]() {\n";
-  code += "        if (terminalInput) {\n";
-  code += "            fclose(terminalInput);\n";
-  code += "        }\n";
-  code += "    });\n\n";
 
   code += "    int result = app.exec();\n";
   code += "    debug(\"Application terminated with code \" + QString::number(result));\n";
