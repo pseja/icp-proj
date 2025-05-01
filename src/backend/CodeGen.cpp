@@ -10,16 +10,20 @@
 #include "variable.hpp"
 
 /**
- * @brief Constructor for the CodeGen class
- * @param parent The parent QObject
+ * @brief Constructor for the CodeGen class.
+ * @param parent The parent QObject.
  */
 CodeGen::CodeGen(QObject* parent) : QObject(parent) {
 }
 
 /**
- * @brief Top-level entry for generating code from an FSM memory representation
- * @param fsm The state machine to generate code from
- * @return Generated C++ code as a QString
+ * @brief Generates C++ code from an FSM memory representation.
+ *
+ * This is the top-level entry point for code generation. It assembles all code sections
+ * including headers, variable declarations, runtime monitoring, helper functions, and the main function.
+ *
+ * @param fsm The state machine to generate code from.
+ * @return Generated C++ code as a QString.
  */
 QString CodeGen::generateCode(FSM* fsm) {
   QString code;
@@ -46,8 +50,8 @@ QString CodeGen::generateCode(FSM* fsm) {
 }
 
 /**
- * @brief Generates standard C++ header includes
- * @return Code section as QString
+ * @brief Generates standard C++ header includes for the generated file.
+ * @return Code section as QString.
  */
 QString CodeGen::generateHeaders() {
   QString code;
@@ -74,20 +78,23 @@ QString CodeGen::generateHeaders() {
 }
 
 /**
- * @brief Provides basic helpers for managing input/output values
- * @return Code section as QString
+ * @brief Provides basic helpers for managing input/output values and timers.
+ *
+ * Includes utility functions for value access, conversion, event flagging, and timer management.
+ * 
+ * @return Code section as QString.
  */
 QString CodeGen::generateHelperFunctions() {
   QString code;
 
   code += "/******************************************************************************\n";
   code += " * Utility functions for input/output and value handling\n";
-  code += " ******************************************************************************/\n\n";
+  code += " ******************************************************************************/\n";
 
   code += "/**\n";
-  code += " * @brief Gets the string value of an input\n";
-  code += " * @param input Input name\n";
-  code += " * @return Current string value of the input, or empty string if not found\n";
+  code += " * @brief Gets the value of an input.\n";
+  code += " * @param input Input name.\n";
+  code += " * @return Current value of the input as a string, or empty if not found.\n";
   code += " */\n";
   code += "QString valueof(const QString &input) {\n";
   code += "    if (inputs.contains(input)) {\n";
@@ -97,9 +104,9 @@ QString CodeGen::generateHelperFunctions() {
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Converts a string to an integer\n";
-  code += " * @param str String to convert\n";
-  code += " * @return Integer value, or 0 if conversion fails\n";
+  code += " * @brief Converts a string to an integer.\n";
+  code += " * @param str String to convert.\n";
+  code += " * @return Integer value, or 0 if conversion fails.\n";
   code += " */\n";
   code += "int atoi(const QString &str) {\n";
   code += "    bool ok = false;\n";
@@ -108,29 +115,29 @@ QString CodeGen::generateHelperFunctions() {
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Checks if an input is defined and has a non-empty value\n";
-  code += " * @param input Input name to check\n";
-  code += " * @return True if the input exists and has a value\n";
+  code += " * @brief Checks if an input is defined and has a non-empty value.\n";
+  code += " * @param input Input name to check.\n";
+  code += " * @return True if the input exists and has a value.\n";
   code += " */\n";
   code += "bool defined(const QString &input) {\n";
   code += "    return inputs.contains(input) && !inputs[input].isEmpty();\n";
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Sends an output value to a specific port\n";
-  code += " * @param port Output port name\n";
-  code += " * @param value Value to send\n";
+  code += " * @brief Sends an output value.\n";
+  code += " * @param port Output destination.\n";
+  code += " * @param value Value to send (any type supported by QVariant).\n";
   code += " */\n";
-  code += "template<typename T>\n";
-  code += "void output(const QString &port, const T& value) {\n";
-  code += "    debug(QString(\"output('%1', %2)\").arg(port).arg(QVariant(value).toString()));\n";
-  code += "    outputs[port] = QString::fromUtf8(QVariant(value).toString().toUtf8());\n";
+  code += "void output(const QString &port, const QVariant &value) {\n";
+  code += "    QString valueStr = value.toString();\n";
+  code += "    debug(QString(\"output('%1', %2)\").arg(port).arg(valueStr));\n";
+  code += "    outputs[port] = valueStr;\n";
   code += "    logOutputEvent(port, outputs[port]);\n";
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Returns time elapsed since state entry in milliseconds\n";
-  code += " * @return Milliseconds elapsed since entering the current state\n";
+  code += " * @brief Returns time elapsed since state entry in milliseconds.\n";
+  code += " * @return Milliseconds elapsed since entering the current state.\n";
   code += " */\n";
   code += "int elapsed() {\n";
   code += "    if (fsm.configuration().isEmpty()) { return 0; }\n";
@@ -154,9 +161,9 @@ QString CodeGen::generateHelperFunctions() {
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Checks if an input was called as an event (regardless of value)\n";
-  code += " * @param input Input name to check\n";
-  code += " * @return True if the input was triggered as an event\n";
+  code += " * @brief Checks if an input was called as an event (regardless of value).\n";
+  code += " * @param input Input name to check.\n";
+  code += " * @return True if the input was triggered as an event.\n";
   code += " */\n";
   code += "bool called(const QString &input) {\n";
   code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
@@ -167,8 +174,8 @@ QString CodeGen::generateHelperFunctions() {
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Sets the trigger flag for an input\n";
-  code += " * @param input Input name to mark as called\n";
+  code += " * @brief Sets the trigger flag for an input.\n";
+  code += " * @param input Input name to mark as called.\n";
   code += " */\n";
   code += "void setInputCalled(const QString &input) {\n";
   code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
@@ -177,13 +184,22 @@ QString CodeGen::generateHelperFunctions() {
 
   code += "/******************************************************************************\n";
   code += " * Timer management for delayed transitions\n";
-  code += " ******************************************************************************/\n\n";
+  code += " ******************************************************************************/\n";
 
+  code += "/**\n";
+  code += " * @brief Returns a reference to the global timer map.\n";
+  code += " * @return Reference to QMap of timers.\n";
+  code += " */\n";
   code += "QMap<QString, QTimer*>& getGlobalTimers() {\n";
   code += "    static QMap<QString, QTimer*> timers;\n";
   code += "    return timers;\n";
   code += "}\n\n";
 
+  code += "/**\n";
+  code += " * @brief Registers a timer for a transition, replacing any existing timer.\n";
+  code += " * @param transitionId Unique transition identifier.\n";
+  code += " * @param timer Timer to register.\n";
+  code += " */\n";
   code += "void registerTimer(const QString& transitionId, QTimer* timer) {\n";
   code += "    debug(QString(\"registerTimer('%1')\").arg(transitionId));\n";
   code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
@@ -198,6 +214,10 @@ QString CodeGen::generateHelperFunctions() {
   code += "    debug(QString(\"Timer registered for '%1'\").arg(transitionId));\n";
   code += "}\n\n";
 
+  code += "/**\n";
+  code += " * @brief Unregisters and stops a timer for a transition.\n";
+  code += " * @param transitionId Unique transition identifier.\n";
+  code += " */\n";
   code += "void unregisterTimer(const QString& transitionId) {\n";
   code += "    debug(QString(\"unregisterTimer('%1')\").arg(transitionId));\n";
   code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
@@ -216,9 +236,9 @@ QString CodeGen::generateHelperFunctions() {
 }
 
 /**
- * @brief Generates global declarations for standard and custom FSM variables
- * @param fsm State machine containing variable definitions
- * @return Code section as QString
+ * @brief Generates global declarations for standard and custom FSM variables.
+ * @param fsm State machine containing variable definitions.
+ * @return Code section as QString.
  */
 QString CodeGen::generateVariableDeclarations(FSM* fsm) {
   QString code;
@@ -246,47 +266,47 @@ QString CodeGen::generateVariableDeclarations(FSM* fsm) {
 }
 
 /**
- * @brief Provides logging functions for state transitions, events, and debugging
- * @return Code section as QString
+ * @brief Provides logging functions for state transitions, events, and debugging.
+ * @return Code section as QString.
  */
 QString CodeGen::generateRuntimeMonitoring() {
   QString code;
 
   code += "/******************************************************************************\n";
   code += " * Runtime monitoring and debugging\n";
-  code += " ******************************************************************************/\n\n";
+  code += " ******************************************************************************/\n";
 
   code += "// ANSI basic formatting codes\n";
   code += "const QString ANSI_RESET = \"\\033[0m\";\n";
   code += "const QString ANSI_BOLD = \"\\033[1m\";\n";
   code += "\n";
 
-  code += "const QString COSMIC_PURPLE = \"\\033[38;5;93m\";    // Rich cosmic purple, used for state names & headers\n";
-  code += "const QString NEBULA_BLUE = \"\\033[38;5;39m\";      // Bright nebula blue, used for transition info and info level logs\n";
-  code += "const QString SPACE_TEAL = \"\\033[38;5;31m\";       // Deep space teal, used for input values\n";
-  code += "const QString STARDUST = \"\\033[38;5;153m\";        // Light blue stardust, used for variable values\n";
-  code += "const QString STAR_WHITE = \"\\033[38;5;231m\";      // Bright star white, used for command headers\n";
-  code += "const QString COSMIC_DUST = \"\\033[38;5;102m\";     // Faded cosmic dust, used for source states and notice level logs\n";
-  code += "const QString TIMEOUT_STARTED = \"\\033[38;5;177m\"; // Light purple for timeout started\n";
-  code += "const QString TIMEOUT_EXPIRED = \"\\033[38;5;213m\"; // Pink for timeout expired\n";
-  code += "const QString STELLAR_PURPLE = \"\\033[38;5;141m\";  // Bright stellar purple, used for section headers\n";
-  code += "const QString PULSAR_YELLOW = \"\\033[38;5;220m\";   // Pulsating yellow, used for warnings\n";
-  code += "const QString QUANTUM_GREEN = \"\\033[38;5;84m\";    // Quantum field green, used for target states and success messages\n";
-  code += "const QString WARP_RED = \"\\033[38;5;196m\";        // Warp field red, used for error messages\n\n";
+  code += "const QString COSMIC_PURPLE = \"\\033[38;5;93m\";\n";
+  code += "const QString NEBULA_BLUE = \"\\033[38;5;39m\";\n";
+  code += "const QString SPACE_TEAL = \"\\033[38;5;31m\";\n";
+  code += "const QString STARDUST = \"\\033[38;5;153m\";\n";
+  code += "const QString STAR_WHITE = \"\\033[38;5;231m\";\n";
+  code += "const QString COSMIC_DUST = \"\\033[38;5;102m\";\n";
+  code += "const QString TIMEOUT_STARTED = \"\\033[38;5;177m\";\n";
+  code += "const QString TIMEOUT_EXPIRED = \"\\033[38;5;213m\";\n";
+  code += "const QString STELLAR_PURPLE = \"\\033[38;5;141m\";\n";
+  code += "const QString PULSAR_YELLOW = \"\\033[38;5;220m\";\n";
+  code += "const QString QUANTUM_GREEN = \"\\033[38;5;84m\";\n";
+  code += "const QString WARP_RED = \"\\033[38;5;196m\";\n\n";
 
   code += "// Semantic color mappings - function-based color assignments\n";
-  code += "const QString COLOR_STATE = COSMIC_PURPLE;    // State names & headers\n";
-  code += "const QString COLOR_TRANSITION = NEBULA_BLUE; // Transition information\n";
-  code += "const QString COLOR_SOURCE = COSMIC_DUST;     // Source states\n";
-  code += "const QString COLOR_TARGET = QUANTUM_GREEN;   // Target states\n";
-  code += "const QString COLOR_COMMAND = STAR_WHITE;     // Command headers\n";
-  code += "const QString COLOR_VALUE = STARDUST;         // Variable values\n";
-  code += "const QString COLOR_INFO = NEBULA_BLUE;       // Info level logs\n";
-  code += "const QString COLOR_NOTICE = COSMIC_DUST;     // Notice level logs\n";
-  code += "const QString COLOR_WARNING = PULSAR_YELLOW;  // Warning level logs\n";
-  code += "const QString COLOR_ERROR = WARP_RED;         // Error level logs\n";
-  code += "const QString COLOR_SUCCESS = QUANTUM_GREEN;  // Success messages\n";
-  code += "const QString COLOR_HEADER = STELLAR_PURPLE;  // Section headers\n\n";
+  code += "const QString COLOR_STATE = COSMIC_PURPLE;\n";
+  code += "const QString COLOR_TRANSITION = NEBULA_BLUE;\n";
+  code += "const QString COLOR_SOURCE = COSMIC_DUST;\n";
+  code += "const QString COLOR_TARGET = QUANTUM_GREEN;\n";
+  code += "const QString COLOR_COMMAND = STAR_WHITE;\n";
+  code += "const QString COLOR_VALUE = STARDUST;\n";
+  code += "const QString COLOR_INFO = NEBULA_BLUE;\n";
+  code += "const QString COLOR_NOTICE = COSMIC_DUST;\n";
+  code += "const QString COLOR_WARNING = PULSAR_YELLOW;\n";
+  code += "const QString COLOR_ERROR = WARP_RED;\n";
+  code += "const QString COLOR_SUCCESS = QUANTUM_GREEN;\n";
+  code += "const QString COLOR_HEADER = STELLAR_PURPLE;\n\n";
 
   code += "const QString SYM_BULLET = \"•\";\n";
   code += "const QString SYM_STAR = \"✧\";\n";
@@ -300,8 +320,8 @@ QString CodeGen::generateRuntimeMonitoring() {
   code += "const QString DOUBLE_SEPARATOR = COLOR_TRANSITION + \"═══════════════════════════════════════════════════\" + ANSI_RESET;\n\n";
 
   code += "/**\n";
-  code += " * @brief Prints a log message\n";
-  code += " * @param message Log message to display\n";
+  code += " * @brief Prints a log message.\n";
+  code += " * @param message Log message to display.\n";
   code += " */\n";
   code += "void log(const QString& message) {\n";
   code += "    QString timeStr = QDateTime::currentDateTime().toString(\"HH:mm:ss.zzz\");\n";
@@ -309,8 +329,8 @@ QString CodeGen::generateRuntimeMonitoring() {
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Logs state transitions for monitoring\n";
-  code += " * @param stateName State name being entered\n";
+  code += " * @brief Logs state transitions for monitoring.\n";
+  code += " * @param stateName State name being entered.\n";
   code += " */\n";
   code += "void logStateChange(const QString& stateName) {\n";
   code += "    log(DOUBLE_SEPARATOR);\n";
@@ -321,40 +341,40 @@ QString CodeGen::generateRuntimeMonitoring() {
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Logs input values for monitoring\n";
-  code += " * @param input Input name\n";
-  code += " * @param value Input value\n";
+  code += " * @brief Logs input values for monitoring.\n";
+  code += " * @param input Input name.\n";
+  code += " * @param value Input value.\n";
   code += " */\n";
   code += "void logInputEvent(const QString& input, const QString& value) {\n";
   code += "    log(\"Input value: \" + ANSI_BOLD + input + ANSI_RESET + \" = \" + COLOR_VALUE + value + ANSI_RESET);\n";
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Logs output values for monitoring\n";
-  code += " * @param output Output name\n";
-  code += " * @param value Output value\n";
+  code += " * @brief Logs output values for monitoring.\n";
+  code += " * @param output Output name.\n";
+  code += " * @param value Output value.\n";
   code += " */\n";
   code += "void logOutputEvent(const QString& output, const QString& value) {\n";
   code += "    log(\"Output value: \" + ANSI_BOLD + output + ANSI_RESET + \" = \" + COLOR_VALUE + value + ANSI_RESET);\n";
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Prints a debug message if debugEnabled is true\n";
-  code += " * @param message Debug message to display\n";
+  code += " * @brief Prints a debug message if debugEnabled is true.\n";
+  code += " * @param message Debug message to display.\n";
   code += " */\n";
   code += "void debug(const QString& message) {\n";
   code += "    if (!debugEnabled) return;\n";
-  code += "    qint64 timeMs = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+  code += "    QString timeStr = QDateTime::currentDateTime().toString(\"HH:mm:ss.zzz\");\n";
   code += "    QString prefix = COLOR_INFO + SYM_BULLET + \" DEBUG\" + ANSI_RESET + \": \";\n";
-  code += "    qDebug().noquote() << \"[\" << timeMs << \"]\" << prefix << message;\n";
+  code += "    qDebug().noquote() << \"[\" << timeStr << \"]\" << prefix << message;\n";
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Displays all available commands and valid inputs\n";
-  code += " * @param fsmName Name of the FSM\n";
-  code += " * @param fsmDescription Description of the FSM\n";
-  code += " * @param validInputs Set of valid input names\n";
-  code += " * @param helpLines List of command descriptions to display\n";
+  code += " * @brief Displays all available commands and valid inputs.\n";
+  code += " * @param fsmName Name of the FSM.\n";
+  code += " * @param fsmDescription Description of the FSM.\n";
+  code += " * @param validInputs Set of valid input names.\n";
+  code += " * @param helpLines List of command descriptions to display.\n";
   code += " */\n";
   code += "void showHelp(const QString& fsmName, const QString& fsmDescription, const QSet<QString>& validInputs, const QStringList& helpLines) {\n";
   code += "    log(DOUBLE_SEPARATOR);\n";
@@ -383,11 +403,11 @@ QString CodeGen::generateRuntimeMonitoring() {
 }
 
 /**
- * @brief Generate code for a transition
- * @param transition The transition
- * @param sourceState Source state
- * @param targetState Target state
- * @return Generated C++ code for the transition
+ * @brief Generate code for a transition.
+ * @param transition The transition.
+ * @param sourceState Source state.
+ * @param targetState Target state.
+ * @return Generated C++ code for the transition.
  */
 QString CodeGen::generateTransitionCode(Transition* transition,
                                         const State* sourceState,
@@ -465,16 +485,16 @@ QString CodeGen::generateTransitionCode(Transition* transition,
 }
 
 /**
- * @brief Generates a main function that uses QStateMachine
- * @param fsm FSM containing the states and transitions
- * @return Code section as QString
+ * @brief Generates a main function that uses QStateMachine.
+ * @param fsm FSM containing the states and transitions.
+ * @return Code section as QString.
  */
 QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   QString code;
 
   code += "/******************************************************************************\n";
   code += " * Main function with QStateMachine\n";
-  code += " ******************************************************************************/\n\n";
+  code += " ******************************************************************************/\n";
 
   State* initial = fsm->getInitialState();
   QMap<QString, State*> allStates = fsm->getStates();
@@ -482,15 +502,13 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   QString initialStateName = initial ? initial->getName() : "UNKNOWN";
 
   code += "/**\n";
-  code += " * @brief Custom event for input changes\n";
+  code += " * @brief Custom event for input changes.\n";
   code += " */\n";
   code += "class InputEvent : public QEvent {\n";
   code += "public:\n";
-  code += "    static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2);\n\n";
-
+  code += "    static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2);\n";
   code += "    InputEvent(const QString& name, const QString& value) \n";
-  code += "        : QEvent(InputChangedType), m_name(name), m_value(value) {}\n\n";
-
+  code += "        : QEvent(InputChangedType), m_name(name), m_value(value) {}\n";
   code += "    QString name() const { return m_name; }\n";
   code += "    QString value() const { return m_value; }\n\n";
 
@@ -500,16 +518,16 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "};\n\n";
 
   code += "/**\n";
-  code += " * @brief Unified transition class handling both conditions and delays\n";
+  code += " * @brief Unified transition class handling both conditions and delays.\n";
   code += " */\n";
   code += "class UnifiedTransition : public QAbstractTransition {\n";
   code += "public:\n";
   code += "    /**\n";
-  code += "     * @brief Constructor for a unified transition that handles both conditions and delays\n";
-  code += "     * @param condition A lambda function that evaluates to a boolean\n";
-  code += "     * @param delayFn A lambda function that returns the delay in milliseconds (live value)\n";
-  code += "     * @param fromState Source state name (for logging)\n";
-  code += "     * @param toState Target state name (for logging)\n";
+  code += "     * @brief Constructor for a unified transition that handles both conditions and delays.\n";
+  code += "     * @param condition A lambda function that evaluates to a boolean.\n";
+  code += "     * @param delayFn A lambda function that returns the delay in milliseconds (live value).\n";
+  code += "     * @param fromState Source state name (for logging).\n";
+  code += "     * @param toState Target state name (for logging).\n";
   code += "     */\n";
   code += "    explicit UnifiedTransition(std::function<bool()> condition = []() { return true; },\n";
   code += "                             std::function<int()> delayFn = []() { return 0; },\n";
@@ -642,18 +660,17 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "        timers.remove(key);\n";
   code += "        debug(QString(\"Timer cleared for transition '%1'\").arg(key));\n";
   code += "    }\n";
-  code += "    // Reset m_timerArmed for all UnifiedTransitions from this state\n";
   code += "    for (QAbstractTransition* t : fsm.findChildren<QAbstractTransition*>()) {\n";
   code += "        auto ut = dynamic_cast<UnifiedTransition*>(t);\n";
   code += "        if (ut && ut->fromStateName() == stateName) {\n";
   code += "            ut->resetTimerArmed();\n";
-  code += "            debug(QString(\"[clearTimersForState] Reset m_timerArmed for transition from '%1' to '%2'\").arg(ut->fromStateName()).arg(ut->toStateName()));\n";
+  code += "            debug(QString(\"Reset m_timerArmed for transition from '%1' to '%2'\").arg(ut->fromStateName()).arg(ut->toStateName()));\n";
   code += "        }\n";
   code += "    }\n";
   code += "}\n\n";
 
   code += "/**\n";
-  code += " * @brief Main function that uses QStateMachine for state management\n";
+  code += " * @brief Main function that uses QStateMachine for state management.\n";
   code += " */\n";
   code += "int main(int argc, char *argv[]) {\n";
   code += "    QCoreApplication app(argc, argv);\n";
@@ -707,7 +724,6 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
 
   code += "    debug(\"Creating states...\");\n";
 
-  code += "    // Global variable to track the last entered state\n";
   code += "    static QString globalPrevStateName;\n";
   for (auto it = allStates.begin(); it != allStates.end(); ++it) {
     State* state = it.value();
@@ -749,15 +765,11 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   for (auto stateIt = allStates.begin(); stateIt != allStates.end(); ++stateIt) {
     State* sourceState = stateIt.value();
     QString sourceName = sourceState->getName();
-
     QList<Transition*> transitions = fsm->getTransitionsFrom(sourceState);
-
     for (Transition* transition : transitions) {
       State* targetState = transition->getTo();
-      if (!targetState) continue;
-
+      if (!targetState) { continue; }
       QString targetName = targetState->getName();
-
       code += generateTransitionCode(transition, sourceState, targetState);
     }
   }
@@ -779,7 +791,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "        if (fgets(buffer, sizeof(buffer), terminalInput)) {\n";
   code += "            QString inputLine = QString::fromLocal8Bit(buffer).trimmed();\n";
   code += "            \n";
-  code += "            if (inputLine.isEmpty()) return;\n";
+  code += "            if (inputLine.isEmpty()) { return; }\n";
   code += "            \n";
   code += "            if (inputLine == \"/quit\" || inputLine == \"/exit\") {\n";
   code += "                log(\"Exit command received. Terminating application.\");\n";
@@ -823,13 +835,14 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "                \n";
   code += "                if (!value.isEmpty()) {\n";
   code += "                    // SET mode: store the new value and trigger event\n";
-  code += "                    debug(\"[DEBUG] SET MODE for '\" + name + \"' with value '\" + value + \"'\");\n";
+  code += "                    debug(\"SET MODE for '\" + name + \"' with value '\" + value + \"'\");\n";
   code += "                    inputs[name] = value;\n";
   code += "                    logInputEvent(name, value);\n";
   code += "                    setInputCalled(name);\n";
   code += "                    fsm.postEvent(new InputEvent(name, value));\n";
   code += "                } else {\n";
   code += "                    // CALL mode: treat as pure event without changing stored value\n";
+  code += "                    debug(\"CALL MODE for '\" + name + \"'\");\n";
   code += "                    QString lastValue = inputs.contains(name) ? inputs[name] : QString();\n";
   code += "                    logInputEvent(name, lastValue);\n";
   code += "                    setInputCalled(name);\n";
@@ -852,9 +865,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
 
   code += "    debug(ANSI_BOLD + COLOR_HEADER + \"INITIALIZING STATE MACHINE\" + ANSI_RESET);\n";
   code += "    fsm.start();\n";
-  code += "    debug(COLOR_SUCCESS + SYM_SUCCESS + \" Transition engine activated successfully\" + ANSI_RESET);\n";
-  code += "    qDebug().noquote() << \"\";\n\n";
-
+  code += "    debug(COLOR_SUCCESS + SYM_SUCCESS + \" Transition engine activated successfully\n\n\" + ANSI_RESET);\n";
   code += "    int result = app.exec();\n";
   code += "    debug(\"Application terminated with code \" + QString::number(result));\n";
   code += "    return result;\n";
