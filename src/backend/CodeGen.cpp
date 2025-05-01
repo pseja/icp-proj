@@ -747,6 +747,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "                    debug(\"[DEBUG] SET MODE for '\" + name + \"' with value '\" + value + \"'\");\n";
   code += "                    inputs[name] = value;\n";
   code += "                    logInputEvent(name, value);\n";
+  code += "                    setInputCalled(name);\n";
   code += "                    fsm.postEvent(new InputEvent(name, value));\n";
   code += "                } else {\n";
   code += "                    // CALL mode: treat as pure event without changing stored value\n";
