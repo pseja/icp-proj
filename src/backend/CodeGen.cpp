@@ -131,13 +131,20 @@ QString CodeGen::generateHelperFunctions() {
   code += " * @return Milliseconds elapsed since entering the current state\n";
   code += " */\n";
   code += "int elapsed() {\n";
+  code += "    static QString lastStateName;\n";
+  code += "    static qint64 entryTime = 0;\n";
   code += "    if (fsm.configuration().isEmpty()) { return 0; }\n";
   code += "    QState* currentState = static_cast<QState*>(*fsm.configuration().begin());\n";
-  code += "    qint64 entryTime = currentState->property(\"entryTime\").toLongLong();\n";
-  code += "    if (entryTime == 0) { \n";
-  code += "       return 0; \n";
+  code += "    QString currentStateName = currentState->objectName();\n";
+  code += "    qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
+  code += "    if (lastStateName != currentStateName) {\n";
+  code += "        entryTime = now;\n";
+  code += "        lastStateName = currentStateName;\n";
   code += "    }\n";
-  code += "    return QDateTime::currentDateTime().toMSecsSinceEpoch() - entryTime;\n";
+  code += "    if (entryTime == 0) {\n";
+  code += "        return 0;\n";
+  code += "    }\n";
+  code += "    return now - entryTime;\n";
   code += "}\n\n";
 
   code += "// Shared event flags for tracking input calls\n";
