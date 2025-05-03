@@ -865,7 +865,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
 
   code += "    debug(ANSI_BOLD + COLOR_HEADER + \"INITIALIZING STATE MACHINE\" + ANSI_RESET);\n";
   code += "    fsm.start();\n";
-  code += "    debug(COLOR_SUCCESS + SYM_SUCCESS + \" Transition engine activated successfully\n\n\" + ANSI_RESET);\n";
+  code += "    debug(COLOR_SUCCESS + SYM_SUCCESS + \" Transition engine activated successfully\\n\\n\" + ANSI_RESET);\n";
   code += "    int result = app.exec();\n";
   code += "    debug(\"Application terminated with code \" + QString::number(result));\n";
   code += "    return result;\n";
