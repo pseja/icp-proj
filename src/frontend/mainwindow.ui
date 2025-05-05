@@ -238,12 +238,12 @@
      <height>19</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuicp">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="actionlol"/>
+    <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionProperties"/>
    </widget>
@@ -263,12 +263,12 @@
     <addaction name="actionColor"/>
     <addaction name="actionShape"/>
    </widget>
-   <addaction name="menuicp"/>
+   <addaction name="menuFile"/>
    <addaction name="menuConnect"/>
    <addaction name="menuDesign"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionlol">
+  <action name="actionOpen">
    <property name="text">
     <string>Open</string>
    </property>

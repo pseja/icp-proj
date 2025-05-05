@@ -20,7 +20,7 @@
 #include "TransitionItem.hpp"
 
 // implementace automat platna
-AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
+AutomatView::AutomatView(FSM *fsm, QWidget *parent) : QGraphicsView(parent) {
   setMinimumSize(400, 300); // Nastav minimální velikost
   setScene(new QGraphicsScene(this));
   setRenderHint(QPainter::Antialiasing);
@@ -28,7 +28,7 @@ AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
   scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
   scene()->setSceneRect(rect()); // důležité: nastav scény velikost podle view
   scene()->installEventFilter(this); // pro ladění pohybů, pokud chceš
-  fsm = new FSM("Default FSM 1");
+  
   //setAcceptHoverEvents(true);
 }
 

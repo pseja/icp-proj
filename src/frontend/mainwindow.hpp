@@ -28,8 +28,10 @@ private slots:
     void updateStateInfo(StateItem *state);
     void on_addStateButton_clicked();
 public slots:
-    void handleStateDeleted();
-    void addState(StateItem *state);
+  void handleStateDeleted();
+  void addState(StateItem *state);
+  void saveFSM();
+  void loadFSM();
 
 private:
   FSM *fsm;

@@ -26,7 +26,7 @@ class AutomatView : public QGraphicsView {
   Q_OBJECT
 
 public:
-  explicit AutomatView(QWidget *parent = nullptr);
+  explicit AutomatView(FSM *fsm, QWidget *parent = nullptr);
 
 signals:
   void stateSelected(StateItem *state);

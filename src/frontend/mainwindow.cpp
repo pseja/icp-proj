@@ -1,5 +1,6 @@
 #include "mainwindow.hpp"
 #include "AutomatView.hpp"
+#include "src/backend/xmlparser.hpp"
 #include "src/frontend/StateItem.hpp"
 #include "src/frontend/TransitionItem.hpp"
 #include "src/frontend/ui_mainwindow.h"
@@ -13,6 +14,8 @@
 #include <QLineEdit>
 #include <qgraphicsitem.h>
 #include <QListWidget>
+#include <QDebug>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,7 +24,8 @@ MainWindow::MainWindow(QWidget *parent)
   ui->setupUi(this);
   resize(1920, 1080);
   setMinimumSize(800, 600);
-  automatView = new AutomatView(this);
+  fsm = new FSM("Default FSM");
+  automatView = new AutomatView(fsm, this);
   automatView->setMinimumSize(400, 300);
 
   automatView->setGeometry(360, 30, 1551, 561);
@@ -50,7 +54,7 @@ void MainWindow::saveState() {
   }
 }
 
-//aka clicking on state calls this with pointer to that state
+//aka clicking on state, calls this with pointer to that state
 void MainWindow::updateStateInfo(StateItem *state) {
   selectedState = state;
   ui->groupBox->setEnabled(true);
@@ -105,4 +109,12 @@ void MainWindow::loadAutomat(const QVector<StateItem *> &states) {
 
 void MainWindow::addState(StateItem *StateItem) {
   fsm->addState(StateItem->state);
+}
+
+void MainWindow::saveFSM() {
+  QString fileName = QFileDialog::getSaveFileName(this, tr("Save FSM"), "",
+                                                  tr("XML Files (*.xml)"));
+  if (!fileName.isEmpty()) {
+    XMLParser::FSMtoXML(*fsm, fileName);
+  }
 }
