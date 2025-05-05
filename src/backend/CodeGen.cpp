@@ -84,7 +84,7 @@ QString CodeGen::generateHeaders() {
  * @brief Provides basic helpers for managing input/output values and timers.
  *
  * Includes utility functions for value access, conversion, event flagging, and timer management.
- * 
+ *
  * @return Code section as QString.
  */
 QString CodeGen::generateHelperFunctions() {
@@ -187,56 +187,6 @@ QString CodeGen::generateHelperFunctions() {
   code += "void setInputCalled(const QString &input) {\n";
   code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
   code += "    eventFlags[input] = true;\n";
-  code += "}\n\n";
-
-  code += "/******************************************************************************\n";
-  code += " * Timer management for delayed transitions\n";
-  code += " ******************************************************************************/\n";
-
-  code += "/**\n";
-  code += " * @brief Returns a reference to the global timer map.\n";
-  code += " * @return Reference to QMap of timers.\n";
-  code += " */\n";
-  code += "QMap<QString, QTimer*>& getGlobalTimers() {\n";
-  code += "    static QMap<QString, QTimer*> timers;\n";
-  code += "    return timers;\n";
-  code += "}\n\n";
-
-  code += "/**\n";
-  code += " * @brief Registers a timer for a transition, replacing any existing timer.\n";
-  code += " * @param transitionId Unique transition identifier.\n";
-  code += " * @param timer Timer to register.\n";
-  code += " */\n";
-  code += "void registerTimer(const QString& transitionId, QTimer* timer) {\n";
-  code += "    debug(QString(\"registerTimer('%1')\").arg(transitionId));\n";
-  code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
-  code += "    if (timers.contains(transitionId)) {\n";
-  code += "        QTimer* oldTimer = timers[transitionId];\n";
-  code += "        if (oldTimer && oldTimer->isActive()) {\n";
-  code += "            debug(QString(\"Stopping old timer for '%1'\").arg(transitionId));\n";
-  code += "            oldTimer->stop();\n";
-  code += "        }\n";
-  code += "    }\n";
-  code += "    timers[transitionId] = timer;\n";
-  code += "    debug(QString(\"Timer registered for '%1'\").arg(transitionId));\n";
-  code += "}\n\n";
-
-  code += "/**\n";
-  code += " * @brief Unregisters and stops a timer for a transition.\n";
-  code += " * @param transitionId Unique transition identifier.\n";
-  code += " */\n";
-  code += "void unregisterTimer(const QString& transitionId) {\n";
-  code += "    debug(QString(\"unregisterTimer('%1')\").arg(transitionId));\n";
-  code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
-  code += "    if (timers.contains(transitionId)) {\n";
-  code += "        QTimer* timer = timers[transitionId];\n";
-  code += "        if (timer && timer->isActive()) {\n";
-  code += "            debug(QString(\"Stopping timer for '%1'\").arg(transitionId));\n";
-  code += "            timer->stop();\n";
-  code += "        }\n";
-  code += "        timers.remove(transitionId);\n";
-  code += "        debug(QString(\"Timer unregistered for '%1'\").arg(transitionId));\n";
-  code += "    }\n";
   code += "}\n\n";
 
   return code;
@@ -547,12 +497,14 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "          m_toState(toState),\n";
   code += "          m_timer(new QTimer(this)),\n";
   code += "          m_conditionMet(false),\n";
-  code += "          m_timerExpired(false)\n";
+  code += "          m_timerExpired(false),\n";
+  code += "          m_initialDelay(-1)\n";
   code += "    {\n";
   code += "        m_timer->setSingleShot(true);\n";
   code += "        connect(m_timer, &QTimer::timeout, this, &UnifiedTransition::triggerTransition);\n";
   code += "    }\n\n";
-  code += "    void resetTimerArmed() { m_timerArmed = false; }\n";
+  code += "    void resetTimerArmed() { m_timerArmed = false; m_initialDelay = -1; }\n";
+  code += "    void stopTimer() { if (m_timer && m_timer->isActive()) m_timer->stop(); }\n";
   code += "    QString fromStateName() const { return m_fromState; }\n";
   code += "    QString toStateName() const { return m_toState; }\n\n";
   code += "protected:\n";
@@ -575,9 +527,13 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "                cancelTimerIfActive(\"Condition is no longer met (input or variable changed).\");\n";
   code += "                return false;\n";
   code += "            }\n";
-  code += "            const int effDelay = m_delayFn();\n";
+  code += "            if (m_initialDelay == -1) {\n";
+  code += "                m_initialDelay = m_delayFn();\n";
+  code += "                debug(\"Initial delay for transition \" + m_fromState + \" → \" + m_toState + \": \" + QString::number(m_initialDelay) + \" ms\");\n";
+  code += "            }\n";
+  code += "            const int effDelay = m_initialDelay;\n";
   code += "            if (effDelay > 0) {\n";
-  code += "                if (!m_timerArmed) {\n";
+  code += "                if (!m_timerArmed && m_initialDelay == effDelay) {\n";
   code += "                    logTransitionStart(effDelay);\n";
   code += "                    m_timer->start(effDelay);\n";
   code += "                    m_timerArmed = true;\n";
@@ -598,6 +554,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "        m_conditionMet = false;\n";
   code += "        m_timerArmed = false;\n";
   code += "        m_timerExpired = false;\n";
+  code += "        m_initialDelay = -1;\n";
   code += "    }\n\n";
   code += "private slots:\n";
   code += "    void triggerTransition() {\n";
@@ -607,7 +564,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "                COLOR_SOURCE + m_fromState + ANSI_RESET +\n";
   code += "                COLOR_TRANSITION + \" → \" +\n";
   code += "                COLOR_TARGET + m_toState + ANSI_RESET +\n";
-  code += "                ANSI_RESET + \" (delay: \" + ANSI_BOLD + QString::number(m_delayFn()) + \" ms)\" + ANSI_RESET);\n";
+  code += "                ANSI_RESET + \" (delay: \" + ANSI_BOLD + QString::number(m_initialDelay) + \" ms)\" + ANSI_RESET);\n";
   code += "            QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1));\n";
   code += "            machine()->postEvent(customEvent);\n";
   code += "        } else {\n";
@@ -628,6 +585,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "            log(msg);\n";
   code += "            m_timer->stop();\n";
   code += "            m_timerArmed = false;\n";
+  code += "            m_initialDelay = -1;\n";
   code += "        }\n";
   code += "    }\n\n";
   code += "    void logTransitionStart(int effDelay) {\n";
@@ -649,30 +607,23 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "    bool m_conditionMet;\n";
   code += "    bool m_timerArmed = false;\n";
   code += "    bool m_timerExpired = false;\n";
+  code += "    int m_initialDelay = -1;\n";
   code += "};\n\n";
 
-  code += "void clearTimersForState(const QString& stateName) {\n";
-  code += "    debug(QString(\"clearTimersForState('%1')\").arg(stateName));\n";
-  code += "    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
-  code += "    QList<QString> toRemove;\n";
-  code += "    for (auto it = timers.begin(); it != timers.end(); ++it) {\n";
-  code += "        if (it.key().startsWith(stateName + \"->\")) {\n";
-  code += "            if (it.value() && it.value()->isActive()) {\n";
-  code += "                debug(QString(\"Stopping timer for transition '%1'\").arg(it.key()));\n";
-  code += "                it.value()->stop();\n";
-  code += "            }\n";
-  code += "            toRemove.append(it.key());\n";
-  code += "        }\n";
-  code += "    }\n";
-  code += "    for (const QString& key : toRemove) {\n";
-  code += "        timers.remove(key);\n";
-  code += "        debug(QString(\"Timer cleared for transition '%1'\").arg(key));\n";
-  code += "    }\n";
+  code += "/**\n";
+  code += " * @brief Zastaví všechny aktivní timeouty pro odchozí přechody z daného stavu (kromě self-transitions).\n";
+  code += " */\n";
+  code += "void clearOutgoingTimers(const QString& stateName) {\n";
+  code += "    debug(QString(\"clearOutgoingTimers('%1')\").arg(stateName));\n";
   code += "    for (QAbstractTransition* t : fsm.findChildren<QAbstractTransition*>()) {\n";
   code += "        auto ut = dynamic_cast<UnifiedTransition*>(t);\n";
-  code += "        if (ut && ut->fromStateName() == stateName) {\n";
+  code += "        if (!ut) continue;\n";
+  code += "        const QString& from = ut->fromStateName();\n";
+  code += "        const QString& to = ut->toStateName();\n";
+  code += "        if (from == stateName && from != to) {\n";
   code += "            ut->resetTimerArmed();\n";
-  code += "            debug(QString(\"Reset m_timerArmed for transition from '%1' to '%2'\").arg(ut->fromStateName()).arg(ut->toStateName()));\n";
+  code += "            ut->stopTimer();\n";
+  code += "            debug(QString(\"Stopped timer and reset for transition %1 → %2\").arg(from, to));\n";
   code += "        }\n";
   code += "    }\n";
   code += "}\n\n";
@@ -750,6 +701,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
     code += "        if (prevStateName != currentStateName) {\n";
     code += "            qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
     code += "            " + stateLower + "State->setProperty(\"entryTime\", QVariant::fromValue(now));\n";
+    code += "            clearOutgoingTimers(\"" + stateName + "\");\n";
     code += "        }\n";
     code += "        globalPrevStateName = currentStateName;\n";
     code += "        log(DOUBLE_SEPARATOR);\n";
@@ -760,10 +712,6 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
       code += "        " + onEntry + "\n";
     }
     code += "        log(SECTION_SEPARATOR);\n";
-    code += "    });\n\n";
-
-    code += "    QObject::connect(" + stateLower + "State, &QState::exited, []() {\n";
-    code += "        clearTimersForState(\"" + stateName + "\");\n";
     code += "    });\n\n";
   }
 
@@ -778,7 +726,9 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
     QList<Transition*> transitions = fsm->getTransitionsFrom(sourceState);
     for (Transition* transition : transitions) {
       State* targetState = transition->getTo();
-      if (!targetState) { continue; }
+      if (!targetState) {
+        continue;
+      }
       QString targetName = targetState->getName();
       code += generateTransitionCode(transition, sourceState, targetState);
     }
@@ -850,23 +800,6 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
     QString varName = var->getName();
     code += "                log(\"  \" + COLOR_COMMAND + \"" + varName + "\" + ANSI_RESET + \" = \" + COLOR_VALUE + QVariant::fromValue(" + varName + ").toString() + ANSI_RESET);\n";
   }
-  code += "                // Show timers\n";
-  code += "                log(SECTION_SEPARATOR);\n";
-  code += "                log(ANSI_BOLD + COLOR_HEADER + \"ACTIVE TIMERS:\" + ANSI_RESET);\n";
-  code += "                {\n";
-  code += "                    QMap<QString, QTimer*>& timers = getGlobalTimers();\n";
-  code += "                    bool anyActive = false;\n";
-  code += "                    for (auto it = timers.constBegin(); it != timers.constEnd(); ++it) {\n";
-  code += "                        QTimer* timer = it.value();\n";
-  code += "                        if (timer && timer->isActive()) {\n";
-  code += "                            anyActive = true;\n";
-  code += "                            log(\"  \" + COLOR_COMMAND + it.key() + ANSI_RESET + \": remaining \" + COLOR_VALUE + QString::number(timer->remainingTime()) + \" ms\" + ANSI_RESET);\n";
-  code += "                        }\n";
-  code += "                    }\n";
-  code += "                    if (!anyActive) {\n";
-  code += "                        log(\"  No active timers.\");\n";
-  code += "                    }\n";
-  code += "                }\n";
   code += "                log(SECTION_SEPARATOR);\n";
   code += "                return;\n";
   code += "            }\n";
