@@ -27,7 +27,8 @@ AutomatView::AutomatView(QWidget *parent) : QGraphicsView(parent) {
   setDragMode(QGraphicsView::RubberBandDrag);
   scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
   scene()->setSceneRect(rect()); // důležité: nastav scény velikost podle view
-  scene()->installEventFilter(this);  // pro ladění pohybů, pokud chceš
+  scene()->installEventFilter(this); // pro ladění pohybů, pokud chceš
+  fsm = new FSM("Default FSM 1");
   //setAcceptHoverEvents(true);
 }
 
@@ -45,9 +46,11 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
         qDebug() << "creating transition";
         TransitionItem *transition =
             new TransitionItem(transitionStart, endstate, nullptr);
-        
+
         qDebug() << "transition created";
+        fsm->addTransition(transition->transition);
         scene()->addItem(transition);
+        emit addTransition(transition);
         break;
       }
     }
@@ -99,6 +102,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
 
   StateItem tempState(nullptr);
   tempState.setPos(scenePos);
+  fsm->addState(tempState.state, "State");
   
   // Zjistíme, jestli by se překrýval s jinými objekty
   for (QGraphicsItem *item : scene()->items()) {

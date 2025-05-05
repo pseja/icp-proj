@@ -12,6 +12,7 @@
 #include <QObject>
 #include <qvariant.h>
 #include "src/backend/state.hpp"
+#include "src/backend/state.hpp"
 
 class StateItem : public QObject, public QGraphicsEllipseItem {
   Q_OBJECT

@@ -2,6 +2,8 @@
 #define AUTOMATVIEW_HPP
 
 #include "src/frontend/StateItem.hpp"
+#include "src/frontend/TransitionItem.hpp"
+#include "src/backend/fsm.hpp"
 //#include "src/frontend/mainwindow.hpp"
 //#include "src/frontend/mainwindow.hpp"
 //#include "src/frontend/mainwindow.hpp"
@@ -29,6 +31,7 @@ public:
 signals:
   void stateSelected(StateItem *state);
   void addState(StateItem *state);
+  void addTransition(TransitionItem *trans);
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;
@@ -39,6 +42,7 @@ protected:
 private:
   StateItem *transitionStart = nullptr;
   QGraphicsLineItem *templine = nullptr;
+  FSM *fsm;
 //  QGraphicsScene *scene;
 };
 
