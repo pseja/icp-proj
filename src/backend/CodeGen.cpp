@@ -72,6 +72,9 @@ QString CodeGen::generateHeaders() {
   code += "#include <unistd.h>\n";
   code += "#include <csignal>\n";
   code += "#include <functional>\n";
+  code += "#include <QTcpServer>\n";
+  code += "#include <QTcpSocket>\n";
+
   code += "\n";
 
   return code;
@@ -133,6 +136,10 @@ QString CodeGen::generateHelperFunctions() {
   code += "    debug(QString(\"output('%1', %2)\").arg(port).arg(valueStr));\n";
   code += "    outputs[port] = valueStr;\n";
   code += "    logOutputEvent(port, outputs[port]);\n";
+  code += "    extern QTcpSocket* clientSocket;\n";
+  code += "    if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
+  code += "        clientSocket->write(QString(port + \"=\" + valueStr + \"\\n\").toUtf8());\n";
+  code += "    }\n";
   code += "}\n\n";
 
   code += "/**\n";
@@ -250,7 +257,8 @@ QString CodeGen::generateVariableDeclarations(FSM* fsm) {
   code += "QStateMachine fsm;              // Global state machine instance\n";
   code += "QMap<QString, QString> inputs;  // Map of input names to values\n";
   code += "QMap<QString, QString> outputs; // Map of output names to values\n";
-  code += "bool debugEnabled = false;\n\n";
+  code += "bool debugEnabled = false;\n";
+  code += "QTcpSocket* clientSocket = nullptr;\n\n";
 
   QMap<QString, Variable*> variables = fsm->getVariables();
   if (!variables.isEmpty()) {
@@ -674,6 +682,8 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += " */\n";
   code += "int main(int argc, char *argv[]) {\n";
   code += "    QCoreApplication app(argc, argv);\n";
+  code += "    QTcpServer server;\n";
+  code += "    clientSocket = nullptr;\n";
   code += "    \n";
   code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
   code += "    qDebug().noquote() << ANSI_BOLD + COLOR_HEADER + SYM_STAR + \" \" + SYM_STAR + \" \" + SYM_STAR + \"  OBLIVION STATE MACHINE  \" + SYM_STAR + \" \" + SYM_STAR + \" \" + SYM_STAR + ANSI_RESET;\n";
@@ -861,6 +871,57 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "            }\n";
   code += "            QCoreApplication::quit();\n";
   code += "        }\n";
+  code += "    });\n\n";
+
+  code += "    // TCP communication\n";
+  code += "    server.listen(QHostAddress::LocalHost, 4242);\n";
+  code += "    QObject::connect(&server, &QTcpServer::newConnection, [&]() {\n";
+  code += "        if (clientSocket) {\n";
+  code += "            QTcpSocket* extra = server.nextPendingConnection();\n";
+  code += "            extra->write(\"Only one client allowed\\n\");\n";
+  code += "            extra->disconnectFromHost();\n";
+  code += "            return;\n";
+  code += "        }\n";
+  code += "        clientSocket = server.nextPendingConnection();\n";
+  code += "        QObject::connect(clientSocket, &QTcpSocket::readyRead, [&]() {\n";
+  code += "            while (clientSocket->canReadLine()) {\n";
+  code += "                QString line = QString::fromUtf8(clientSocket->readLine()).trimmed();\n";
+  code += "                if (line == \"/quit\") {\n";
+  code += "                    clientSocket->write(\"Goodbye\\n\");\n";
+  code += "                    clientSocket->disconnectFromHost();\n";
+  code += "                    return;\n";
+  code += "                }\n";
+  code += "                QRegularExpression inputRegex(\"^(\\\\w+)(?:=(.*))?$\");\n";
+  code += "                QRegularExpressionMatch match = inputRegex.match(line);\n";
+  code += "                if (match.hasMatch()) {\n";
+  code += "                    QString name = match.captured(1);\n";
+  code += "                    QString value = match.captured(2);\n";
+  code += "                    if (!validInputNames.contains(name)) {\n";
+  code += "                        log(\"Invalid input name: \" + name);\n";
+  code += "                        return;\n";
+  code += "                    }\n";
+  code += "                    if (!value.isEmpty()) {\n";
+  code += "                        inputs[name] = value;\n";
+  code += "                        logInputEvent(name, value);\n";
+  code += "                        setInputCalled(name);\n";
+  code += "                        fsm.postEvent(new InputEvent(name, value));\n";
+  code += "                    } else {\n";
+  code += "                        QString lastValue = inputs.contains(name) ? inputs[name] : QString();\n";
+  code += "                        logInputEvent(name, lastValue);\n";
+  code += "                        setInputCalled(name);\n";
+  code += "                        fsm.postEvent(new InputEvent(name, lastValue));\n";
+  code += "                    }\n";
+  code += "                } else {\n";
+  code += "                    log(\"Unrecognized input: \" + line);\n";
+  code += "                }\n";
+  code += "            }\n";
+  code += "        });\n";
+  code += "        QObject::connect(clientSocket, &QTcpSocket::disconnected, [&]() {\n";
+  code += "            clientSocket->deleteLater();\n";
+  code += "            clientSocket = nullptr;\n";
+  code += "            log(\"Client disconnected\");\n";
+  code += "        });\n";
+  code += "        log(\"Client connected from \" + clientSocket->peerAddress().toString());\n";
   code += "    });\n\n";
 
   code += "    debug(ANSI_BOLD + COLOR_HEADER + \"INITIALIZING STATE MACHINE\" + ANSI_RESET);\n";
