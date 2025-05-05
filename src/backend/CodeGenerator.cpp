@@ -1,4 +1,4 @@
-#include "CodeGen.hpp"
+#include "CodeGenerator.hpp"
 
 #include <QDebug>
 #include <QRegularExpression>

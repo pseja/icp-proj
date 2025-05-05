@@ -1,5 +1,5 @@
 #include "frontend/mainwindow.hpp"
-#include "backend/CodeGen.hpp"
+#include "backend/CodeGenerator.hpp"
 #include "backend/xmlparser.hpp"
 #include "backend/fsm.hpp"
 #include <QApplication>
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     }
     
     // Generate code from the FSM
-    CodeGen codeGen;
+    CodeGenerator codeGen;
     QString generatedCode = codeGen.generateCode(&fsm);
     
     // Create the generated directory if it doesn't exist
