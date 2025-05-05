@@ -10,10 +10,10 @@
 #include "variable.hpp"
 
 /**
- * @brief Constructor for the CodeGen class.
+ * @brief Constructor for the CodeGenerator class.
  * @param parent The parent QObject.
  */
-CodeGen::CodeGen(QObject* parent) : QObject(parent) {
+CodeGenerator::CodeGenerator(QObject* parent) : QObject(parent) {
 }
 
 /**
@@ -25,7 +25,7 @@ CodeGen::CodeGen(QObject* parent) : QObject(parent) {
  * @param fsm The state machine to generate code from.
  * @return Generated C++ code as a QString.
  */
-QString CodeGen::generateCode(FSM* fsm) {
+QString CodeGenerator::generateCode(FSM* fsm) {
   QString code;
 
   code += "/**\n";
@@ -44,7 +44,7 @@ QString CodeGen::generateCode(FSM* fsm) {
   code += generateVariableDeclarations(fsm);
   code += generateRuntimeMonitoring();
   code += generateHelperFunctions();
-  code += generateQStateMachineMain(fsm);
+  code += generateMainFunction(fsm);
 
   return code;
 }
@@ -53,7 +53,7 @@ QString CodeGen::generateCode(FSM* fsm) {
  * @brief Generates standard C++ header includes for the generated file.
  * @return Code section as QString.
  */
-QString CodeGen::generateHeaders() {
+QString CodeGenerator::generateHeaders() {
   QString code;
 
   code += "#include <QtCore/QDebug>\n";
@@ -87,7 +87,7 @@ QString CodeGen::generateHeaders() {
  *
  * @return Code section as QString.
  */
-QString CodeGen::generateHelperFunctions() {
+QString CodeGenerator::generateHelperFunctions() {
   QString code;
 
   code += "/******************************************************************************\n";
@@ -197,7 +197,7 @@ QString CodeGen::generateHelperFunctions() {
  * @param fsm State machine containing variable definitions.
  * @return Code section as QString.
  */
-QString CodeGen::generateVariableDeclarations(FSM* fsm) {
+QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
   QString code;
 
   code += "/******************************************************************************\n";
@@ -227,7 +227,7 @@ QString CodeGen::generateVariableDeclarations(FSM* fsm) {
  * @brief Provides logging functions for state transitions, events, and debugging.
  * @return Code section as QString.
  */
-QString CodeGen::generateRuntimeMonitoring() {
+QString CodeGenerator::generateRuntimeMonitoring() {
   QString code;
 
   code += "/******************************************************************************\n";
@@ -353,9 +353,9 @@ QString CodeGen::generateRuntimeMonitoring() {
  * @param targetState Target state.
  * @return Generated C++ code for the transition.
  */
-QString CodeGen::generateTransitionCode(Transition* transition,
-                                        const State* sourceState,
-                                        const State* targetState) {
+QString CodeGenerator::generateTransitionCode(Transition* transition,
+                                              const State* sourceState,
+                                              const State* targetState) {
   QString code;
   QString sourceName = const_cast<State*>(sourceState)->getName();
   QString targetName = const_cast<State*>(targetState)->getName();
@@ -404,7 +404,7 @@ QString CodeGen::generateTransitionCode(Transition* transition,
     delayProvider = "[]() -> int { return 0; }";
   }
 
-  code += "    UnifiedTransition* " + transName + " = new UnifiedTransition(";
+  code += "    GeneratedTransition* " + transName + " = new GeneratedTransition(";
   if (hasEvent && hasCondition) {
     code += "[]() -> bool {\n";
     code += "        return called(\"" + event + "\") && (" + condition + ");\n";
@@ -433,7 +433,7 @@ QString CodeGen::generateTransitionCode(Transition* transition,
  * @param fsm FSM containing the states and transitions.
  * @return Code section as QString.
  */
-QString CodeGen::generateQStateMachineMain(FSM* fsm) {
+QString CodeGenerator::generateMainFunction(FSM* fsm) {
   QString code;
 
   code += "/******************************************************************************\n";
@@ -462,18 +462,18 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "};\n\n";
 
   code += "/**\n";
-  code += " * @brief Unified transition class handling both conditions and delays.\n";
+  code += " * @brief Transition class handling both conditions and delays, generated for runtime.\n";
   code += " */\n";
-  code += "class UnifiedTransition : public QAbstractTransition {\n";
+  code += "class GeneratedTransition : public QAbstractTransition {\n";
   code += "public:\n";
   code += "    /**\n";
-  code += "     * @brief Constructor for a unified transition that handles both conditions and delays.\n";
+  code += "     * @brief Constructor for a transition that handles both conditions and delays.\n";
   code += "     * @param condition A lambda function that evaluates to a boolean.\n";
   code += "     * @param delayFn A lambda function that returns the delay in milliseconds (live value).\n";
   code += "     * @param fromState Source state name (for logging).\n";
   code += "     * @param toState Target state name (for logging).\n";
   code += "     */\n";
-  code += "    explicit UnifiedTransition(std::function<bool()> condition = []() { return true; },\n";
+  code += "    explicit GeneratedTransition(std::function<bool()> condition = []() { return true; },\n";
   code += "                             std::function<int()> delayFn = []() { return 0; },\n";
   code += "                             const QString& fromState = QString(),\n";
   code += "                             const QString& toState = QString())\n";
@@ -487,7 +487,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "          m_initialDelay(-1)\n";
   code += "    {\n";
   code += "        m_timer->setSingleShot(true);\n";
-  code += "        connect(m_timer, &QTimer::timeout, this, &UnifiedTransition::triggerTransition);\n";
+  code += "        connect(m_timer, &QTimer::timeout, this, &GeneratedTransition::triggerTransition);\n";
   code += "    }\n\n";
   code += "    void resetTimerArmed() { m_timerArmed = false; m_initialDelay = -1; }\n";
   code += "    void stopTimer() { if (m_timer && m_timer->isActive()) m_timer->stop(); }\n";
@@ -602,7 +602,7 @@ QString CodeGen::generateQStateMachineMain(FSM* fsm) {
   code += "void clearOutgoingTimers(const QString& stateName) {\n";
   code += "    debug(QString(\"clearOutgoingTimers('%1')\").arg(stateName));\n";
   code += "    for (QAbstractTransition* t : fsm.findChildren<QAbstractTransition*>()) {\n";
-  code += "        auto ut = dynamic_cast<UnifiedTransition*>(t);\n";
+  code += "        auto ut = dynamic_cast<GeneratedTransition*>(t);\n";
   code += "        if (!ut) continue;\n";
   code += "        const QString& from = ut->fromStateName();\n";
   code += "        const QString& to = ut->toStateName();\n";
