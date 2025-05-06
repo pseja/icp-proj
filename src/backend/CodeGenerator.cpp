@@ -1,6 +1,8 @@
 #include "CodeGenerator.hpp"
 
 #include <QDebug>
+#include <QDomDocument>
+#include <QDomElement>
 #include <QRegularExpression>
 #include <csignal>
 
@@ -74,6 +76,10 @@ QString CodeGenerator::generateHeaders() {
   code += "#include <functional>\n";
   code += "#include <QTcpServer>\n";
   code += "#include <QTcpSocket>\n";
+  code += "#include <QDomDocument>\n";
+  code += "#include <QDomElement>\n";
+  code += "#include <QFile>\n";
+  code += "#include <QDir>\n";
 
   code += "\n";
 
@@ -138,7 +144,18 @@ QString CodeGenerator::generateHelperFunctions() {
   code += "    logOutputEvent(port, outputs[port]);\n";
   code += "    extern QTcpSocket* clientSocket;\n";
   code += "    if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
-  code += "        clientSocket->write(QString(port + \"=\" + valueStr + \"\\n\").toUtf8());\n";
+  code += "        QDomDocument doc;\n";
+  code += "        QDomElement element = doc.createElement(\"event\");\n";
+  code += "        element.setAttribute(\"type\", \"output\");\n";
+  code += "        QDomElement name = doc.createElement(\"name\");\n";
+  code += "        name.appendChild(doc.createTextNode(port));\n";
+  code += "        QDomElement valueElem = doc.createElement(\"value\");\n";
+  code += "        valueElem.appendChild(doc.createTextNode(valueStr));\n";
+  code += "        element.appendChild(name);\n";
+  code += "        element.appendChild(valueElem);\n";
+  code += "        doc.appendChild(element);\n";
+  code += "        clientSocket->write(doc.toString(-1).toUtf8() + \"\\n\");\n";
+  code += "        clientSocket->flush();\n";
   code += "    }\n";
   code += "}\n\n";
 
@@ -189,6 +206,74 @@ QString CodeGenerator::generateHelperFunctions() {
   code += "    eventFlags[input] = true;\n";
   code += "}\n\n";
 
+  code += "/**\n";
+  code += " * @brief Sends a timer event to the client.\n";
+  code += " * @param type 'timerStart' or 'timerExpired'.\n";
+  code += " * @param name Timer name.\n";
+  code += " * @param ms Optional ms value for timerStart.\n";
+  code += " */\n";
+  code += "void sendTimerEvent(const QString& type, const QString& name, int ms = -1) {\n";
+  code += "    extern QTcpSocket* clientSocket;\n";
+  code += "    if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
+  code += "        if (type == \"timerStart\") {\n";
+  code += "            clientSocket->write(QString(\"<event type=\\\"timerStart\\\"><name>%1</name><ms>%2</ms></event>\\n\").arg(name).arg(ms).toUtf8());\n";
+  code += "        } else if (type == \"timerExpired\") {\n";
+  code += "            clientSocket->write(QString(\"<event type=\\\"timerExpired\\\"><name>%1</name></event>\\n\").arg(name).toUtf8());\n";
+  code += "        }\n";
+  code += "        clientSocket->flush();\n";
+  code += "    }\n";
+  code += "}\n\n";
+
+  code += "QString generateStatusXml(const QString& state) {\n";
+  code += "  QDomDocument doc;\n";
+  code += "  QDomElement root = doc.createElement(\"status\");\n";
+  code += "  doc.appendChild(root);\n";
+
+  code += "  QDomElement stateElem = doc.createElement(\"state\");\n";
+  code += "  stateElem.appendChild(doc.createTextNode(state));\n";
+  code += "  root.appendChild(stateElem);\n";
+
+  code += "  QDomElement inputsElem = doc.createElement(\"inputs\");\n";
+  code += "  for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {\n";
+  code += "    QDomElement inputElem = doc.createElement(\"input\");\n";
+  code += "    inputElem.setAttribute(\"name\", it.key());\n";
+  code += "    inputElem.appendChild(doc.createTextNode(it.value()));\n";
+  code += "    inputsElem.appendChild(inputElem);\n";
+  code += "  }\n";
+  code += "  root.appendChild(inputsElem);\n";
+
+  code += "  QDomElement outputsElem = doc.createElement(\"outputs\");\n";
+  code += "  for (auto it = outputs.constBegin(); it != outputs.constEnd(); ++it) {\n";
+  code += "    QDomElement outputElem = doc.createElement(\"output\");\n";
+  code += "    outputElem.setAttribute(\"name\", it.key());\n";
+  code += "    outputElem.appendChild(doc.createTextNode(it.value()));\n";
+  code += "    outputsElem.appendChild(outputElem);\n";
+  code += "  }\n";
+  code += "  root.appendChild(outputsElem);\n";
+
+  code += "  QDomElement varsElem = doc.createElement(\"variables\");\n";
+  code += "  extern QMap<QString, QVariant> variables;\n";
+  code += "  for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {\n";
+  code += "    QDomElement varElem = doc.createElement(\"var\");\n";
+  code += "    varElem.setAttribute(\"name\", it.key());\n";
+  code += "    varElem.appendChild(doc.createTextNode(it.value().toString()));\n";
+  code += "    varsElem.appendChild(varElem);\n";
+  code += "  }\n";
+  code += "  root.appendChild(varsElem);\n";
+
+  code += "  QDomElement timersElem = doc.createElement(\"timers\");\n";
+  code += "  extern QMap<QString, int> timers;\n";
+  code += "  for (auto it = timers.constBegin(); it != timers.constEnd(); ++it) {\n";
+  code += "    QDomElement timerElem = doc.createElement(\"timer\");\n";
+  code += "    timerElem.setAttribute(\"name\", it.key());\n";
+  code += "    timerElem.setAttribute(\"msRemaining\", QString::number(it.value()));\n";
+  code += "    timersElem.appendChild(timerElem);\n";
+  code += "  }\n";
+  code += "  root.appendChild(timersElem);\n";
+
+  code += "  return doc.toString(-1);\n";
+  code += "}\n";
+
   return code;
 }
 
@@ -208,7 +293,9 @@ QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
   code += "QMap<QString, QString> inputs;  // Map of input names to values\n";
   code += "QMap<QString, QString> outputs; // Map of output names to values\n";
   code += "bool debugEnabled = false;\n";
-  code += "QTcpSocket* clientSocket = nullptr;\n\n";
+  code += "QTcpSocket* clientSocket = nullptr;\n";
+  code += "QMap<QString, QVariant> variables;\n";
+  code += "QMap<QString, int> timers;\n\n";
 
   QMap<QString, Variable*> variables = fsm->getVariables();
   if (!variables.isEmpty()) {
@@ -521,6 +608,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "            if (effDelay > 0) {\n";
   code += "                if (!m_timerArmed && m_initialDelay == effDelay) {\n";
   code += "                    logTransitionStart(effDelay);\n";
+  code += "                    sendTimerEvent(\"timerStart\", m_fromState + \" → \" + m_toState, effDelay);\n";
   code += "                    m_timer->start(effDelay);\n";
   code += "                    m_timerArmed = true;\n";
   code += "                }\n";
@@ -551,6 +639,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                COLOR_TRANSITION + \" → \" +\n";
   code += "                COLOR_TARGET + m_toState + ANSI_RESET +\n";
   code += "                ANSI_RESET + \" (delay: \" + ANSI_BOLD + QString::number(m_initialDelay) + \" ms)\" + ANSI_RESET);\n";
+  code += "            sendTimerEvent(\"timerExpired\", m_fromState + \" → \" + m_toState);\n";
   code += "            QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1)); // Custom event type\n";
   code += "            machine()->postEvent(customEvent);\n";
   code += "        } else {\n";
@@ -693,6 +782,10 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
     code += "        log(DOUBLE_SEPARATOR);\n";
     code += "        log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
     code += "        log(SECTION_SEPARATOR);\n";
+    code += "        if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
+    code += "            clientSocket->write(QString(\"<event type=\\\"stateChange\\\"><name>%1</name></event>\\n\").arg(currentStateName).toUtf8());\n";
+    code += "            clientSocket->flush();\n";
+    code += "        }\n";
     if (!onEntry.isEmpty()) {
       code += "        log(\"Executing onEntry action for state: \" + ANSI_BOLD + \"" + stateName + "\" + ANSI_RESET);\n";
       code += "        " + onEntry + "\n";
@@ -846,53 +939,97 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    // TCP communication\n";
   code += "    server.listen(QHostAddress::LocalHost, 4242);\n";
   code += "    QObject::connect(&server, &QTcpServer::newConnection, [&]() {\n";
+  code += "        // Only allow one client\n";
   code += "        if (clientSocket) {\n";
   code += "            QTcpSocket* extra = server.nextPendingConnection();\n";
   code += "            extra->write(\"Only one client allowed\\n\");\n";
+  code += "            extra->flush();\n";
   code += "            extra->disconnectFromHost();\n";
+  code += "            extra->deleteLater();\n";
+  code += "            log(\"Rejected extra client connection\");\n";
   code += "            return;\n";
   code += "        }\n";
+
   code += "        clientSocket = server.nextPendingConnection();\n";
+  code += "        log(\"Client connected from \" + clientSocket->peerAddress().toString());\n\n";
+
+  code += "        // Handle incoming data from the client\n";
   code += "        QObject::connect(clientSocket, &QTcpSocket::readyRead, [&]() {\n";
-  code += "            while (clientSocket->canReadLine()) {\n";
+  code += "            while (clientSocket && clientSocket->canReadLine()) {\n";
   code += "                QString line = QString::fromUtf8(clientSocket->readLine()).trimmed();\n";
-  code += "                if (line == \"/quit\") {\n";
-  code += "                    clientSocket->write(\"Goodbye\\n\");\n";
-  code += "                    clientSocket->disconnectFromHost();\n";
-  code += "                    return;\n";
+  code += "                if (line.isEmpty()) { continue; }\n";
+  code += "                if (!line.startsWith(\"<\")) {\n";
+  code += "                    clientSocket->write(\"<event type=\\\"error\\\"><code>400</code><message>Malformed XML</message></event>\\n\");\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    log(\"Non-XML command received from client: \" + line);\n";
+  code += "                    continue;\n";
   code += "                }\n";
-  code += "                QRegularExpression inputRegex(\"^(\\\\w+)(?:=(.*))?$\");\n";
-  code += "                QRegularExpressionMatch match = inputRegex.match(line);\n";
-  code += "                if (match.hasMatch()) {\n";
-  code += "                    QString name = match.captured(1);\n";
-  code += "                    QString value = match.captured(2);\n";
-  code += "                    if (!validInputNames.contains(name)) {\n";
-  code += "                        log(\"Invalid input name: \" + name);\n";
-  code += "                        return;\n";
-  code += "                    }\n";
-  code += "                    if (!value.isEmpty()) {\n";
+  code += "                QDomDocument doc;\n";
+  code += "                if (!doc.setContent(line)) {\n";
+  code += "                    clientSocket->write(\"<event type=\\\"error\\\"><code>400</code><message>Malformed XML</message></event>\\n\");\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    log(\"Malformed XML received from client\");\n";
+  code += "                    continue;\n";
+  code += "                }\n";
+  code += "                QDomElement root = doc.documentElement();\n";
+  code += "                QString type = root.attribute(\"type\");\n";
+  code += "                if (type == \"set\") {\n";
+  code += "                    QString name = root.firstChildElement(\"name\").text();\n";
+  code += "                    QString value = root.firstChildElement(\"value\").text();\n";
+  code += "                    if (inputs.contains(name)) {\n";
   code += "                        inputs[name] = value;\n";
-  code += "                        logInputEvent(name, value);\n";
   code += "                        setInputCalled(name);\n";
   code += "                        fsm.postEvent(new InputEvent(name, value));\n";
+  code += "                        log(\"Input '\" + name + \"' set to '\" + value + \"' via TCP\");\n";
   code += "                    } else {\n";
-  code += "                        QString lastValue = inputs.contains(name) ? inputs[name] : QString();\n";
-  code += "                        logInputEvent(name, lastValue);\n";
-  code += "                        setInputCalled(name);\n";
-  code += "                        fsm.postEvent(new InputEvent(name, lastValue));\n";
+  code += "                        clientSocket->write(\"<event type=\\\"error\\\"><code>404</code><message>Unknown input</message></event>\\n\");\n";
+  code += "                        clientSocket->flush();\n";
   code += "                    }\n";
+  code += "                    continue;\n";
+  code += "                } else if (type == \"call\") {\n";
+  code += "                    QString name = root.firstChildElement(\"name\").text();\n";
+  code += "                    if (inputs.contains(name)) {\n";
+  code += "                        setInputCalled(name);\n";
+  code += "                        fsm.postEvent(new InputEvent(name, inputs[name]));\n";
+  code += "                        log(\"Input '\" + name + \"' called via TCP\");\n";
+  code += "                    } else {\n";
+  code += "                        clientSocket->write(\"<event type=\\\"error\\\"><code>404</code><message>Unknown input</message></event>\\n\");\n";
+  code += "                        clientSocket->flush();\n";
+  code += "                    }\n";
+  code += "                    continue;\n";
+  code += "                } else if (type == \"status\") {\n";
+  code += "                    QString state = fsm.configuration().isEmpty() ? \"UNKNOWN\" : (*fsm.configuration().begin())->objectName();\n";
+  code += "                    QString xml = generateStatusXml(state);\n";
+  code += "                    clientSocket->write(xml.toUtf8() + \"\\n\");\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    continue;\n";
+  code += "                } else if (type == \"help\") {\n";
+  code += "                    clientSocket->write(\"<event type=\\\"log\\\"><message>Supported commands: set, call, status, reqFSM, help, quit</message></event>\\n\");\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    continue;\n";
+  code += "                } else if (type == \"quit\") {\n";
+  code += "                    clientSocket->write(\"Quitting\\n\");\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    clientSocket->disconnectFromHost();\n";
+  code += "                    clientSocket->deleteLater();\n";
+  code += "                    clientSocket = nullptr;\n";
+  code += "                    log(\"Client requested disconnect via XML\");\n";
+  code += "                    return;\n";
   code += "                } else {\n";
-  code += "                    log(\"Unrecognized input: \" + line);\n";
+  code += "                    clientSocket->write(\"<event type=\\\"error\\\"><code>400</code><message>Unknown command</message></event>\\n\");\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    log(\"Unknown XML command received from client\");\n";
+  code += "                    continue;\n";
   code += "                }\n";
   code += "            }\n";
-  code += "        });\n";
+  code += "        });\n\n";
+  code += "        // Handle client disconnect\n";
   code += "        QObject::connect(clientSocket, &QTcpSocket::disconnected, [&]() {\n";
+  code += "            log(\"Client disconnected\");\n";
   code += "            clientSocket->deleteLater();\n";
   code += "            clientSocket = nullptr;\n";
-  code += "            log(\"Client disconnected\");\n";
   code += "        });\n";
-  code += "        log(\"Client connected from \" + clientSocket->peerAddress().toString());\n";
-  code += "    });\n\n";
+  code += "    });\n";
 
   code += "    debug(ANSI_BOLD + COLOR_HEADER + \"INITIALIZING STATE MACHINE\" + ANSI_RESET);\n";
   code += "    fsm.start();\n";
