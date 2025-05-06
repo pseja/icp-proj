@@ -12,11 +12,11 @@
 #include "src/backend/transition.hpp"
 #include "StateItem.hpp"
 
-class TransitionItem : public QObject, public QGraphicsLineItem {
+class TransitionItem : public QObject, public QGraphicsPathItem {
   Q_OBJECT
   
 public:
-    explicit TransitionItem(StateItem *fromState, StateItem *toState, QGraphicsItem *parent = nullptr);
+    explicit TransitionItem(StateItem *fromState, StateItem *toState, QGraphicsItem *parent = nullptr, int offset = 0);
     Transition *transition;
     void updatePosition();
     StateItem* getFrom();
@@ -32,6 +32,7 @@ private:
   StateItem *fromState;
   StateItem *toState;
   QGraphicsTextItem *label;
+  int offsetIndex;
 };
 
 #endif // STATEITEM_HPP

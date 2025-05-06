@@ -155,14 +155,21 @@ void MainWindow::loadFSM() {
       if (++col >= cols) { col = 0; ++row; }
     }
 
-    QMap<QPair<StateItem*, StateItem*>, int> transition_count;
+    QMap<QPair<QString, QString>, int> transition_count;
     for (Transition *transition : fsm->getTransitions()) {
+      qDebug() << "Transition from" << transition->getFrom()->getName()
+               << "to" << transition->getTo()->getName();
       State *from = transition->getFrom();
       State *to = transition->getTo();
       StateItem *fromItem = state_map.value(from, nullptr);
       StateItem *toItem = state_map.value(to, nullptr);
       if (fromItem && toItem) {
-        TransitionItem *transItem = new TransitionItem(fromItem, toItem);
+        QPair<QString, QString> pair(from->getName(), to->getName());
+        int count = transition_count.value(pair, 0);
+        qDebug() << "Transition count for" << pair << ":" << count;
+        transition_count[pair] = count + 1;
+
+        TransitionItem *transItem = new TransitionItem(fromItem, toItem, nullptr, count);
         transItem->transition = transition;
         automatView->scene()->addItem(transItem);
       }
