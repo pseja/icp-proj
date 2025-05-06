@@ -236,6 +236,8 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   code += "        }\n";
   code += "        clientSocket->flush();\n";
   code += "    }\n";
+  code += "    QPair<QString, QString> timerKey = qMakePair(from, to);\n";
+  code += "    timers[timerKey] = qMakePair(QDateTime::currentMSecsSinceEpoch(), ms);\n";
   code += "}\n\n";
 
   code += "QString generateStatusXml(const QString& state) {\n";
@@ -284,11 +286,20 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   code += "  root.appendChild(varsElem);\n";
 
   code += "  QDomElement timersElem = doc.createElement(\"timers\");\n";
-  code += "  extern QMap<QString, int> timers;\n";
+  code += "  extern QMap<QPair<QString, QString>, QPair<qint64, int>> timers;\n";
   code += "  for (auto it = timers.constBegin(); it != timers.constEnd(); ++it) {\n";
+  code += "    QString from = it.key().first;\n";
+  code += "    QString to = it.key().second;\n";
   code += "    QDomElement timerElem = doc.createElement(\"timer\");\n";
-  code += "    timerElem.setAttribute(\"name\", it.key());\n";
-  code += "    timerElem.setAttribute(\"msRemaining\", QString::number(it.value()));\n";
+  code += "    QDomElement fromElem = doc.createElement(\"from\");\n";
+  code += "    fromElem.appendChild(doc.createTextNode(from));\n";
+  code += "    QDomElement toElem = doc.createElement(\"to\");\n";
+  code += "    toElem.appendChild(doc.createTextNode(to));\n";
+  code += "    QDomElement msElem = doc.createElement(\"ms\");\n";
+  code += "    msElem.appendChild(doc.createTextNode(QString::number(it.value().second)));\n";
+  code += "    timerElem.appendChild(fromElem);\n";
+  code += "    timerElem.appendChild(toElem);\n";
+  code += "    timerElem.appendChild(msElem);\n";
   code += "    timersElem.appendChild(timerElem);\n";
   code += "  }\n";
   code += "  root.appendChild(timersElem);\n";
@@ -339,7 +350,7 @@ QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
   code += "bool debugEnabled = false;\n";
   code += "QTcpSocket* clientSocket = nullptr;\n";
   code += "QMap<QString, QVariant> variables;\n";
-  code += "QMap<QString, int> timers;\n\n";
+  code += "QMap<QPair<QString, QString>, QPair<qint64, int>> timers;\n\n";
 
   QMap<QString, Variable*> variables = fsm->getVariables();
   if (!variables.isEmpty()) {
