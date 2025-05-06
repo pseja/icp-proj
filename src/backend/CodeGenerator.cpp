@@ -101,6 +101,15 @@ QString CodeGenerator::generateHelperFunctions() {
   code += " ******************************************************************************/\n";
 
   code += "/**\n";
+  code += " * @brief Builds a QByteArray needed for the TCP communication.\n";
+  code += " * @param eventString The event as a QString (XML or plain text).\n";
+  code += " * @return QByteArray ready to send via TCP.\n";
+  code += " */\n";
+  code += "QByteArray buildEvent(const QString& eventString) {\n";
+  code += "    return (eventString + \"\\n\").toUtf8();\n";
+  code += "}\n\n";
+
+  code += "/**\n";
   code += " * @brief Gets the value of an input.\n";
   code += " * @param input Input name.\n";
   code += " * @return Current value of the input as a string, or empty if not found.\n";
@@ -141,20 +150,23 @@ QString CodeGenerator::generateHelperFunctions() {
   code += "    QString valueStr = value.toString();\n";
   code += "    debug(QString(\"output('%1', %2)\").arg(port).arg(valueStr));\n";
   code += "    outputs[port] = valueStr;\n";
-  code += "    logOutputEvent(port, outputs[port]);\n";
+  code += "    logOutputEvent(port, outputs[port]);\n\n";
+
   code += "    extern QTcpSocket* clientSocket;\n";
   code += "    if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
   code += "        QDomDocument doc;\n";
   code += "        QDomElement element = doc.createElement(\"event\");\n";
-  code += "        element.setAttribute(\"type\", \"output\");\n";
+  code += "        element.setAttribute(\"type\", \"output\");\n\n";
+
   code += "        QDomElement name = doc.createElement(\"name\");\n";
   code += "        name.appendChild(doc.createTextNode(port));\n";
   code += "        QDomElement valueElem = doc.createElement(\"value\");\n";
   code += "        valueElem.appendChild(doc.createTextNode(valueStr));\n";
   code += "        element.appendChild(name);\n";
-  code += "        element.appendChild(valueElem);\n";
+  code += "        element.appendChild(valueElem);\n\n";
+
   code += "        doc.appendChild(element);\n";
-  code += "        clientSocket->write(doc.toString(-1).toUtf8() + \"\\n\");\n";
+  code += "        clientSocket->write(buildEvent(doc.toString(-1)));\n";
   code += "        clientSocket->flush();\n";
   code += "    }\n";
   code += "}\n\n";
@@ -216,9 +228,9 @@ QString CodeGenerator::generateHelperFunctions() {
   code += "    extern QTcpSocket* clientSocket;\n";
   code += "    if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
   code += "        if (type == \"timerStart\") {\n";
-  code += "            clientSocket->write(QString(\"<event type=\\\"timerStart\\\"><name>%1</name><ms>%2</ms></event>\\n\").arg(name).arg(ms).toUtf8());\n";
+  code += "            clientSocket->write(buildEvent(QString(\"<event type=\\\"timerStart\\\"><name>%1</name><ms>%2</ms></event>\").arg(name).arg(ms)));\n";
   code += "        } else if (type == \"timerExpired\") {\n";
-  code += "            clientSocket->write(QString(\"<event type=\\\"timerExpired\\\"><name>%1</name></event>\\n\").arg(name).toUtf8());\n";
+  code += "            clientSocket->write(buildEvent(QString(\"<event type=\\\"timerExpired\\\"><name>%1</name></event>\").arg(name)));\n";
   code += "        }\n";
   code += "        clientSocket->flush();\n";
   code += "    }\n";
@@ -281,10 +293,10 @@ QString CodeGenerator::generateHelperFunctions() {
   code += " */\n";
   code += "void sendError(int code, const QString& msg) {\n";
   code += "    if (!clientSocket) return;\n";
-  code += "    QString error = QString(\"<event type=\\\"error\\\"><code>%1</code><message>%2</message></event>\\n\")\n";
+  code += "    QString error = QString(\"<event type=\\\"error\\\"><code>%1</code><message>%2</message></event>\")\n";
   code += "        .arg(code)\n";
   code += "        .arg(msg.toHtmlEscaped());\n";
-  code += "    clientSocket->write(error.toUtf8());\n";
+  code += "    clientSocket->write(buildEvent(error));\n";
   code += "    clientSocket->flush();\n";
   code += "}\n\n";
 
@@ -806,7 +818,8 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
     code += "        log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + \"" + stateName + "\" + ANSI_RESET + \" ENTERED\");\n";
     code += "        log(SECTION_SEPARATOR);\n";
     code += "        if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
-    code += "            clientSocket->write(QString(\"<event type=\\\"stateChange\\\"><name>%1</name></event>\\n\").arg(currentStateName).toUtf8());\n";
+    code += "            QString stateMsg = QString(\"<event type=\\\"stateChange\\\"><name>%1</name></event>\").arg(currentStateName);\n";
+    code += "            clientSocket->write(buildEvent(stateMsg));\n";
     code += "            clientSocket->flush();\n";
     code += "        }\n";
     if (!onEntry.isEmpty()) {
@@ -1017,22 +1030,27 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                    }\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"status\") {\n";
-  code += "                    QString state = fsm.configuration().isEmpty() ? \"UNKNOWN\" : (*fsm.configuration().begin())->objectName();\n";
-  code += "                    QString xml = generateStatusXml(state);\n";
-  code += "                    clientSocket->write(xml.toUtf8() + \"\\n\");\n";
+  code += "                    QString state = fsm.configuration().isEmpty()\n";
+  code += "                        ? \"UNKNOWN\"\n";
+  code += "                        : (*fsm.configuration().begin())->objectName();\n";
+  code += "                    QString statusXml = generateStatusXml(state);\n";
+  code += "                    QByteArray msg = buildEvent(statusXml);\n";
+  code += "                    clientSocket->write(msg);\n";
   code += "                    clientSocket->flush();\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"help\") {\n";
-  code += "                    clientSocket->write(\"<event type=\\\"log\\\"><message>Supported commands: set, call, status, reqFSM, help, quit</message></event>\\n\");\n";
+  code += "                    QString helpMsg = \"<event type=\\\"log\\\"><message>Supported commands: set, call, status, reqFSM, help, quit</message></event>\";\n";
+  code += "                    clientSocket->write(buildEvent(helpMsg));\n";
   code += "                    clientSocket->flush();\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"reqFSM\") {\n";
-  code += "                    clientSocket->write(QString(\"<event type=\\\"fsm\\\"><model><![CDATA[%1]]></model></event>\\n\").arg(FSM_XML).toUtf8());\n";
+  code += "                    QString fsmMsg = QString(\"<event type=\\\"fsm\\\"><model><![CDATA[%1]]></model></event>\").arg(FSM_XML);\n";
+  code += "                    clientSocket->write(buildEvent(fsmMsg));\n";
   code += "                    clientSocket->flush();\n";
   code += "                    log(\"FSM model XML sent to client (reqFSM)\");\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"quit\") {\n";
-  code += "                    clientSocket->write(\"Quitting\\n\");\n";
+  code += "                    clientSocket->write(buildEvent(\"Quitting\"));\n";
   code += "                    clientSocket->flush();\n";
   code += "                    clientSocket->disconnectFromHost();\n";
   code += "                    clientSocket->deleteLater();\n";
