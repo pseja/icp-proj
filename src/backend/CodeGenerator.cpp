@@ -1074,7 +1074,8 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                    debug(\"TCP: Sent help message\");\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"reqFSM\") {\n";
-  code += "                    QString fsmMsg = QString(\"<event type=\\\"fsm\\\"><model><![CDATA[%1]]></model></event>\").arg(FSM_XML);\n";
+  code += "                    QString fsmMsgLine = QString::fromUtf8(FSM_XML).replace('\\n', ' ').replace('\\r', ' ');\n";
+  code += "                    QString fsmMsg = QString(\"<event type=\\\"fsm\\\"><model><![CDATA[%1]]></model></event>\").arg(fsmMsgLine);\n";
   code += "                    clientSocket->write(buildEvent(fsmMsg));\n";
   code += "                    clientSocket->flush();\n";
   code += "                    debug(\"TCP: FSM model XML sent to client\");\n";
