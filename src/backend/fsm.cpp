@@ -30,6 +30,11 @@ QString FSM::getName()
     return name;
 }
 
+QString FSM::getXml() const {
+    // TODO: stub
+    return QString("<automaton name=\"ahoj\"></automaton>");
+}
+
 QString FSM::getComment()
 {
     return comment;
