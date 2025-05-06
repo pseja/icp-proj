@@ -30,7 +30,7 @@ class CodeGenerator : public QObject {
   QString generateHeaders();
   QString generateVariableDeclarations(FSM *fsm);
   QString generateRuntimeMonitoring();
-  QString generateHelperFunctions();
+  QString generateHelperFunctions(FSM *fsm);
   QString generateMainFunction(FSM *fsm);
   QString generateQStateMachineMain(FSM *fsm);
 

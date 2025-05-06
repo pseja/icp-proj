@@ -45,7 +45,7 @@ QString CodeGenerator::generateCode(FSM* fsm) {
   code += generateHeaders();
   code += generateVariableDeclarations(fsm);
   code += generateRuntimeMonitoring();
-  code += generateHelperFunctions();
+  code += generateHelperFunctions(fsm);
   code += generateMainFunction(fsm);
 
   return code;
@@ -91,9 +91,10 @@ QString CodeGenerator::generateHeaders() {
  *
  * Includes utility functions for value access, conversion, event flagging, and timer management.
  *
+ * @param fsm The state machine to generate helper functions for.
  * @return Code section as QString.
  */
-QString CodeGenerator::generateHelperFunctions() {
+QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   QString code;
 
   code += "/******************************************************************************\n";
@@ -267,13 +268,16 @@ QString CodeGenerator::generateHelperFunctions() {
   code += "  root.appendChild(outputsElem);\n";
 
   code += "  QDomElement varsElem = doc.createElement(\"variables\");\n";
-  code += "  extern QMap<QString, QVariant> variables;\n";
-  code += "  for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {\n";
-  code += "    QDomElement varElem = doc.createElement(\"var\");\n";
-  code += "    varElem.setAttribute(\"name\", it.key());\n";
-  code += "    varElem.appendChild(doc.createTextNode(it.value().toString()));\n";
-  code += "    varsElem.appendChild(varElem);\n";
-  code += "  }\n";
+  QMap<QString, Variable*> variables = fsm->getVariables();
+  for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
+    Variable* var = it.value();
+    QString varName = var->getName();
+    code += "  { QDomElement varElem = doc.createElement(\"var\");\n";
+    code += "    varElem.setAttribute(\"name\", \"" + varName + "\");\n";
+    code += "    varElem.appendChild(doc.createTextNode(QVariant::fromValue(" + varName + ").toString()));\n";
+    code += "    varsElem.appendChild(varElem);\n";
+    code += "  }\n";
+  }
   code += "  root.appendChild(varsElem);\n";
 
   code += "  QDomElement timersElem = doc.createElement(\"timers\");\n";
