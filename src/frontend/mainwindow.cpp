@@ -40,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,
           &MainWindow::saveState);
   connect(automatView, &AutomatView::addState, this, &MainWindow::addState);
+  connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveFSM);
+  connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::loadFSM);
 }
 
 MainWindow::~MainWindow() { delete ui; }
