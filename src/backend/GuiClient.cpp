@@ -80,12 +80,14 @@ void GuiClient::onReadyRead() {
         QString value = root.firstChildElement("value").text();
         qDebug() << "[OUTPUT]" << name << "=" << value;
       } else if (type == "timerStart") {
-        QString name = root.firstChildElement("name").text();
+        QString from = root.attribute("from");
+        QString to = root.attribute("to");
         QString ms = root.firstChildElement("ms").text();
-        qDebug() << "[TIMER START]" << name << ms << "ms";
+        qDebug() << "[TIMER START] from" << from << "to" << to << ms << "ms";
       } else if (type == "timerExpired") {
-        QString name = root.firstChildElement("name").text();
-        qDebug() << "[TIMER EXPIRED]" << name;
+        QString from = root.attribute("from");
+        QString to = root.attribute("to");
+        qDebug() << "[TIMER EXPIRED] from" << from << "to" << to;
       } else if (type == "fsm") {
         QString model = root.firstChildElement("model").text();
         qDebug() << "[FSM XML RECEIVED]";
