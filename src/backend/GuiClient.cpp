@@ -64,6 +64,12 @@ void GuiClient::onReadyRead() {
   while (socket->canReadLine()) {
     QString line = QString::fromUtf8(socket->readLine()).trimmed();
     if (line.isEmpty()) continue;
+    QDomDocument prettyDoc;
+    QString prettyXml = line;
+    if (prettyDoc.setContent(line)) {
+      prettyXml = prettyDoc.toString(2);
+    }
+    Logger::messageHandler(QtDebugMsg, {}, QString("Recieved command:\n%1").arg(prettyXml));
     QDomDocument doc;
     if (!doc.setContent(line)) {
       qWarning() << "Received malformed XML:" << line;
@@ -80,13 +86,13 @@ void GuiClient::onReadyRead() {
         QString value = root.firstChildElement("value").text();
         qDebug() << "[OUTPUT]" << name << "=" << value;
       } else if (type == "timerStart") {
-        QString from = root.attribute("from");
-        QString to = root.attribute("to");
+        QString from = root.firstChildElement("from").text();
+        QString to = root.firstChildElement("to").text();
         QString ms = root.firstChildElement("ms").text();
         qDebug() << "[TIMER START] from" << from << "to" << to << ms << "ms";
       } else if (type == "timerExpired") {
-        QString from = root.attribute("from");
-        QString to = root.attribute("to");
+        QString from = root.firstChildElement("from").text();
+        QString to = root.firstChildElement("to").text();
         qDebug() << "[TIMER EXPIRED] from" << from << "to" << to;
       } else if (type == "fsm") {
         QString model = root.firstChildElement("model").text();

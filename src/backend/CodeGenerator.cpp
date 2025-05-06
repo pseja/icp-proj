@@ -230,9 +230,9 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   code += "    extern QTcpSocket* clientSocket;\n";
   code += "    if (clientSocket && clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
   code += "        if (type == \"timerStart\") {\n";
-  code += "            clientSocket->write(buildEvent(QString(\"<event type=\\\"timerStart\\\" from=\\\"%1\\\" to=\\\"%2\\\"><ms>%3</ms></event>\").arg(from).arg(to).arg(ms)));\n";
+  code += "            clientSocket->write(buildEvent(QString(\"<event type=\\\"timerStart\\\"><from>%1</from><to>%2</to><ms>%3</ms></event>\").arg(from).arg(to).arg(ms)));\n";
   code += "        } else if (type == \"timerExpired\") {\n";
-  code += "            clientSocket->write(buildEvent(QString(\"<event type=\\\"timerExpired\\\" from=\\\"%1\\\" to=\\\"%2\\\"></event>\").arg(from).arg(to)));\n";
+  code += "            clientSocket->write(buildEvent(QString(\"<event type=\\\"timerExpired\\\"><from>%1</from><to>%2</to></event>\").arg(from).arg(to)));\n";
   code += "        }\n";
   code += "        clientSocket->flush();\n";
   code += "    }\n";
