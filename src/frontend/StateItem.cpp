@@ -14,7 +14,8 @@ StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *pa
   setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemSendsGeometryChanges);
   setBrush(Qt::cyan);
 
-  state = new State("State");
+  state = new State(name);
+  state->setCode(code);
   textItem = new QGraphicsTextItem(this);
   textItem->setDefaultTextColor(Qt::black);
   //state->setName("State");

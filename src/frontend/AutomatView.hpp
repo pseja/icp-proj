@@ -43,6 +43,7 @@ private:
   StateItem *transitionStart = nullptr;
   QGraphicsLineItem *templine = nullptr;
   FSM *fsm;
+  int stateCounter = 1;
 //  QGraphicsScene *scene;
 };
 

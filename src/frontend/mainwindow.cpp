@@ -6,6 +6,7 @@
 #include "src/frontend/StateItem.hpp"
 #include "src/frontend/TransitionItem.hpp"
 #include "src/frontend/ui_mainwindow.h"
+#include "src/backend/variable.hpp"
 #include <qdialogbuttonbox.h>
 #include <qgraphicsitem.h>
 #include <qlist.h>
@@ -34,12 +35,14 @@ MainWindow::MainWindow(QWidget *parent)
 
   automatView->setGeometry(360, 30, 1551, 561);
   fsm = new FSM("Default FSM");
+  fsm->addVariable(new Variable("int", "dummy", 0));
   // setCentralWidget(automatView);
   connect(automatView, &AutomatView::stateSelected, this,
           &MainWindow::updateStateInfo);
   connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,
           &MainWindow::saveState);
   connect(automatView, &AutomatView::addState, this, &MainWindow::addState);
+  connect(automatView, &AutomatView::addTransition, this, &MainWindow::addTransition);
   connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveFSM);
   connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::loadFSM);
 }
@@ -117,9 +120,16 @@ void MainWindow::addState(StateItem *StateItem) {
   fsm->addState(StateItem->state);
 }
 
+void MainWindow::addTransition(TransitionItem *transition) {
+  fsm->addTransition(transition->transition);
+}
+
 void MainWindow::saveFSM() {
   QString fileName = QFileDialog::getSaveFileName(this, tr("Save FSM"), "",
                                                   tr("XML Files (*.xml)"));
+  for (State *state : fsm->getStates()) {
+    qDebug() << "State in FSM:" << state->getName();
+  }
   if (!fileName.isEmpty()) {
     XMLParser::FSMtoXML(*fsm, fileName);
   }

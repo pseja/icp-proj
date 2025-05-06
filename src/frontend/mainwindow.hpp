@@ -30,6 +30,7 @@ private slots:
 public slots:
   void handleStateDeleted();
   void addState(StateItem *state);
+  void addTransition(TransitionItem *transition);
   void saveFSM();
   void loadFSM();
 

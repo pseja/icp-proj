@@ -47,7 +47,7 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
             new TransitionItem(transitionStart, endstate, nullptr);
 
         qDebug() << "transition created";
-        fsm->addTransition(transition->transition);
+        //fsm->addTransition(transition->transition);
         scene()->addItem(transition);
         emit addTransition(transition);
         break;
@@ -86,6 +86,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
   qDebug() << "got possion\n";
   // Vytvoříme dočasný state jen pro kontrolu kolizí
 
+  
   QList<QGraphicsItem *> clicked = scene()->selectedItems();
   for (QGraphicsItem *item : clicked) {
     if (typeid(*item) == typeid(StateItem)) {
@@ -96,12 +97,24 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
                                   QPen(Qt::black, 2, Qt::DashLine));
       return;
     }
+  }
+  
 
+  //kontroluju kolizi s jinym stateimtemem
+  for (QGraphicsItem *item : scene()->items()) {
+    if (typeid(*item) == typeid(StateItem)) {
+        if (item->boundingRect().translated(item->pos()).intersects(
+          QRectF(scenePos.x() - 40, scenePos.y() - 40, 80, 80))) {
+          return;
+        }
+    }
   }
 
+  qDebug() << "clicked";
   StateItem tempState(nullptr);
   tempState.setPos(scenePos);
-  fsm->addState(tempState.state, "State");
+  qDebug() << "added state to fsm";
+  //fsm->addState(tempState->state, "State");
   
   // Zjistíme, jestli by se překrýval s jinými objekty
   for (QGraphicsItem *item : scene()->items()) {
@@ -109,9 +122,10 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
       return;
     }
   }
-  
+
   qDebug() << "if it doesnt collide\n";
-  StateItem *state = new StateItem(nullptr);
+  QString stateName = QString("State%1").arg(stateCounter++);
+  StateItem *state = new StateItem(stateName);
   state->setBrush(Qt::cyan);
   state->setPos(scenePos);
   state->setFlags(QGraphicsItem::ItemIsSelectable |
