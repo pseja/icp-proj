@@ -155,6 +155,7 @@ void MainWindow::loadFSM() {
       if (++col >= cols) { col = 0; ++row; }
     }
 
+    QMap<QPair<StateItem*, StateItem*>, int> transition_count;
     for (Transition *transition : fsm->getTransitions()) {
       State *from = transition->getFrom();
       State *to = transition->getTo();
