@@ -274,6 +274,28 @@ QString CodeGenerator::generateHelperFunctions() {
   code += "  return doc.toString(-1);\n";
   code += "}\n";
 
+  code += "/**\n";
+  code += " * @brief Sends an error response to the client.\n";
+  code += " * @param code Error code.\n";
+  code += " * @param msg Error message.\n";
+  code += " */\n";
+  code += "void sendError(int code, const QString& msg) {\n";
+  code += "    if (!clientSocket) return;\n";
+  code += "    QString error = QString(\"<event type=\\\"error\\\"><code>%1</code><message>%2</message></event>\\n\")\n";
+  code += "        .arg(code)\n";
+  code += "        .arg(msg.toHtmlEscaped());\n";
+  code += "    clientSocket->write(error.toUtf8());\n";
+  code += "    clientSocket->flush();\n";
+  code += "}\n\n";
+
+  code += "// Error codes for TCP XML protocol\n";
+  code += "enum FsmErrorCode {\n";
+  code += "    ERR_UNKNOWN_INPUT      = 21,\n";
+  code += "    ERR_UNKNOWN_COMMAND    = 10,\n";
+  code += "    ERR_MALFORMED_XML      = 11,\n";
+  code += "    ERR_INTERNAL           = 99,\n";
+  code += "};\n\n";
+
   return code;
 }
 
@@ -960,15 +982,13 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                QString line = QString::fromUtf8(clientSocket->readLine()).trimmed();\n";
   code += "                if (line.isEmpty()) { continue; }\n";
   code += "                if (!line.startsWith(\"<\")) {\n";
-  code += "                    clientSocket->write(\"<event type=\\\"error\\\"><code>400</code><message>Malformed XML</message></event>\\n\");\n";
-  code += "                    clientSocket->flush();\n";
+  code += "                    sendError(ERR_MALFORMED_XML, \"Malformed XML\");\n";
   code += "                    log(\"Non-XML command received from client: \" + line);\n";
   code += "                    continue;\n";
   code += "                }\n";
   code += "                QDomDocument doc;\n";
   code += "                if (!doc.setContent(line)) {\n";
-  code += "                    clientSocket->write(\"<event type=\\\"error\\\"><code>400</code><message>Malformed XML</message></event>\\n\");\n";
-  code += "                    clientSocket->flush();\n";
+  code += "                    sendError(ERR_MALFORMED_XML, \"Malformed XML\");\n";
   code += "                    log(\"Malformed XML received from client\");\n";
   code += "                    continue;\n";
   code += "                }\n";
@@ -983,8 +1003,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                        fsm.postEvent(new InputEvent(name, value));\n";
   code += "                        log(\"Input '\" + name + \"' set to '\" + value + \"' via TCP\");\n";
   code += "                    } else {\n";
-  code += "                        clientSocket->write(\"<event type=\\\"error\\\"><code>404</code><message>Unknown input</message></event>\\n\");\n";
-  code += "                        clientSocket->flush();\n";
+  code += "                        sendError(ERR_UNKNOWN_INPUT, \"Unknown input\");\n";
   code += "                    }\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"call\") {\n";
@@ -994,8 +1013,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                        fsm.postEvent(new InputEvent(name, inputs[name]));\n";
   code += "                        log(\"Input '\" + name + \"' called via TCP\");\n";
   code += "                    } else {\n";
-  code += "                        clientSocket->write(\"<event type=\\\"error\\\"><code>404</code><message>Unknown input</message></event>\\n\");\n";
-  code += "                        clientSocket->flush();\n";
+  code += "                        sendError(ERR_UNKNOWN_INPUT, \"Unknown input\");\n";
   code += "                    }\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"status\") {\n";
@@ -1022,8 +1040,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                    log(\"Client requested disconnect via XML\");\n";
   code += "                    return;\n";
   code += "                } else {\n";
-  code += "                    clientSocket->write(\"<event type=\\\"error\\\"><code>400</code><message>Unknown command</message></event>\\n\");\n";
-  code += "                    clientSocket->flush();\n";
+  code += "                    sendError(ERR_UNKNOWN_COMMAND, \"Unknown command\");\n";
   code += "                    log(\"Unknown XML command received from client\");\n";
   code += "                    continue;\n";
   code += "                }\n";
