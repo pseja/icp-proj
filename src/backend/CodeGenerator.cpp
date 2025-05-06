@@ -238,8 +238,11 @@ QString CodeGenerator::generateHelperFunctions() {
 
   code += "QString generateStatusXml(const QString& state) {\n";
   code += "  QDomDocument doc;\n";
+  code += "  QDomElement eventElem = doc.createElement(\"event\");\n";
+  code += "  eventElem.setAttribute(\"type\", \"status\");\n";
   code += "  QDomElement root = doc.createElement(\"status\");\n";
-  code += "  doc.appendChild(root);\n";
+  code += "  eventElem.appendChild(root);\n";
+  code += "  doc.appendChild(eventElem);\n";
 
   code += "  QDomElement stateElem = doc.createElement(\"state\");\n";
   code += "  stateElem.appendChild(doc.createTextNode(state));\n";
