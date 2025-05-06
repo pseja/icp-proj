@@ -710,6 +710,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    QCoreApplication app(argc, argv);\n";
   code += "    QTcpServer server;\n";
   code += "    clientSocket = nullptr;\n";
+  code += "    const char* FSM_XML = R\"xml(\n" + fsm->getXml() + "\n)xml\";\n";
   code += "    \n";
   code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
   code += "    qDebug().noquote() << ANSI_BOLD + COLOR_HEADER + \"✧ ✧ ✧  OBLIVION STATE MACHINE  ✧ ✧ ✧\" + ANSI_RESET;\n";
@@ -1006,6 +1007,11 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                } else if (type == \"help\") {\n";
   code += "                    clientSocket->write(\"<event type=\\\"log\\\"><message>Supported commands: set, call, status, reqFSM, help, quit</message></event>\\n\");\n";
   code += "                    clientSocket->flush();\n";
+  code += "                    continue;\n";
+  code += "                } else if (type == \"reqFSM\") {\n";
+  code += "                    clientSocket->write(QString(\"<event type=\\\"fsm\\\"><model><![CDATA[%1]]></model></event>\\n\").arg(FSM_XML).toUtf8());\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    log(\"FSM model XML sent to client (reqFSM)\");\n";
   code += "                    continue;\n";
   code += "                } else if (type == \"quit\") {\n";
   code += "                    clientSocket->write(\"Quitting\\n\");\n";
