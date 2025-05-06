@@ -272,8 +272,10 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
     Variable* var = it.value();
     QString varName = var->getName();
+    QString varType = var->getType();
     code += "  { QDomElement varElem = doc.createElement(\"var\");\n";
     code += "    varElem.setAttribute(\"name\", \"" + varName + "\");\n";
+    code += "    varElem.setAttribute(\"type\", \"" + varType + "\");\n";
     code += "    varElem.appendChild(doc.createTextNode(QVariant::fromValue(" + varName + ").toString()));\n";
     code += "    varsElem.appendChild(varElem);\n";
     code += "  }\n";

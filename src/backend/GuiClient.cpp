@@ -111,7 +111,10 @@ void GuiClient::onReadyRead() {
         }
         QDomElement vars = statusElem.firstChildElement("variables");
         for (QDomElement var = vars.firstChildElement("var"); !var.isNull(); var = var.nextSiblingElement("var")) {
-          qDebug() << "  [VAR]" << var.attribute("name") << "=" << var.text();
+          QString varName = var.attribute("name");
+          QString varType = var.attribute("type");
+          QString varValue = var.text();
+          qDebug() << "  [VAR]" << varName << "(" << varType << ") =" << varValue;
         }
         QDomElement timers = statusElem.firstChildElement("timers");
         for (QDomElement timer = timers.firstChildElement("timer"); !timer.isNull(); timer = timer.nextSiblingElement("timer")) {
