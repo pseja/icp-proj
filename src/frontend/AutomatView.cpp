@@ -32,7 +32,6 @@ AutomatView::AutomatView(FSM *fsm, QWidget *parent) : QGraphicsView(parent) {
   //setAcceptHoverEvents(true);
 }
 
-
 void AutomatView::mousePressEvent(QMouseEvent *event) {
   QGraphicsView::mousePressEvent(event);
 

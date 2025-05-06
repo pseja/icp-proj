@@ -1,5 +1,7 @@
 #include "mainwindow.hpp"
 #include "AutomatView.hpp"
+#include "src/backend/state.hpp"
+#include "src/backend/transition.hpp"
 #include "src/backend/xmlparser.hpp"
 #include "src/frontend/StateItem.hpp"
 #include "src/frontend/TransitionItem.hpp"
@@ -8,6 +10,7 @@
 #include <qgraphicsitem.h>
 #include <qlist.h>
 #include <qlistwidget.h>
+#include <qmap.h>
 #include <qradiobutton.h>
 #include <qtextedit.h>
 #include <qvector.h>
@@ -16,6 +19,7 @@
 #include <QListWidget>
 #include <QDebug>
 #include <QFileDialog>
+#include <cmath>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -116,5 +120,40 @@ void MainWindow::saveFSM() {
                                                   tr("XML Files (*.xml)"));
   if (!fileName.isEmpty()) {
     XMLParser::FSMtoXML(*fsm, fileName);
+  }
+}
+
+void MainWindow::loadFSM() {
+  QString fileName = QFileDialog::getOpenFileName(this, tr("Open FSM"), "",
+                                                  tr("XML Files (*.xml)"));
+  if (!fileName.isEmpty()) {
+    automatView->scene()->clear();
+    XMLParser::XMLtoFSM(fileName, *fsm);
+
+    int cols = ceil(sqrt(fsm->getStates().size()));
+    int spacing = 120;
+    int row = 0, col = 0;
+    QMap<State*, StateItem*> state_map;
+    for (State *state : fsm->getStates()) {
+      StateItem *stateItem = new StateItem(state->getName(), state->getCode());
+      stateItem->state = state;
+      stateItem->setPos(100 + col * spacing, 100 + row * spacing);
+      automatView->scene()->addItem(stateItem);
+      state_map[state] = stateItem;
+      if (++col >= cols) { col = 0; ++row; }
+    }
+
+    for (Transition *transition : fsm->getTransitions()) {
+      State *from = transition->getFrom();
+      State *to = transition->getTo();
+      StateItem *fromItem = state_map.value(from, nullptr);
+      StateItem *toItem = state_map.value(to, nullptr);
+      if (fromItem && toItem) {
+        TransitionItem *transItem = new TransitionItem(fromItem, toItem);
+        transItem->transition = transition;
+        automatView->scene()->addItem(transItem);
+      }
+    }
+    
   }
 }
