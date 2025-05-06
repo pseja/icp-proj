@@ -746,6 +746,25 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    clientSocket = nullptr;\n";
   code += "    const char* FSM_XML = R\"xml(\n" + fsm->getXml() + "\n)xml\";\n";
   code += "    \n";
+  code += "    // --host and --port arguments\n";
+  code += "    QString hostStr = \"127.0.0.1\";\n";
+  code += "    quint16 port = 4242;\n";
+  code += "    for (int i = 1; i < argc; ++i) {\n";
+  code += "        QString arg = argv[i];\n";
+  code += "        if (arg == \"--host\" && i + 1 < argc) {\n";
+  code += "            hostStr = argv[++i];\n";
+  code += "        } else if (arg == \"--port\" && i + 1 < argc) {\n";
+  code += "            bool ok = false;\n";
+  code += "            int p = QString(argv[++i]).toInt(&ok);\n";
+  code += "            if (ok && p > 0 && p < 65536) { port = static_cast<quint16>(p); }\n";
+  code += "        }\n";
+  code += "    }\n";
+  code += "    QHostAddress hostAddr;\n";
+  code += "    if (!hostAddr.setAddress(hostStr)) {\n";
+  code += "        log(\"Invalid host address specified, defaulting to 127.0.0.1\");\n";
+  code += "        hostAddr = QHostAddress::LocalHost;\n";
+  code += "    }\n";
+  code += "    \n";
   code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
   code += "    qDebug().noquote() << ANSI_BOLD + COLOR_HEADER + \"✧ ✧ ✧  OBLIVION STATE MACHINE  ✧ ✧ ✧\" + ANSI_RESET;\n";
   code += "    qDebug().noquote() << COLOR_TRANSITION + \"     Navigating the infinite expanse of software states\" + ANSI_RESET;\n";
@@ -973,7 +992,8 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    });\n\n";
 
   code += "    // TCP communication\n";
-  code += "    server.listen(QHostAddress::LocalHost, 4242);\n";
+  code += "    server.listen(hostAddr, port);\n";
+  code += "    log(QString(\"Listening for TCP connections on %1:%2\").arg(hostAddr.toString()).arg(port));\n";
   code += "    QObject::connect(&server, &QTcpServer::newConnection, [&]() {\n";
   code += "        // Only allow one client\n";
   code += "        if (clientSocket) {\n";
