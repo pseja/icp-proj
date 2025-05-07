@@ -163,6 +163,9 @@ void MainWindow::loadFSM() {
       State *to = transition->getTo();
       StateItem *fromItem = state_map.value(from, nullptr);
       StateItem *toItem = state_map.value(to, nullptr);
+      if (!fromItem || !toItem) {
+        qDebug() << "Pointer mismatch for transition from" << from->getName() << "to" << to->getName();
+      }
       if (fromItem && toItem) {
         QPair<QString, QString> pair(from->getName(), to->getName());
         int count = transition_count.value(pair, 0);

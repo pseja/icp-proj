@@ -14,9 +14,23 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
 
     //setting color and axis position of transition line
     setPen(QPen(Qt::black, 2));
-    setZValue(-1);
+    setZValue(-10);
+    fromState = startState;
+    toState = endState;
 
+    if (fromState == toState) {
+      QPointF p = fromState->pos();
+      double radius = 30.0 + 20.0 * offsetIndex;
+      QRectF ellipseRect(p.x() - radius, p.y() - 2*radius, 2*radius, 2*radius);
+      QPainterPath path;
+      path.arcMoveTo(ellipseRect, 225);
+      path.arcTo(ellipseRect, 225, -270);
+      setPath(path);
 
+      label = new QGraphicsTextItem(QString("Transition %1").arg(offsetIndex), this);
+      label->setDefaultTextColor(Qt::darkRed);
+      label->setPos(p.x(), p.y() - 2 * radius - 20);
+    } else {
     QPointF p1 = startState->pos();
     QPointF p2 = endState->pos();
 
@@ -26,7 +40,7 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
         normal /= line.length();
     }
 
-    double offset = 80.0 * offsetIndex;
+    double offset = 40.0 * (offsetIndex - 0.5);
     QPointF mid = (p1 + p2) / 2 + normal * offset;
 
     QPainterPath path(p1);
@@ -35,12 +49,11 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
 
 
     //asigning state to transition, will be used for search, then labeling the transition
-    fromState = startState;
-    toState = endState;
-    label = new QGraphicsTextItem("Transition", this);
+
+    label = new QGraphicsTextItem(QString("Transition %1").arg(offsetIndex), this);
     label->setDefaultTextColor(Qt::darkRed);
     label->setPos(mid);
-    
+  }    
     //we call drawing(i.e. updateposition) for the first time
     updatePosition();
     qDebug() << "possition updated";
@@ -66,12 +79,28 @@ void TransitionItem::updatePosition() {
     QPointF p1 = fromState->pos();
     QPointF p2 = toState->pos();
 
+    if (fromState == toState) {
+      // Smyčka: vykresli oblouk nad stavem, každý další offsetIndex posune smyčku výš
+      double radius = 30.0 + 20.0 * offsetIndex;
+      QRectF ellipseRect(p1.x() - radius, p1.y() - 2*radius, 2*radius, 2*radius);
+      QPainterPath path;
+      path.arcMoveTo(ellipseRect, 225);
+      path.arcTo(ellipseRect, 225, -270);
+      setPath(path);
+
+      if (label) {
+        label->setPos(p1.x(), p1.y() - 2*radius - 20);
+      }
+      return;
+    }
+
+
     QLineF line(p1, p2);
     QPointF normal(-line.dy(), line.dx());
     if (line.length() != 0)
         normal /= line.length();
 
-    double offset = 80.0 * offsetIndex; // offsetIndex musí být member proměnná!
+    double offset = 40.0 * (offsetIndex - 0.5); // offsetIndex musí být member proměnná!
     QPointF mid = (p1 + p2) / 2 + normal * offset;
 
     QPainterPath path(p1);
