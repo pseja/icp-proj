@@ -33,15 +33,15 @@ MainWindow::MainWindow(QWidget *parent)
   fsm = new FSM("Default FSM");
   automatView = new AutomatView(fsm, this);
   automatView->setMinimumSize(400, 300);
-
+  ui->logConsole->setStyleSheet("background-color:rgb(203, 202, 202);");
+  ui->lineEdit_2->setStyleSheet("background-color:rgb(160, 160, 160);");
   automatView->setGeometry(710, 30, 1205, 960);
   fsm = new FSM("Default FSM");
   fsm->addVariable(new Variable("int", "dummy", 0));
   // setCentralWidget(automatView);
-  connect(automatView, &AutomatView::stateSelected, this,
-          &MainWindow::updateStateInfo);
-  connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,
-          &MainWindow::saveState);
+  
+  connect(automatView, &AutomatView::stateSelected, this,&MainWindow::updateStateInfo);
+  connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,&MainWindow::saveState);
   connect(automatView, &AutomatView::addState, this, &MainWindow::addState);
   connect(automatView, &AutomatView::addTransition, this, &MainWindow::addTransition);
   connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveFSM);

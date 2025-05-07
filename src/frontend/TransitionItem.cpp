@@ -43,7 +43,7 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
             path.arcMoveTo(ellipseRect, angle);
             path.arcTo(ellipseRect, angle, -360);
 
-            // Kolizní detekce (zjednodušeně)
+            //Kolizní detekce (zjednodušeně)
             bool collision = false;
             if (scene()) {
                 for (QGraphicsItem* item : scene()->items(path.boundingRect())) {
