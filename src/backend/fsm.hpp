@@ -178,6 +178,8 @@ class FSM : public QStateMachine
      */
     void setComment(QString new_comment);
 
+    // TODO: stub
+    QString getXml() const;
     /**
      * @brief Sets the initial state of the finite state machine.
      * @param new_initial_state A pointer to the new initial State object.
