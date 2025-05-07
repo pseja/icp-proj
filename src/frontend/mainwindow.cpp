@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
   automatView = new AutomatView(fsm, this);
   automatView->setMinimumSize(400, 300);
 
-  automatView->setGeometry(360, 30, 1551, 561);
+  automatView->setGeometry(710, 30, 1205, 960);
   fsm = new FSM("Default FSM");
   fsm->addVariable(new Variable("int", "dummy", 0));
   // setCentralWidget(automatView);
