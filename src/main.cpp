@@ -47,7 +47,23 @@ int main(int argc, char* argv[]) {
   // }
   // return 0;
 
-  GuiClient* client = new GuiClient(&app);
+  // --host and --port arguments
+  QString hostStr = "127.0.0.1";
+  quint16 port = 54323;
+  for (int i = 1; i < argc; ++i) {
+    QString arg = argv[i];
+    if (arg == "--host" && i + 1 < argc) {
+      hostStr = argv[++i];
+    } else if (arg == "--port" && i + 1 < argc) {
+      bool ok = false;
+      int p = QString(argv[++i]).toInt(&ok);
+      if (ok && p > 1024 && p < 65536) {
+        port = static_cast<quint16>(p);
+      }
+    }
+  }
+
+  GuiClient* client = new GuiClient(hostStr, port, &app);
 
   QTimer::singleShot(0, [client]() {
     client->connectToServer();

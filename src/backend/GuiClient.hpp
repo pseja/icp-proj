@@ -8,7 +8,7 @@
 class GuiClient : public QObject {
   Q_OBJECT
  public:
-  explicit GuiClient(QObject* parent = nullptr);
+  explicit GuiClient(const QString& host = "127.0.0.1", quint16 port = 54323, QObject* parent = nullptr);
   void connectToServer();
   void sendCommand(const QString& xml);
   void sendSet(const QString& name, const QString& value);
@@ -24,6 +24,8 @@ class GuiClient : public QObject {
 
  private:
   QTcpSocket* socket;
+  QString m_host;
+  quint16 m_port;
 };
 
 #endif  // GUICLIENT_HPP

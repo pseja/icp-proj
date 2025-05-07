@@ -2,17 +2,18 @@
 
 #include "logger.hpp"
 
-GuiClient::GuiClient(QObject* parent) : QObject(parent) {
+GuiClient::GuiClient(const QString& host, quint16 port, QObject* parent)
+    : QObject(parent), m_host(host), m_port(port) {
   socket = new QTcpSocket(this);
   connect(socket, &QTcpSocket::readyRead, this, &GuiClient::onReadyRead);
 }
 
 void GuiClient::connectToServer() {
-  socket->connectToHost("127.0.0.1", 4242);
+  socket->connectToHost(m_host, m_port);
   if (socket->waitForConnected(3000)) {
-    Logger::messageHandler(QtInfoMsg, {}, "Connected to 127.0.0.1:4242");
+    Logger::messageHandler(QtInfoMsg, {}, QString("Connected to %1:%2").arg(m_host).arg(m_port));
   } else {
-    Logger::messageHandler(QtCriticalMsg, {}, "Failed to connect: " + socket->errorString());
+    Logger::messageHandler(QtCriticalMsg, {}, "Failed to connect after 3 seconds: " + socket->errorString());
   }
 }
 

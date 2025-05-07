@@ -769,7 +769,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    \n";
   code += "    // --host and --port arguments\n";
   code += "    QString hostStr = \"127.0.0.1\";\n";
-  code += "    quint16 port = 4242;\n";
+  code += "    quint16 port = 54323;\n";
   code += "    for (int i = 1; i < argc; ++i) {\n";
   code += "        QString arg = argv[i];\n";
   code += "        if (arg == \"--host\" && i + 1 < argc) {\n";
@@ -777,7 +777,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "        } else if (arg == \"--port\" && i + 1 < argc) {\n";
   code += "            bool ok = false;\n";
   code += "            int p = QString(argv[++i]).toInt(&ok);\n";
-  code += "            if (ok && p > 0 && p < 65536) { port = static_cast<quint16>(p); }\n";
+  code += "            if (ok && p > 1024 && p < 65536) { port = static_cast<quint16>(p); }\n";
   code += "        }\n";
   code += "    }\n";
   code += "    QHostAddress hostAddr;\n";
