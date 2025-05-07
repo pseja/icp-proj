@@ -13,6 +13,7 @@
 #include <qlist.h>
 #include <qlistwidget.h>
 #include <qmap.h>
+#include <qprocess.h>
 #include <qradiobutton.h>
 #include <qtextedit.h>
 #include <qvector.h>
@@ -22,6 +23,7 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <cmath>
+#include <QProcess>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -48,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::loadFSM);
   connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonBox, &QDialogButtonBox::accepted, this,&MainWindow::saveTransition);
+  connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -215,4 +218,12 @@ void MainWindow::loadFSM() {
     }
     
   }
+}
+
+void MainWindow::runFSM() {
+  QString xmlPath = QDir::temp().filePath("fsm_run.xml");
+  XMLParser::FSMtoXML(*fsm, xmlPath);
+
+  QProcess generation;
+  
 }
