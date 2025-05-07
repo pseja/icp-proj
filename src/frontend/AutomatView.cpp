@@ -24,7 +24,8 @@ AutomatView::AutomatView(FSM *fsm, QWidget *parent) : QGraphicsView(parent) {
   setMinimumSize(400, 300); // Nastav minimální velikost
   setScene(new QGraphicsScene(this));
   setRenderHint(QPainter::Antialiasing);
-  setDragMode(QGraphicsView::RubberBandDrag);
+  // setDragMode(QGraphicsView::RubberBandDrag);
+  setDragMode(QGraphicsView::NoDrag);
   scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
   scene()->setSceneRect(rect()); // důležité: nastav scény velikost podle view
   scene()->installEventFilter(this); // pro ladění pohybů, pokud chceš
