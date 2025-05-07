@@ -2,6 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include <qlistwidget.h>
 #include <qobjectdefs.h>
 #include <qvector.h>
 #include "AutomatView.hpp"
@@ -33,6 +34,8 @@ public slots:
   void addTransition(TransitionItem *transition);
   void saveFSM();
   void loadFSM();
+  void editTransition(QListWidgetItem *item);
+  void saveTransition();
 
 private:
   FSM *fsm;
@@ -40,5 +43,7 @@ private:
   AutomatView *automatView;
   StateItem *selectedState = nullptr;
   void loadAutomat(const QVector<StateItem *> &states);
+  QVector<TransitionItem*> transitionItemsForSelectedState;
+  TransitionItem* selectedTransition = nullptr;
 };
 #endif // MAINWINDOW_HPP

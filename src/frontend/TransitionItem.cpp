@@ -2,9 +2,11 @@
 #include "src/frontend/StateItem.hpp"
 #include <QPen>
 #include <QPainter>
+#include <qgraphicsscene.h>
 #include <qline.h>
 #include <qdebug.h>
 #include <qpoint.h>
+#include <qmath.h>
 
 TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGraphicsItem *parent, int offsetIndex)
     : QObject(), QGraphicsPathItem(parent), offsetIndex(offsetIndex) {
@@ -17,22 +19,54 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
     setZValue(-10);
     fromState = startState;
     toState = endState;
-
-    if (fromState == toState) {
-      QPointF p = fromState->pos();
-      double radius = 30.0 + 20.0 * offsetIndex;
-      QRectF ellipseRect(p.x() - radius, p.y() - 2*radius, 2*radius, 2*radius);
-      QPainterPath path;
-      path.arcMoveTo(ellipseRect, 225);
-      path.arcTo(ellipseRect, 225, -270);
-      setPath(path);
-
-      label = new QGraphicsTextItem(QString("Transition %1").arg(offsetIndex), this);
-      label->setDefaultTextColor(Qt::darkRed);
-      label->setPos(p.x(), p.y() - 2 * radius - 20);
-    } else {
     QPointF p1 = startState->pos();
     QPointF p2 = endState->pos();
+
+    if (fromState == toState) {
+        QPointF p = fromState->pos();
+        double baseAngle = 270.0; // nahoru
+        double angleStep = 30.0;
+        double radius = 25.0 + 15.0 * offsetIndex;
+        int maxTries = 12;
+        double angle = baseAngle;
+        QRectF ellipseRect;
+        QPainterPath path;
+
+        for (int i = 0; i < maxTries; ++i) {
+            double rad = angle * M_PI / 180.0;
+            double dx = cos(rad) * radius;
+            double dy = sin(rad) * radius;
+            QPointF center = p + QPointF(dx, dy);
+
+            ellipseRect = QRectF(center.x() - radius, center.y() - radius, 2*radius, 2*radius);
+            path = QPainterPath();
+            path.arcMoveTo(ellipseRect, angle);
+            path.arcTo(ellipseRect, angle, -360);
+
+            // Kolizní detekce (zjednodušeně)
+            bool collision = false;
+            if (scene()) {
+                for (QGraphicsItem* item : scene()->items(path.boundingRect())) {
+                  if (item != this) {
+                      auto other = dynamic_cast<TransitionItem*>(item);
+                      if (other && other->path().intersects(path)) {
+                          collision = true;
+                          break;
+                      }
+                  }
+                }
+            }
+            if (!collision) break;
+            angle += angleStep;
+        }
+
+        setPath(path);
+        label = new QGraphicsTextItem(QString("Transition %1").arg(offsetIndex), this);
+        label->setDefaultTextColor(Qt::darkRed);
+        label->setPos(ellipseRect.center().x(), ellipseRect.top() - 20);
+        setZValue(-20);
+    } else {
+
 
     QLineF line(p1, p2);
     QPointF normal(-line.dy(), line.dx());
@@ -80,18 +114,46 @@ void TransitionItem::updatePosition() {
     QPointF p2 = toState->pos();
 
     if (fromState == toState) {
-      // Smyčka: vykresli oblouk nad stavem, každý další offsetIndex posune smyčku výš
-      double radius = 30.0 + 20.0 * offsetIndex;
-      QRectF ellipseRect(p1.x() - radius, p1.y() - 2*radius, 2*radius, 2*radius);
-      QPainterPath path;
-      path.arcMoveTo(ellipseRect, 225);
-      path.arcTo(ellipseRect, 225, -270);
-      setPath(path);
+            QPointF p = fromState->pos();
+            double baseAngle = 270.0;
+            double angleStep = 30.0;
+            double radius = 25.0 + 15.0 * offsetIndex;
+            int maxTries = 12;
+            double angle = baseAngle;
+            QRectF ellipseRect;
+            QPainterPath path;
 
-      if (label) {
-        label->setPos(p1.x(), p1.y() - 2*radius - 20);
-      }
-      return;
+            for (int i = 0; i < maxTries; ++i) {
+                double rad = angle * M_PI / 180.0;
+                double dx = cos(rad) * radius;
+                double dy = sin(rad) * radius;
+                QPointF center = p + QPointF(dx, dy);
+
+                ellipseRect = QRectF(center.x() - radius, center.y() - radius, 2*radius, 2*radius);
+                path = QPainterPath();
+                path.arcMoveTo(ellipseRect, angle);
+                path.arcTo(ellipseRect, angle, -360);
+
+                bool collision = false;
+                if (scene()) {
+                    for (QGraphicsItem* item : scene()->items(path.boundingRect())) {
+                      if (item != this) {
+                          auto other = dynamic_cast<TransitionItem*>(item);
+                          if (other && other->path().intersects(path)) {
+                              collision = true;
+                              break;
+                          }
+                      }
+                    }
+                }
+                if (!collision) break;
+                angle += angleStep;
+            }
+
+            setPath(path);
+            if (label) label->setPos(ellipseRect.center().x(), ellipseRect.top() - 20);
+            setZValue(-20);
+            return;
     }
 
 
