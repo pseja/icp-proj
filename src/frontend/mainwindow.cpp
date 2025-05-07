@@ -9,6 +9,7 @@
 #include "src/backend/variable.hpp"
 #include <qdialogbuttonbox.h>
 #include <qgraphicsitem.h>
+#include <qlineedit.h>
 #include <qlist.h>
 #include <qlistwidget.h>
 #include <qmap.h>
@@ -164,6 +165,7 @@ void MainWindow::saveTransition() {
 
     selectedTransition->transition->setEvent(lineEdit->text());
     selectedTransition->transition->setCondition(conditionEdit->text());
+    selectedTransition->setLabel(conditionEdit->text());
     selectedTransition->transition->setDelay(delayEdit->text().toInt());
     selectedTransition->transition->setDelayVariableName(delayVarEdit->text());
 }
@@ -207,6 +209,7 @@ void MainWindow::loadFSM() {
 
         TransitionItem *transItem = new TransitionItem(fromItem, toItem, nullptr, count);
         transItem->transition = transition;
+        transItem->setLabel(transition->getCondition());
         automatView->scene()->addItem(transItem);
       }
     }

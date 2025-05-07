@@ -61,7 +61,7 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
         }
 
         setPath(path);
-        label = new QGraphicsTextItem(QString("Transition %1").arg(offsetIndex), this);
+        label = new QGraphicsTextItem(transition->getCondition(), this);
         label->setDefaultTextColor(Qt::darkRed);
         label->setPos(ellipseRect.center().x(), ellipseRect.top() - 20);
         setZValue(-20);
@@ -84,7 +84,7 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
 
     //asigning state to transition, will be used for search, then labeling the transition
 
-    label = new QGraphicsTextItem(QString("Transition %1").arg(offsetIndex), this);
+    label = new QGraphicsTextItem(transition->getCondition(), this);
     label->setDefaultTextColor(Qt::darkRed);
     label->setPos(mid);
   }    

@@ -20,7 +20,9 @@ public:
     Transition *transition;
     void updatePosition();
     StateItem* getFrom();
-    StateItem* getTo();
+    StateItem *getTo();
+    QString getLabel() const { return label->toPlainText(); }
+    void setLabel(const QString &text) { label->setPlainText(text); }
 
 protected:
 //  void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
