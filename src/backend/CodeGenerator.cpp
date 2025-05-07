@@ -788,7 +788,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    \n";
   code += "    qDebug().noquote() << \"\\n\" + DOUBLE_SEPARATOR;\n";
   code += "    qDebug().noquote() << ANSI_BOLD + COLOR_HEADER + \"✧ ✧ ✧  OBLIVION STATE MACHINE  ✧ ✧ ✧\" + ANSI_RESET;\n";
-  code += "    qDebug().noquote() << COLOR_TRANSITION + \"     Navigating the infinite expanse of software states\" + ANSI_RESET;\n";
+  code += "    qDebug().noquote() << COLOR_TRANSITION + \"     we looove finite state machines (｡◕‿‿◕｡)\" + ANSI_RESET;\n";
   code += "    qDebug().noquote() << DOUBLE_SEPARATOR + \"\\n\";\n";
   code += "    \n";
   code += "    debug(\"Starting FSM application with QStateMachine\");\n";
@@ -867,6 +867,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
       code += "        " + onEntry + "\n";
     }
     code += "        log(SECTION_SEPARATOR);\n";
+    code += "        log(\" \");\n";
     code += "    });\n\n";
   }
 
