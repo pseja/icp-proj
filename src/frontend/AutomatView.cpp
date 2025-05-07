@@ -41,7 +41,7 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
 
     for (QGraphicsItem *item : clicked) {
       StateItem *endstate = dynamic_cast<StateItem *>(item);
-      if (endstate && endstate != transitionStart) {
+      if (endstate) {
         int count = 0;
         for (QGraphicsItem *other : scene()->items()) {
           TransitionItem *ti = dynamic_cast<TransitionItem *>(other);
