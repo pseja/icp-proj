@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
   automatView->setGeometry(710, 30, 1205, 960);
   fsm = new FSM("Default FSM");
   fsm->addVariable(new Variable("int", "dummy", 0));
-  client = new GuiClient(this);
+  client = new GuiClient("127.0.0.1", 4242, this);
   // setCentralWidget(automatView);
   
   connect(automatView, &AutomatView::stateSelected, this,&MainWindow::updateStateInfo);
