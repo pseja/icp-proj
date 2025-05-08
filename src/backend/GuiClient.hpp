@@ -23,6 +23,9 @@ class GuiClient : public QObject {
  public slots:
   void onReadyRead();
 
+signals:
+  void stateChange(const QString& state);
+  void output(const QString& name, const QString& value);
  private:
   QTcpSocket* socket;
   QString m_host;

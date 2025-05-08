@@ -29,6 +29,7 @@ private slots:
     void saveState();
     void updateStateInfo(StateItem *state);
     void on_addStateButton_clicked();
+    void stateChanged(QString stateName);
 public slots:
   void handleStateDeleted();
   void addState(StateItem *state);

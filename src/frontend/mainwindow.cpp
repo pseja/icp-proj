@@ -58,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
   connect(client, &GuiClient::onReadyRead, this, &MainWindow::onReadyRead);
+  connect(client, &GuiClient::stateChange, this, &MainWindow::stateChanged);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -158,6 +159,20 @@ void MainWindow::saveFSM() {
   }
   if (!fileName.isEmpty()) {
     XMLParser::FSMtoXML(*fsm, fileName);
+  }
+}
+
+void MainWindow::stateChanged(QString stateName) {
+  for (QGraphicsItem *item : automatView->scene()->items()) {
+    if (typeid(*item) != typeid(StateItem)) {continue;}
+    StateItem *state = dynamic_cast<StateItem *>(item);
+    if (state->state->getName() == stateName) {
+      state->setBrush(Qt::green);
+      state->setPen(QPen(Qt::black, 2));
+    } else {
+      state->setBrush(Qt::cyan);
+      state->setPen(QPen(Qt::black, 1));
+    }
   }
 }
 

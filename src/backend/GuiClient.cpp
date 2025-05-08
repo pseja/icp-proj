@@ -87,6 +87,7 @@ void GuiClient::onReadyRead() {
       if (type == "stateChange") {
         QString state = root.firstChildElement("name").text();
         qDebug() << "[STATE]" << state;
+        emit stateChange(state);
       } else if (type == "output") {
         QString name = root.firstChildElement("name").text();
         QString value = root.firstChildElement("value").text();
