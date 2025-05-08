@@ -1,5 +1,6 @@
 #include "mainwindow.hpp"
 #include "AutomatView.hpp"
+#include "backend/CodeGenerator.hpp"
 #include "backend/state.hpp"
 #include "backend/transition.hpp"
 #include "backend/xmlparser.hpp"
@@ -9,6 +10,7 @@
 #include "backend/variable.hpp"
 #include <qdialogbuttonbox.h>
 #include <qgraphicsitem.h>
+#include <qdir.h>
 #include <qlineedit.h>
 #include <qlist.h>
 #include <qlistwidget.h>
@@ -282,6 +284,40 @@ void MainWindow::runFSM() {
   QString xmlPath = QDir::temp().filePath("fsm_run.xml");
   XMLParser::FSMtoXML(*fsm, xmlPath);
 
-  QProcess generation;
-  
+  //code generation part, using codegen class
+  CodeGenerator codeGen;
+  QString generatedCode = codeGen.generateCode(fsm);
+  QString genCpp = QDir::temp().filePath("fsm_generated.cpp");
+  QFile file(genCpp);
+  //writing to file
+  if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    QTextStream out(&file);
+    out << generatedCode;
+    file.close();
+  } else {
+    qDebug() << "Failed to save generated code to file" << genCpp;
+    return;
+  }
+
+  //compiling the generated code using g++
+  //using process because compiler is not our class
+  QString exe = QDir::temp().filePath("fsm_run");
+  QProcess compiling;
+  //missing qt5 libraries need to by added for compilation
+  QStringList args = {genCpp, "-o", exe, "-fPIC", "-std=c++17"};
+  QString pkgConfig = "`pkg-config --cflags --libs Qt5Core Qt5Network Qt5Widgets Qt5Xml`";
+  QString command = QString("g++ %1 %2").arg(args.join(' '), pkgConfig);
+  compiling.start("bash", QStringList() << "-c" << command);
+  if (!compiling.waitForFinished() || compiling.exitCode() != 0) {
+    qDebug() << "Compilation failed:" << compiling.readAllStandardError();
+    return;
+  }
+
+  QProcess *serverProcess = new QProcess(this);
+  serverProcess->start(exe, QStringList{});
+  if (!serverProcess->waitForStarted()) {
+    qDebug() << "Failed to start server process";
+    return;
+  }
+  qDebug() << "Server process started with PID:" << serverProcess->processId();
 }
