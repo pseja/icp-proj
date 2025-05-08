@@ -1073,6 +1073,8 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    });\n\n";
 
   code += "    // TCP communication\n";
+  code += "    server.listen(hostAddr, port);\n";
+  code += "    log(QString(\"Listening for TCP connections on %1:%2\").arg(hostAddr.toString()).arg(port));\n";
   code += "    // QTcpServer::newConnection lambda\n";
   code += "    QObject::connect(&server, &QTcpServer::newConnection, [&]() {\n";
   code += "        while (server.hasPendingConnections()) {\n";
