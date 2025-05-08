@@ -140,6 +140,9 @@ void GuiClient::onReadyRead() {
           QString ms = timer.firstChildElement("ms").text();
           qDebug() << "  [TIMER] from" << from << "to" << to << "remaining:" << ms << "ms";
         }
+      } else if (type == "shutdown") {
+        QString shutdownMsg = root.firstChildElement("message").text();
+        qDebug() << "[SHUTDOWN] Server FSM shutting down:" << shutdownMsg;
       } else {
         qDebug() << "[EVENT] type=" << type << line;
       }
