@@ -5,8 +5,7 @@
  * @date 8. May 2025
  */
 
-#ifndef CODEGEN_HPP
-#define CODEGEN_HPP
+#pragma once
 
 #include <QObject>
 #include <QString>
@@ -57,5 +56,3 @@ class CodeGenerator : public QObject {
                                  const State *sourceState,
                                  const State *targetState);
 };
-
-#endif  // CODEGEN_HPP

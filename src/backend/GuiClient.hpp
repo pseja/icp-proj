@@ -5,8 +5,7 @@
  * @date 8. May 2025
  */
 
-#ifndef GUICLIENT_HPP
-#define GUICLIENT_HPP
+#pragma once
 
 #include <QDomDocument>
 #include <QObject>
@@ -35,5 +34,3 @@ class GuiClient : public QObject {
   QString m_host;
   quint16 m_port;
 };
-
-#endif  // GUICLIENT_HPP
