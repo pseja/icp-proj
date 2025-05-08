@@ -309,15 +309,15 @@ void MainWindow::runFSM() {
   QString command = QString("g++ %1 %2").arg(args.join(' '), pkgConfig);
   compiling.start("bash", QStringList() << "-c" << command);
   if (!compiling.waitForFinished() || compiling.exitCode() != 0) {
-    qDebug() << "Compilation failed:" << compiling.readAllStandardError();
+    qDebug() << "Compilation failed SADGE:" << compiling.readAllStandardError();
     return;
   }
 
   QProcess *serverProcess = new QProcess(this);
   serverProcess->start(exe, QStringList{});
   if (!serverProcess->waitForStarted()) {
-    qDebug() << "Failed to start server process";
+    qDebug() << "Failed to start server process SADGE";
     return;
   }
-  qDebug() << "Server process started with PID:" << serverProcess->processId();
+  qDebug() << "Server is running RAAAAHHHH:" << serverProcess->processId();
 }
