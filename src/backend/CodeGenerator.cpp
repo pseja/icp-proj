@@ -1,3 +1,10 @@
+/**
+ * @file CodeGenerator.cpp
+ * @brief Implementation of the CodeGenerator class for generating C++ code from FSM memory instances.
+ * @author xcsirim00
+ * @date 8. May 2025
+ */
+
 #include "CodeGenerator.hpp"
 
 #include <QDebug>

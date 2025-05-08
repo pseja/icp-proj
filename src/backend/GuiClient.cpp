@@ -1,3 +1,10 @@
+/**
+ * @file GuiClient.cpp
+ * @brief Implementation of the GuiClient class for TCP communication with the FSM server.
+ * @author xcsirim00
+ * @date 8. May 2025
+ */
+
 #include "GuiClient.hpp"
 
 #include "logger.hpp"

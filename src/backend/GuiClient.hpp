@@ -1,3 +1,10 @@
+/**
+ * @file GuiClient.hpp
+ * @brief Header file for the GuiClient class for TCP communication with the FSM server.
+ * @author xcsirim00
+ * @date 8. May 2025
+ */
+
 #ifndef GUICLIENT_HPP
 #define GUICLIENT_HPP
 
