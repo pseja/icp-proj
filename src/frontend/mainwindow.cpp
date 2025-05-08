@@ -47,20 +47,31 @@ MainWindow::MainWindow(QWidget *parent)
   fsm = new FSM("Default FSM");
   fsm->addVariable(new Variable("int", "dummy", 0));
   client = new GuiClient("127.0.0.1", 4242, this);
+  ui->groupBox_3->setEnabled(true);
+  ui->groupBox_3->setVisible(true);
+  ui->groupBox_3->move(0, 0);
+  showFSMInfo();
+  ui->groupBox->setVisible(false);
   // setCentralWidget(automatView);
   
+  //-------------------------AUTOMAT VIEW SIGNALS-----------------
+  connect(automatView, &AutomatView::showFSMInfo, this, &MainWindow::showFSMInfo);
   connect(automatView, &AutomatView::stateSelected, this,&MainWindow::updateStateInfo);
-  connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,&MainWindow::saveState);
   connect(automatView, &AutomatView::addState, this, &MainWindow::addState);
   connect(automatView, &AutomatView::addTransition, this, &MainWindow::addTransition);
+  //-------------------------------------------------------------
+
+  //-------------------------UI SIGNALS--------------------------
   connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveFSM);
   connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::loadFSM);
   connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
-  connect(ui->buttonBox, &QDialogButtonBox::accepted, this,&MainWindow::saveTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
-  connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
   connect(ui->console, &QLineEdit::returnPressed, this, &MainWindow::onConsoleEnter);
-  //connect(client, &GuiClient::onReadyRead, this, &MainWindow::onReadyRead);
+  connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
+  connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,&MainWindow::saveState);
+  //--------------------------------------------------------------
+
+  //------------------------CLIENT SIGNALS------------------------
   connect(client, &GuiClient::stateChange, this, &MainWindow::stateChanged);
   connect(client, &GuiClient::printoutput, this, &MainWindow::printoutput);
   connect(client, &GuiClient::timerstart, this, &MainWindow::timerstart);
@@ -68,6 +79,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(client, &GuiClient::printmsg, this, &MainWindow::printmsg);
   connect(client, &GuiClient::printerr, this, &MainWindow::printerr);
   connect(client, &GuiClient::printlog, this, &MainWindow::printlog);
+  //---------------------------------------------------------------
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -83,13 +95,51 @@ void MainWindow::saveState() {
     // qDebug() << "trying to update code";
     // selectedState->setCodeSegment(ui->textEdit->toPlainText());
     selectedState->updateState(ui->lineEdit->text(), ui->textEdit->toPlainText(), ui->radioButton_3->isChecked());
+    saveTransition();
   }
+}
+
+void MainWindow::showFSMInfo() {
+  ui->groupBox->setEnabled(false);
+  ui->groupBox->setVisible(false);
+  ui->groupBox_3->setEnabled(true);
+  ui->groupBox_3->setVisible(true);
+
+  QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+  textEdit->clear();
+  for (QString in : fsm->getInputs()) { textEdit->append(in); }
+
+  QTextEdit *textEdit1 = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+  textEdit1->clear();
+  for (QString out : fsm->getOutputs()) { textEdit1->append(out); }
+
+  QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+  textEdit2->clear();
+  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+  
+  QLineEdit *inputsLine = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_3");
+  QLineEdit *outputsLine = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_4");
+  QLineEdit *varName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_5");
+  QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
+  QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
+  QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
+
+  inputsLine->clear();
+  outputsLine->clear();
+  varName->clear();
+  typeEdit->clear();
+  valueEdit->clear();
+  fsmName->setText(fsm->getName());
+  
 }
 
 //aka clicking on state, calls this with pointer to that state
 void MainWindow::updateStateInfo(StateItem *state) {
   selectedState = state;
   ui->groupBox->setEnabled(true);
+  ui->groupBox->setVisible(true);
+  ui->groupBox_3->setEnabled(false);
+  ui->groupBox_3->setVisible(false);
   QLineEdit *lineEdit = ui->groupBox->findChild<QLineEdit *>("lineEdit");
   QTextEdit *textedit = ui->groupBox->findChild<QTextEdit *>("textEdit");
   QRadioButton *radio = ui->groupBox->findChild<QRadioButton *>("radioButton_3");
@@ -103,6 +153,7 @@ void MainWindow::updateStateInfo(StateItem *state) {
     radio->setChecked(selectedState->state->isInitial());
   }
 
+  /* pottentially useless now redoing design
   QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
   textEdit->clear();
   for (QString in : fsm->getInputs()) { textEdit->append(in); }
@@ -114,6 +165,7 @@ void MainWindow::updateStateInfo(StateItem *state) {
   QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
   textEdit2->clear();
   for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+  */
 
   QListWidget *widget = ui->groupBox->findChild<QListWidget *>("listWidget");
   widget->clear();
@@ -256,12 +308,14 @@ void MainWindow::saveVars() {
   QLineEdit *varName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_5");
   QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
   QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
+  QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
 
   QString input = inputsLine->text();
   QString output = outputsLine->text();
   QString variable = varName->text();
   QString type = typeEdit->text();
   QString value = valueEdit->text();
+  QString fsmNameText = fsmName->text();
 
   if (variable.isEmpty() || type.isEmpty() || value.isEmpty()) {
     qDebug() << "Variable name, type, or value is empty.";
@@ -271,6 +325,12 @@ void MainWindow::saveVars() {
   fsm->addVariable(new Variable(type, variable, value));
   fsm->addInput(input);
   fsm->addOutput(output);
+  fsm->setName(fsmNameText);
+  inputsLine->clear();
+  outputsLine->clear();
+  varName->clear();
+  typeEdit->clear();
+  valueEdit->clear();
 
   QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
   textEdit->clear();
@@ -290,11 +350,11 @@ void MainWindow::editTransition(QListWidgetItem *item) {
   if (row < 0 || row >= transitionItemsForSelectedState.size()) return;
   selectedTransition = transitionItemsForSelectedState[row];
 
-  ui->groupBox_2->setEnabled(true);
-  QLineEdit *lineEdit = ui->groupBox_2->findChild<QLineEdit *>("eventLineEdit");
-  QLineEdit *conditionEdit = ui->groupBox_2->findChild<QLineEdit *>("conditionLineEdit");
-  QLineEdit *delayEdit = ui->groupBox_2->findChild<QLineEdit *>("delayLineEdit");
-  QLineEdit *delayVarEdit = ui->groupBox_2->findChild<QLineEdit *>("delayVarLineEdit");
+  //ui->groupBox_2->setEnabled(true);
+  QLineEdit *lineEdit = ui->groupBox->findChild<QLineEdit *>("eventLineEdit");
+  QLineEdit *conditionEdit = ui->groupBox->findChild<QLineEdit *>("conditionLineEdit");
+  QLineEdit *delayEdit = ui->groupBox->findChild<QLineEdit *>("delayLineEdit");
+  QLineEdit *delayVarEdit = ui->groupBox->findChild<QLineEdit *>("delayVarLineEdit");
   lineEdit->setText(selectedTransition->transition->getEvent());
   conditionEdit->setText(selectedTransition->transition->getCondition());
   delayEdit->setText(QString::number(selectedTransition->transition->getDelay()));
@@ -304,10 +364,10 @@ void MainWindow::editTransition(QListWidgetItem *item) {
 void MainWindow::saveTransition() {
     if (!selectedTransition) return;
 
-    QLineEdit *lineEdit = ui->groupBox_2->findChild<QLineEdit *>("eventLineEdit");
-    QLineEdit *conditionEdit = ui->groupBox_2->findChild<QLineEdit *>("conditionLineEdit");
-    QLineEdit *delayEdit = ui->groupBox_2->findChild<QLineEdit *>("delayLineEdit");
-    QLineEdit *delayVarEdit = ui->groupBox_2->findChild<QLineEdit *>("delayVarLineEdit");
+    QLineEdit *lineEdit = ui->groupBox->findChild<QLineEdit *>("eventLineEdit");
+    QLineEdit *conditionEdit = ui->groupBox->findChild<QLineEdit *>("conditionLineEdit");
+    QLineEdit *delayEdit = ui->groupBox->findChild<QLineEdit *>("delayLineEdit");
+    QLineEdit *delayVarEdit = ui->groupBox->findChild<QLineEdit *>("delayVarLineEdit");
 
     selectedTransition->transition->setEvent(lineEdit->text());
     selectedTransition->transition->setCondition(conditionEdit->text());

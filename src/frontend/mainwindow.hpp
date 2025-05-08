@@ -37,6 +37,7 @@ private slots:
     void printerr(const QString &msg, const QString &code);
     void printlog(const QString &msg);
     void onConsoleEnter();
+    void showFSMInfo();
 public slots:
   void handleStateDeleted();
   void addState(StateItem *state);

@@ -32,6 +32,11 @@ signals:
   void stateSelected(StateItem *state);
   void addState(StateItem *state);
   void addTransition(TransitionItem *trans);
+  void showFSMInfo();
+  
+
+private slots:
+  void onSelection();
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;

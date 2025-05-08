@@ -27,10 +27,19 @@ AutomatView::AutomatView(FSM *fsm, QWidget *parent) : QGraphicsView(parent) {
   // setDragMode(QGraphicsView::RubberBandDrag);
   setDragMode(QGraphicsView::NoDrag);
   scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
-  scene()->setSceneRect(rect()); // důležité: nastav scény velikost podle view
-  scene()->installEventFilter(this); // pro ladění pohybů, pokud chceš
-  
+  scene()->setSceneRect(rect());
+  scene()->installEventFilter(this);
+  //scene()->setSelectionMode(QGraphicsScene::SingleSelection);
+
+  connect(scene(), &QGraphicsScene::selectionChanged, this, &AutomatView::onSelection);
   //setAcceptHoverEvents(true);
+}
+
+void AutomatView::onSelection() {
+  QList<QGraphicsItem *> selectedItems = scene()->selectedItems();
+  if (selectedItems.isEmpty()) {
+    emit showFSMInfo();
+  }
 }
 
 void AutomatView::mousePressEvent(QMouseEvent *event) {
