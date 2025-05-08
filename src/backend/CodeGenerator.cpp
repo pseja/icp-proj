@@ -845,7 +845,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "        \"• \" + ANSI_BOLD + QString(\"input_name\").leftJustified(26) + ANSI_RESET + \"- Call an input\",\n";
   code += "        \"• \" + ANSI_BOLD + QString(\"/status\").leftJustified(26) + ANSI_RESET + \"- Show the current system state\",\n";
   code += "        \"• \" + ANSI_BOLD + QString(\"/help\").leftJustified(26) + ANSI_RESET + \"- Show this help message\",\n";
-  code += "        \"• \" + ANSI_BOLD + QString(\"/quit /exit\").leftJustified(26) + ANSI_RESET + \"- Exit the application\",\n";
+  code += "        \"• \" + ANSI_BOLD + QString(\"/exit\").leftJustified(26) + ANSI_RESET + \"- Exit the application\",\n";
   code += "        \"• \" + ANSI_BOLD + QString(\"/debugon /debugoff\").leftJustified(26) + ANSI_RESET + \"- Turn debug statements on/off\"\n";
   code += "    };\n\n";
 
@@ -930,9 +930,9 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "            \n";
   code += "            if (inputLine.isEmpty()) { return; }\n";
   code += "            \n";
-  code += "            if (inputLine == \"/quit\" || inputLine == \"/exit\") {\n";
-  code += "                log(\"Exit command received. Terminating application.\");\n";
-  code += "                broadcastShutdownEvent(\"Server is shutting down due to /quit command. All clients will be disconnected.\");\n";
+  code += "            if (inputLine == \"/exit\") {\n";
+  code += "                log(\"Quit command received. Terminating application.\");\n";
+  code += "                broadcastShutdownEvent(\"Server is shutting down due to /exit command. All clients will be disconnected.\");\n";
   code += "                QCoreApplication::quit();\n";
   code += "                return;\n";
   code += "            }\n";
