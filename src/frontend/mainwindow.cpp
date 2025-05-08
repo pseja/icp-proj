@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 #include "AutomatView.hpp"
 #include "backend/CodeGenerator.hpp"
+#include "backend/GuiClient.hpp"
 #include "backend/state.hpp"
 #include "backend/transition.hpp"
 #include "backend/xmlparser.hpp"
@@ -56,6 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->buttonBox, &QDialogButtonBox::accepted, this,&MainWindow::saveTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
+  connect(client, &GuiClient::onReadyRead, this, &MainWindow::onReadyRead);
 }
 
 MainWindow::~MainWindow() { delete ui; }

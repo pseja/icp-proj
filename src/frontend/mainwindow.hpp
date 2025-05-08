@@ -39,6 +39,7 @@ public slots:
   void saveTransition();
   void runFSM();
   void saveVars();
+  void onReadyRead(const QString &data);
 
 private:
   FSM *fsm;
