@@ -244,6 +244,20 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   code += "    timers[timerKey] = qMakePair(QDateTime::currentMSecsSinceEpoch(), ms);\n";
   code += "}\n\n";
 
+  code += "/**\n";
+  code += " * @brief Broadcasts a shutdown event to all connected clients.\n";
+  code += " * @param message Optional shutdown message.\n";
+  code += " */\n";
+  code += "void broadcastShutdownEvent(const QString& message = \"Server is shutting down. All client connections will be closed. Please save your work and reconnect later.\") {\n";
+  code += "    for (QTcpSocket* clientSocket : clientSockets) {\n";
+  code += "        if (clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
+  code += "            QString shutdownMsg = QString(\"<event type=\\\"shutdown\\\"><message>%1</message></event>\").arg(message);\n";
+  code += "            clientSocket->write(buildEvent(shutdownMsg));\n";
+  code += "            clientSocket->flush();\n";
+  code += "        }\n";
+  code += "    }\n";
+  code += "}\n\n";
+
   code += "QString generateStatusXml(const QString& state) {\n";
   code += "  QDomDocument doc;\n";
   code += "  QDomElement eventElem = doc.createElement(\"event\");\n";
@@ -802,6 +816,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "        log(DOUBLE_SEPARATOR);\n";
   code += "        log(ANSI_BOLD + COLOR_WARNING + \"SIGINT (Ctrl+C) received. Exiting application.\" + ANSI_RESET);\n";
   code += "        log(DOUBLE_SEPARATOR);\n";
+  code += "        broadcastShutdownEvent(\"Server is shutting down due to SIGINT (Ctrl+C). All clients will be disconnected.\");\n";
   code += "        QCoreApplication::quit();\n";
   code += "    });\n\n";
 
@@ -917,6 +932,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "            \n";
   code += "            if (inputLine == \"/quit\" || inputLine == \"/exit\") {\n";
   code += "                log(\"Exit command received. Terminating application.\");\n";
+  code += "                broadcastShutdownEvent(\"Server is shutting down due to /quit command. All clients will be disconnected.\");\n";
   code += "                QCoreApplication::quit();\n";
   code += "                return;\n";
   code += "            }\n";
@@ -1017,6 +1033,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                fclose(terminalInput);\n";
   code += "                terminalInput = nullptr;\n";
   code += "            }\n";
+  code += "            broadcastShutdownEvent(\"Server is shutting down due to EOF (Ctrl+D) on terminal. All clients will be disconnected.\");\n";
   code += "            QCoreApplication::quit();\n";
   code += "        }\n";
   code += "    });\n\n";
@@ -1102,11 +1119,8 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                        debug(\"TCP: Client requested disconnect via socket communication\");\n";
   code += "                        continue;\n";
   code += "                    } else if (type == \"shutdown\") {\n";
-  code += "                        QString shutdownMsg = \"<event type=\\\"shutdown\\\"><message>Server shutting down</message></event>\";\n";
-  code += "                        socket->write(buildEvent(shutdownMsg));\n";
-  code += "                        socket->flush();\n";
+  code += "                        broadcastShutdownEvent(\"Server is shutting down due to a TCP shutdown command. All clients will be disconnected.\");\n";
   code += "                        log(\"Shutdown command received via socket communication. Shutting down server.\");\n";
-  code += "                        debug(\"TCP: Shutdown command received\");\n";
   code += "                        QCoreApplication::quit();\n";
   code += "                        continue;\n";
   code += "                    } else {\n";
