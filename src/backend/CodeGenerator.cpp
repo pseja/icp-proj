@@ -258,6 +258,26 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   code += "    }\n";
   code += "}\n\n";
 
+  code += "void cleanupSocket(QTcpSocket* socket) {\n";
+  code += "    if (!socket) {\n";
+  code += "        return;\n";
+  code += "    }\n";
+  code += "    debug(QString(\"cleanupSocket: removing and deleting socket %1\").arg(reinterpret_cast<quintptr>(socket)));\n";
+  code += "    if (clientSockets.contains(socket)) {\n";
+  code += "        clientSockets.remove(socket);\n";
+  code += "    }\n";
+  code += "    socket->deleteLater();\n";
+  code += "}\n\n";
+
+  code += "void closeAndCleanupAllSockets() {\n";
+  code += "    auto socketsCopy = clientSockets;\n";
+  code += "    for (QTcpSocket* socket : socketsCopy) {\n";
+  code += "        cleanupSocket(socket);\n";
+  code += "    }\n";
+  code += "    clientSockets.clear();\n";
+  code += "    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);\n";
+  code += "}\n\n";
+
   code += "QString generateStatusXml(const QString& state) {\n";
   code += "  QDomDocument doc;\n";
   code += "  QDomElement eventElem = doc.createElement(\"event\");\n";
@@ -817,6 +837,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "        log(ANSI_BOLD + COLOR_WARNING + \"SIGINT (Ctrl+C) received. Exiting application.\" + ANSI_RESET);\n";
   code += "        log(DOUBLE_SEPARATOR);\n";
   code += "        broadcastShutdownEvent(\"Server is shutting down due to SIGINT (Ctrl+C). All clients will be disconnected.\");\n";
+  code += "        closeAndCleanupAllSockets();\n";
   code += "        QCoreApplication::quit();\n";
   code += "    });\n\n";
 
@@ -933,6 +954,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "            if (inputLine == \"/exit\") {\n";
   code += "                log(\"Quit command received. Terminating application.\");\n";
   code += "                broadcastShutdownEvent(\"Server is shutting down due to /exit command. All clients will be disconnected.\");\n";
+  code += "                closeAndCleanupAllSockets();\n";
   code += "                QCoreApplication::quit();\n";
   code += "                return;\n";
   code += "            }\n";
@@ -1034,6 +1056,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                terminalInput = nullptr;\n";
   code += "            }\n";
   code += "            broadcastShutdownEvent(\"Server is shutting down due to EOF (Ctrl+D) on terminal. All clients will be disconnected.\");\n";
+  code += "            closeAndCleanupAllSockets();\n";
   code += "            QCoreApplication::quit();\n";
   code += "        }\n";
   code += "    });\n\n";
@@ -1121,6 +1144,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                    } else if (type == \"shutdown\") {\n";
   code += "                        broadcastShutdownEvent(\"Server is shutting down due to a TCP shutdown command. All clients will be disconnected.\");\n";
   code += "                        log(\"Shutdown command received via socket communication. Shutting down server.\");\n";
+  code += "                        closeAndCleanupAllSockets();\n";
   code += "                        QCoreApplication::quit();\n";
   code += "                        continue;\n";
   code += "                    } else {\n";
@@ -1132,8 +1156,11 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "            });\n";
   code += "            QObject::connect(socket, &QTcpSocket::disconnected, [socket]() {\n";
   code += "                log(\"Client disconnected\");\n";
-  code += "                clientSockets.remove(socket);\n";
-  code += "                socket->deleteLater();\n";
+  code += "                cleanupSocket(socket);\n";
+  code += "            });\n";
+  code += "            QObject::connect(socket, &QTcpSocket::errorOccurred, [socket](QAbstractSocket::SocketError socketError) {\n";
+  code += "                log(QString(\"Socket error occurred: %1\").arg(socket->errorString()));\n";
+  code += "                cleanupSocket(socket);\n";
   code += "            });\n";
   code += "        }\n";
   code += "    });\n";
