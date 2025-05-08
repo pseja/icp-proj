@@ -33,6 +33,11 @@ class CodeGenerator : public QObject {
   QString generateHelperFunctions(FSM *fsm);
   QString generateMainFunction(FSM *fsm);
   QString generateQStateMachineMain(FSM *fsm);
+  QString generateTcpXmlProtocolServer(FSM *fsm);
+  QString generateStateSetup(FSM *fsm);
+  QString generateTerminalInputHandler(FSM *fsm);
+  QString generateInputEventClass();
+  QString generateGeneratedTransitionClass();
 
   /**
    * @brief Generate transition code based on a transition

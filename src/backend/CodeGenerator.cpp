@@ -56,34 +56,29 @@ QString CodeGenerator::generateCode(FSM* fsm) {
  * @return Code section as QString.
  */
 QString CodeGenerator::generateHeaders() {
-  QString code;
-
-  code += "#include <QtCore/QDebug>\n";
-  code += "#include <QtCore/QString>\n";
-  code += "#include <QtCore/QMap>\n";
-  code += "#include <QtCore/QDateTime>\n";
-  code += "#include <QtCore/QCoreApplication>\n";
-  code += "#include <QtCore/QTimer>\n";
-  code += "#include <QtCore/QSocketNotifier>\n";
-  code += "#include <QtCore/QStateMachine>\n";
-  code += "#include <QtCore/QState>\n";
-  code += "#include <QtCore/QEvent>\n";
-  code += "#include <QtCore/QAbstractTransition>\n";
-  code += "#include <QtCore/QRegularExpression>\n";
-  code += "#include <stdio.h>\n";
-  code += "#include <unistd.h>\n";
-  code += "#include <csignal>\n";
-  code += "#include <functional>\n";
-  code += "#include <QTcpServer>\n";
-  code += "#include <QTcpSocket>\n";
-  code += "#include <QDomDocument>\n";
-  code += "#include <QDomElement>\n";
-  code += "#include <QFile>\n";
-  code += "#include <QDir>\n";
-
-  code += "\n";
-
-  return code;
+  return R"cpp(#include <QtCore/QDebug>
+#include <QtCore/QString>
+#include <QtCore/QMap>
+#include <QtCore/QDateTime>
+#include <QtCore/QCoreApplication>
+#include <QtCore/QTimer>
+#include <QtCore/QSocketNotifier>
+#include <QtCore/QStateMachine>
+#include <QtCore/QState>
+#include <QtCore/QEvent>
+#include <QtCore/QAbstractTransition>
+#include <QtCore/QRegularExpression>
+#include <stdio.h>
+#include <unistd.h>
+#include <csignal>
+#include <functional>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QDomDocument>
+#include <QDomElement>
+#include <QFile>
+#include <QDir>
+  )cpp";
 }
 
 /**
@@ -97,225 +92,233 @@ QString CodeGenerator::generateHeaders() {
 QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   QString code;
 
-  code += "/******************************************************************************\n";
-  code += " * Utility functions for input/output and value handling\n";
-  code += " ******************************************************************************/\n";
+  code += R"cpp(/******************************************************************************
+                 * Utility functions for input/output and value handling
+                 ******************************************************************************/
 
-  code += "/**\n";
-  code += " * @brief Builds a QByteArray needed for the TCP communication.\n";
-  code += " * @param eventString The event as a QString (XML or plain text).\n";
-  code += " * @return QByteArray ready to send via TCP.\n";
-  code += " */\n";
-  code += "QByteArray buildEvent(const QString& eventString) {\n";
-  code += "    return (eventString + \"\\n\").toUtf8();\n";
-  code += "}\n\n";
+                /**
+                 * @brief Builds a QByteArray needed for the TCP communication.
+                 * @param eventString The event as a QString (XML or plain text).
+                 * @return QByteArray ready to send via TCP.
+                 */
+                QByteArray buildEvent(const QString& eventString) {
+                  return (eventString + "\n").toUtf8();
+                }
 
-  code += "/**\n";
-  code += " * @brief Gets the value of an input.\n";
-  code += " * @param input Input name.\n";
-  code += " * @return Current value of the input as a string, or empty if not found.\n";
-  code += " */\n";
-  code += "QString valueof(const QString &input) {\n";
-  code += "    if (inputs.contains(input)) {\n";
-  code += "        return inputs[input];\n";
-  code += "    }\n";
-  code += "    return QString();\n";
-  code += "}\n\n";
+                /**
+                 * @brief Gets the value of an input.
+                 * @param input Input name.
+                 * @return Current value of the input as a string, or empty if not found.
+                 */
+                QString valueof(const QString& input) {
+                  if (inputs.contains(input)) {
+                    return inputs[input];
+                  }
+                  return QString();
+                }
 
-  code += "/**\n";
-  code += " * @brief Converts a string to an integer.\n";
-  code += " * @param str String to convert.\n";
-  code += " * @return Integer value, or 0 if conversion fails.\n";
-  code += " */\n";
-  code += "int atoi(const QString &str) {\n";
-  code += "    bool ok = false;\n";
-  code += "    int value = str.toInt(&ok);\n";
-  code += "    return ok ? value : 0;\n";
-  code += "}\n\n";
+                /**
+                 * @brief Converts a string to an integer.
+                 * @param str String to convert.
+                 * @return Integer value, or 0 if conversion fails.
+                 */
+                int atoi(const QString& str) {
+                  bool ok = false;
+                  int value = str.toInt(&ok);
+                  return ok ? value : 0;
+                }
 
-  code += "/**\n";
-  code += " * @brief Checks if an input is defined and has a non-empty value.\n";
-  code += " * @param input Input name to check.\n";
-  code += " * @return True if the input exists and has a value.\n";
-  code += " */\n";
-  code += "bool defined(const QString &input) {\n";
-  code += "    return inputs.contains(input) && !inputs[input].isEmpty();\n";
-  code += "}\n\n";
+                /**
+                 * @brief Checks if an input is defined and has a non-empty value.
+                 * @param input Input name to check.
+                 * @return True if the input exists and has a value.
+                 */
+                bool defined(const QString& input) {
+                  return inputs.contains(input) && !inputs[input].isEmpty();
+                }
 
-  code += "/**\n";
-  code += " * @brief Sends an output value.\n";
-  code += " * @param port Output destination.\n";
-  code += " * @param value Value to send (any type supported by QVariant).\n";
-  code += " */\n";
-  code += "void output(const QString &port, const QVariant &value) {\n";
-  code += "    QString valueStr = value.toString();\n";
-  code += "    debug(QString(\"output('%1', %2)\").arg(port).arg(valueStr));\n";
-  code += "    outputs[port] = valueStr;\n";
-  code += "    logOutputEvent(port, outputs[port]);\n\n";
+                /**
+                 * @brief Sends an output value.
+                 * @param port Output destination.
+                 * @param value Value to send (any type supported by QVariant).
+                 */
+                void output(const QString& port, const QVariant& value) {
+                  QString valueStr = value.toString();
+                  debug(QString("output('%1', %2)").arg(port).arg(valueStr));
+                  outputs[port] = valueStr;
+                  logOutputEvent(port, outputs[port]);
 
-  code += "    extern QSet<QTcpSocket*> clientSockets;\n";
-  code += "    for (QTcpSocket* clientSocket : clientSockets) {\n";
-  code += "        if (clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
-  code += "            QDomDocument doc;\n";
-  code += "            QDomElement element = doc.createElement(\"event\");\n";
-  code += "            element.setAttribute(\"type\", \"output\");\n\n";
+                  extern QSet<QTcpSocket*> clientSockets;
+                  for (QTcpSocket* clientSocket : clientSockets) {
+                    if (clientSocket->state() == QAbstractSocket::ConnectedState) {
+                      QDomDocument doc;
+                      QDomElement element = doc.createElement("event");
+                      element.setAttribute("type", "output");
 
-  code += "            QDomElement name = doc.createElement(\"name\");\n";
-  code += "            name.appendChild(doc.createTextNode(port));\n";
-  code += "            QDomElement valueElem = doc.createElement(\"value\");\n";
-  code += "            valueElem.appendChild(doc.createTextNode(valueStr));\n";
-  code += "            element.appendChild(name);\n";
-  code += "            element.appendChild(valueElem);\n\n";
+                      QDomElement name = doc.createElement("name");
+                      name.appendChild(doc.createTextNode(port));
+                      QDomElement valueElem = doc.createElement("value");
+                      valueElem.appendChild(doc.createTextNode(valueStr));
+                      element.appendChild(name);
+                      element.appendChild(valueElem);
 
-  code += "            doc.appendChild(element);\n";
-  code += "            clientSocket->write(buildEvent(doc.toString(-1)));\n";
-  code += "            clientSocket->flush();\n";
-  code += "        }\n";
-  code += "    }\n";
-  code += "}\n\n";
+                      doc.appendChild(element);
+                      clientSocket->write(buildEvent(doc.toString(-1)));
+                      clientSocket->flush();
+                    }
+                  }
+                }
 
-  code += "/**\n";
-  code += " * @brief Returns time elapsed since state entry in milliseconds.\n";
-  code += " * @return Milliseconds elapsed since entering the current state.\n";
-  code += " */\n";
-  code += "int elapsed() {\n";
-  code += "    if (fsm.configuration().isEmpty()) { return 0; }\n";
-  code += "    QState* currentState = static_cast<QState*>(*fsm.configuration().begin());\n";
-  code += "    QVariant entryTimeVar = currentState->property(\"entryTime\");\n";
-  code += "    if (!entryTimeVar.isValid() || !entryTimeVar.canConvert<qint64>()) {\n";
-  code += "        debug(\"elapsed(): entryTime property is invalid or not a qint64\");\n";
-  code += "        return 0;\n";
-  code += "    }\n";
-  code += "    qint64 entryTime = entryTimeVar.toLongLong();\n";
-  code += "    qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();\n";
-  code += "    int diff = static_cast<int>(now - entryTime);\n";
-  code += "    debug(QString(\"elapsed(): entryTime=%1, now=%2, diff=%3\").arg(entryTime).arg(now).arg(diff));\n";
-  code += "    return diff;\n";
-  code += "}\n\n";
+                /**
+                 * @brief Returns time elapsed since state entry in milliseconds.
+                 * @return Milliseconds elapsed since entering the current state.
+                 */
+                int elapsed() {
+                  if (fsm.configuration().isEmpty()) {
+                    return 0;
+                  }
+                  QState* currentState = static_cast<QState*>(*fsm.configuration().begin());
+                  QVariant entryTimeVar = currentState->property("entryTime");
+                  if (!entryTimeVar.isValid() || !entryTimeVar.canConvert<qint64>()) {
+                    debug("elapsed(): entryTime property is invalid or not a qint64");
+                    return 0;
+                  }
+                  qint64 entryTime = entryTimeVar.toLongLong();
+                  qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();
+                  int diff = static_cast<int>(now - entryTime);
+                  debug(QString("elapsed(): entryTime=%1, now=%2, diff=%3").arg(entryTime).arg(now).arg(diff));
+                  return diff;
+                }
 
-  code += "// Shared event flags for tracking input calls\n";
-  code += "QMap<QString, bool>& getEventFlags() {\n";
-  code += "    static QMap<QString, bool> flags;\n";
-  code += "    return flags;\n";
-  code += "}\n\n";
+                // Shared event flags for tracking input calls
+                QMap<QString, bool>& getEventFlags() {
+                  static QMap<QString, bool> flags;
+                  return flags;
+                }
 
-  code += "/**\n";
-  code += " * @brief Checks if an input was called as an event (regardless of value).\n";
-  code += " * @param input Input name to check.\n";
-  code += " * @return True if the input was triggered as an event.\n";
-  code += " */\n";
-  code += "bool called(const QString &input) {\n";
-  code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
-  code += "    bool result = eventFlags.value(input, false);\n";
-  code += "    debug(QString(\"called('%1') returning %2\").arg(input).arg(result ? \"true\" : \"false\"));\n";
-  code += "    eventFlags[input] = false;\n";
-  code += "    return result;\n";
-  code += "}\n\n";
+                /**
+                 * @brief Checks if an input was called as an event (regardless of value).
+                 * @param input Input name to check.
+                 * @return True if the input was triggered as an event.
+                 */
+                bool called(const QString& input) {
+                  QMap<QString, bool>& eventFlags = getEventFlags();
+                  bool result = eventFlags.value(input, false);
+                  debug(QString("called('%1') returning %2").arg(input).arg(result ? "true" : "false"));
+                  eventFlags[input] = false;
+                  return result;
+                }
 
-  code += "/**\n";
-  code += " * @brief Sets the trigger flag for an input.\n";
-  code += " * @param input Input name to mark as called.\n";
-  code += " */\n";
-  code += "void setInputCalled(const QString &input) {\n";
-  code += "    QMap<QString, bool>& eventFlags = getEventFlags();\n";
-  code += "    eventFlags[input] = true;\n";
-  code += "}\n\n";
+                /**
+                 * @brief Sets the trigger flag for an input.
+                 * @param input Input name to mark as called.
+                 */
+                void setInputCalled(const QString& input) {
+                  QMap<QString, bool>& eventFlags = getEventFlags();
+                  eventFlags[input] = true;
+                }
 
-  code += "/**\n";
-  code += " * @brief Sends a timer event to the client.\n";
-  code += " * @param type 'timerStart' or 'timerExpired'.\n";
-  code += " * @param from Source state name.\n";
-  code += " * @param to Target state name.\n";
-  code += " * @param ms Optional ms value for timerStart.\n";
-  code += " */\n";
-  code += "void sendTimerEvent(const QString& type, const QString& from, const QString& to, int ms = -1) {\n";
-  code += "    extern QSet<QTcpSocket*> clientSockets;\n";
-  code += "    for (QTcpSocket* clientSocket : clientSockets) {\n";
-  code += "        if (clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
-  code += "            if (type == \"timerStart\") {\n";
-  code += "                clientSocket->write(buildEvent(QString(\"<event type=\\\"timerStart\\\"><from>%1</from><to>%2</to><ms>%3</ms></event>\").arg(from).arg(to).arg(ms)));\n";
-  code += "            } else if (type == \"timerExpired\") {\n";
-  code += "                clientSocket->write(buildEvent(QString(\"<event type=\\\"timerExpired\\\"><from>%1</from><to>%2</to></event>\").arg(from).arg(to)));\n";
-  code += "            }\n";
-  code += "            clientSocket->flush();\n";
-  code += "        }\n";
-  code += "    }\n";
-  code += "    QPair<QString, QString> timerKey = qMakePair(from, to);\n";
-  code += "    timers[timerKey] = qMakePair(QDateTime::currentMSecsSinceEpoch(), ms);\n";
-  code += "}\n\n";
+                /**
+                 * @brief Sends a timer event to the client.
+                 * @param type 'timerStart' or 'timerExpired'.
+                 * @param from Source state name.
+                 * @param to Target state name.
+                 * @param ms Optional ms value for timerStart.
+                 */
+                void sendTimerEvent(const QString& type, const QString& from, const QString& to, int ms = -1) {
+                  extern QSet<QTcpSocket*> clientSockets;
+                  for (QTcpSocket* clientSocket : clientSockets) {
+                    if (clientSocket->state() == QAbstractSocket::ConnectedState) {
+                      if (type == "timerStart") {
+                        clientSocket->write(buildEvent(QString("<event type=\"timerStart\"><from>%1</from><to>%2</to><ms>%3</ms></event>").arg(from).arg(to).arg(ms)));
+                      } else if (type == "timerExpired") {
+                        clientSocket->write(buildEvent(QString("<event type=\"timerExpired\"><from>%1</from><to>%2</to></event>").arg(from).arg(to)));
+                      }
+                      clientSocket->flush();
+                    }
+                  }
+                  QPair<QString, QString> timerKey = qMakePair(from, to);
+                  timers[timerKey] = qMakePair(QDateTime::currentMSecsSinceEpoch(), ms);
+                }
 
-  code += "/**\n";
-  code += " * @brief Broadcasts a shutdown event to all connected clients.\n";
-  code += " * @param message Optional shutdown message.\n";
-  code += " */\n";
-  code += "void broadcastShutdownEvent(const QString& message = \"Server is shutting down. All client connections will be closed. Please save your work and reconnect later.\") {\n";
-  code += "    for (QTcpSocket* clientSocket : clientSockets) {\n";
-  code += "        if (clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
-  code += "            QString shutdownMsg = QString(\"<event type=\\\"shutdown\\\"><message>%1</message></event>\").arg(message);\n";
-  code += "            clientSocket->write(buildEvent(shutdownMsg));\n";
-  code += "            clientSocket->flush();\n";
-  code += "        }\n";
-  code += "    }\n";
-  code += "}\n\n";
+                /**
+                 * @brief Broadcasts a shutdown event to all connected clients.
+                 * @param message Optional shutdown message.
+                 */
+                void broadcastShutdownEvent(const QString& message = "Server is shutting down. All client connections will be closed. Please save your work and reconnect later.") {
+                  for (QTcpSocket* clientSocket : clientSockets) {
+                    if (clientSocket->state() == QAbstractSocket::ConnectedState) {
+                      QString shutdownMsg = QString("<event type=\"shutdown\"><message>%1</message></event>").arg(message);
+                      clientSocket->write(buildEvent(shutdownMsg));
+                      clientSocket->flush();
+                    }
+                  }
+                }
 
-  code += "void cleanupSocket(QTcpSocket* socket) {\n";
-  code += "    if (!socket) {\n";
-  code += "        return;\n";
-  code += "    }\n";
-  code += "    debug(QString(\"cleanupSocket: removing and deleting socket %1\").arg(reinterpret_cast<quintptr>(socket)));\n";
-  code += "    if (clientSockets.contains(socket)) {\n";
-  code += "        clientSockets.remove(socket);\n";
-  code += "    }\n";
-  code += "    if (awaitingPong.contains(socket)) {\n";
-  code += "        awaitingPong.remove(socket);\n";
-  code += "    }\n";
-  code += "    if (pingTimers.contains(socket)) {\n";
-  code += "        QTimer* t = pingTimers.take(socket);\n";
-  code += "        if (t) { t->stop(); t->deleteLater(); }\n";
-  code += "    }\n";
-  code += "    socket->deleteLater();\n";
-  code += "}\n\n";
+                void cleanupSocket(QTcpSocket* socket) {
+                  if (!socket) {
+                    return;
+                  }
+                  debug(QString("cleanupSocket: removing and deleting socket %1").arg(reinterpret_cast<quintptr>(socket)));
+                  if (clientSockets.contains(socket)) {
+                    clientSockets.remove(socket);
+                  }
+                  if (awaitingPong.contains(socket)) {
+                    awaitingPong.remove(socket);
+                  }
+                  if (pingTimers.contains(socket)) {
+                    QTimer* t = pingTimers.take(socket);
+                    if (t) {
+                      t->stop();
+                      t->deleteLater();
+                    }
+                  }
+                  socket->deleteLater();
+                }
 
-  code += "void closeAndCleanupAllSockets() {\n";
-  code += "    auto socketsCopy = clientSockets;\n";
-  code += "    for (QTcpSocket* socket : socketsCopy) {\n";
-  code += "        cleanupSocket(socket);\n";
-  code += "    }\n";
-  code += "    clientSockets.clear();\n";
-  code += "    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);\n";
-  code += "}\n\n";
+                void closeAndCleanupAllSockets() {
+                  auto socketsCopy = clientSockets;
+                  for (QTcpSocket* socket : socketsCopy) {
+                    cleanupSocket(socket);
+                  }
+                  clientSockets.clear();
+                  QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+                }
+  )cpp";
 
-  code += "QString generateStatusXml(const QString& state) {\n";
-  code += "  QDomDocument doc;\n";
-  code += "  QDomElement eventElem = doc.createElement(\"event\");\n";
-  code += "  eventElem.setAttribute(\"type\", \"status\");\n";
-  code += "  QDomElement root = doc.createElement(\"status\");\n";
-  code += "  eventElem.appendChild(root);\n";
-  code += "  doc.appendChild(eventElem);\n";
+  // Dynamic section: generateStatusXml and variable code
+  code += R"cpp(QString generateStatusXml(const QString& state) {
+                  QDomDocument doc;
+                  QDomElement eventElem = doc.createElement("event");
+                  eventElem.setAttribute("type", "status");
+                  QDomElement root = doc.createElement("status");
+                  eventElem.appendChild(root);
+                  doc.appendChild(eventElem);
 
-  code += "  QDomElement stateElem = doc.createElement(\"state\");\n";
-  code += "  stateElem.appendChild(doc.createTextNode(state));\n";
-  code += "  root.appendChild(stateElem);\n";
+                  QDomElement stateElem = doc.createElement("state");
+                  stateElem.appendChild(doc.createTextNode(state));
+                  root.appendChild(stateElem);
 
-  code += "  QDomElement inputsElem = doc.createElement(\"inputs\");\n";
-  code += "  for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {\n";
-  code += "    QDomElement inputElem = doc.createElement(\"input\");\n";
-  code += "    inputElem.setAttribute(\"name\", it.key());\n";
-  code += "    inputElem.appendChild(doc.createTextNode(it.value()));\n";
-  code += "    inputsElem.appendChild(inputElem);\n";
-  code += "  }\n";
-  code += "  root.appendChild(inputsElem);\n";
+                  QDomElement inputsElem = doc.createElement("inputs");
+                  for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {
+                    QDomElement inputElem = doc.createElement("input");
+                    inputElem.setAttribute("name", it.key());
+                    inputElem.appendChild(doc.createTextNode(it.value()));
+                    inputsElem.appendChild(inputElem);
+                  }
+                  root.appendChild(inputsElem);
 
-  code += "  QDomElement outputsElem = doc.createElement(\"outputs\");\n";
-  code += "  for (auto it = outputs.constBegin(); it != outputs.constEnd(); ++it) {\n";
-  code += "    QDomElement outputElem = doc.createElement(\"output\");\n";
-  code += "    outputElem.setAttribute(\"name\", it.key());\n";
-  code += "    outputElem.appendChild(doc.createTextNode(it.value()));\n";
-  code += "    outputsElem.appendChild(outputElem);\n";
-  code += "  }\n";
-  code += "  root.appendChild(outputsElem);\n";
+                  QDomElement outputsElem = doc.createElement("outputs");
+                  for (auto it = outputs.constBegin(); it != outputs.constEnd(); ++it) {
+                    QDomElement outputElem = doc.createElement("output");
+                    outputElem.setAttribute("name", it.key());
+                    outputElem.appendChild(doc.createTextNode(it.value()));
+                    outputsElem.appendChild(outputElem);
+                  }
+                  root.appendChild(outputsElem);
 
-  code += "  QDomElement varsElem = doc.createElement(\"variables\");\n";
+                  QDomElement varsElem = doc.createElement("variables");
+  )cpp";
   QMap<QString, Variable*> variables = fsm->getVariables();
   for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
     Variable* var = it.value();
@@ -328,52 +331,52 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
     code += "    varsElem.appendChild(varElem);\n";
     code += "  }\n";
   }
-  code += "  root.appendChild(varsElem);\n";
+  code += R"cpp(root.appendChild(varsElem);
+                QDomElement timersElem = doc.createElement("timers");
+                extern QMap<QPair<QString, QString>, QPair<qint64, int>> timers;
+                for (auto it = timers.constBegin(); it != timers.constEnd(); ++it) {
+                  QString from = it.key().first;
+                  QString to = it.key().second;
+                  QDomElement timerElem = doc.createElement("timer");
+                  QDomElement fromElem = doc.createElement("from");
+                  fromElem.appendChild(doc.createTextNode(from));
+                  QDomElement toElem = doc.createElement("to");
+                  toElem.appendChild(doc.createTextNode(to));
+                  QDomElement msElem = doc.createElement("ms");
+                  msElem.appendChild(doc.createTextNode(QString::number(it.value().second)));
+                  timerElem.appendChild(fromElem);
+                  timerElem.appendChild(toElem);
+                  timerElem.appendChild(msElem);
+                  timersElem.appendChild(timerElem);
+                }
+                root.appendChild(timersElem);
 
-  code += "  QDomElement timersElem = doc.createElement(\"timers\");\n";
-  code += "  extern QMap<QPair<QString, QString>, QPair<qint64, int>> timers;\n";
-  code += "  for (auto it = timers.constBegin(); it != timers.constEnd(); ++it) {\n";
-  code += "    QString from = it.key().first;\n";
-  code += "    QString to = it.key().second;\n";
-  code += "    QDomElement timerElem = doc.createElement(\"timer\");\n";
-  code += "    QDomElement fromElem = doc.createElement(\"from\");\n";
-  code += "    fromElem.appendChild(doc.createTextNode(from));\n";
-  code += "    QDomElement toElem = doc.createElement(\"to\");\n";
-  code += "    toElem.appendChild(doc.createTextNode(to));\n";
-  code += "    QDomElement msElem = doc.createElement(\"ms\");\n";
-  code += "    msElem.appendChild(doc.createTextNode(QString::number(it.value().second)));\n";
-  code += "    timerElem.appendChild(fromElem);\n";
-  code += "    timerElem.appendChild(toElem);\n";
-  code += "    timerElem.appendChild(msElem);\n";
-  code += "    timersElem.appendChild(timerElem);\n";
-  code += "  }\n";
-  code += "  root.appendChild(timersElem);\n";
+                return doc.toString(-1);
+                }
 
-  code += "  return doc.toString(-1);\n";
-  code += "}\n";
+                /**
+                 * @brief Sends an error response to the client.
+                 * @param code Error code.
+                 * @param msg Error message.
+                 * @param socket Client socket to send the error to.
+                 */
+                void sendError(int code, const QString& msg, QTcpSocket* socket) {
+                  if (!socket) return;
+                  QString error = QString("<event type=\"error\"><code>%1</code><message>%2</message></event>")
+                                      .arg(code)
+                                      .arg(msg.toHtmlEscaped());
+                  socket->write(buildEvent(error));
+                  socket->flush();
+                }
 
-  code += "/**\n";
-  code += " * @brief Sends an error response to the client.\n";
-  code += " * @param code Error code.\n";
-  code += " * @param msg Error message.\n";
-  code += " * @param socket Client socket to send the error to.\n";
-  code += " */\n";
-  code += "void sendError(int code, const QString& msg, QTcpSocket* socket) {\n";
-  code += "    if (!socket) return;\n";
-  code += "    QString error = QString(\"<event type=\\\"error\\\"><code>%1</code><message>%2</message></event>\")\n";
-  code += "        .arg(code)\n";
-  code += "        .arg(msg.toHtmlEscaped());\n";
-  code += "    socket->write(buildEvent(error));\n";
-  code += "    socket->flush();\n";
-  code += "}\n\n";
-
-  code += "// Error codes for TCP XML protocol\n";
-  code += "enum FsmErrorCode {\n";
-  code += "    ERR_UNKNOWN_INPUT      = 21,\n";
-  code += "    ERR_UNKNOWN_COMMAND    = 10,\n";
-  code += "    ERR_MALFORMED_XML      = 11,\n";
-  code += "    ERR_INTERNAL           = 99,\n";
-  code += "};\n\n";
+                // Error codes for TCP XML protocol
+                enum FsmErrorCode {
+                  ERR_UNKNOWN_INPUT = 21,
+                  ERR_UNKNOWN_COMMAND = 10,
+                  ERR_MALFORMED_XML = 11,
+                  ERR_INTERNAL = 99,
+                };
+  )cpp";
 
   return code;
 }
@@ -384,26 +387,24 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
  * @return Code section as QString.
  */
 QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
-  QString code;
+  QString code = R"cpp(/******************************************************************************
+                        * Variable declarations
+                        ******************************************************************************/
 
-  code += "/******************************************************************************\n";
-  code += " * Variable declarations\n";
-  code += " ******************************************************************************/\n\n";
-
-  code += "QStateMachine fsm;              // Global state machine instance\n";
-  code += "QMap<QString, QString> inputs;  // Map of input names to values\n";
-  code += "QMap<QString, QString> outputs; // Map of output names to values\n";
-  code += "bool debugEnabled = false;\n";
-  code += "QSet<QTcpSocket*> clientSockets;\n";
-  code += "QMap<QString, QVariant> variables;\n";
-  code += "QMap<QPair<QString, QString>, QPair<qint64, int>> timers; // [(from,to),(startime,duration)]\n\n";
-  code += "QMap<QTcpSocket*, QTimer*> pingTimers; // Tracks pingpong keepalive timers per client\n";
-  code += "QSet<QTcpSocket*> awaitingPong;        // Tracks clients waiting for pong\n\n";
+                       QStateMachine fsm;               // Global state machine instance
+                       QMap<QString, QString> inputs;   // Map of input names to values
+                       QMap<QString, QString> outputs;  // Map of output names to values
+                       bool debugEnabled = false;
+                       QSet<QTcpSocket*> clientSockets;
+                       QMap<QString, QVariant> variables;
+                       QMap<QPair<QString, QString>, QPair<qint64, int>> timers;  // [(from,to),(startime,duration)]
+                       QMap<QTcpSocket*, QTimer*> pingTimers;                     // Tracks pingpong keepalive timers per client
+                       QSet<QTcpSocket*> awaitingPong;                            // Tracks clients waiting for pong
+  )cpp";
 
   QMap<QString, Variable*> variables = fsm->getVariables();
   if (!variables.isEmpty()) {
     code += "// Custom variables for " + fsm->getName() + "\n";
-
     for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
       Variable* var = it.value();
       code += var->getType() + " " + var->getName() + " = " + var->getValue().toString() + ";\n";
@@ -418,121 +419,119 @@ QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
  * @return Code section as QString.
  */
 QString CodeGenerator::generateRuntimeMonitoring() {
-  QString code;
+  QString code = R"cpp(/******************************************************************************
+                        * Runtime monitoring and debugging
+                        ******************************************************************************/
 
-  code += "/******************************************************************************\n";
-  code += " * Runtime monitoring and debugging\n";
-  code += " ******************************************************************************/\n";
+                       const QString ANSI_RESET = "\033[0m";
+                       const QString ANSI_BOLD = "\033[1m";
 
-  code += "const QString ANSI_RESET = \"\\033[0m\";\n";
-  code += "const QString ANSI_BOLD = \"\\033[1m\";\n\n";
+                       // Semantic Color Mappings
+                       const QString COLOR_STATE = "\033[38;5;93m";       // Purple: For state names
+                       const QString COLOR_TRANSITION = "\033[38;5;39m";  // Blueish: For transition arrows/info
+                       const QString COLOR_SOURCE = "\033[38;5;102m";     // Gray: For source state names in transitions
+                       const QString COLOR_TARGET = "\033[38;5;84m";      // Green: For target state names in transitions
+                       const QString COLOR_COMMAND = "\033[38;5;231m";    // Whitish: For commands, keywords
+                       const QString COLOR_INPUT = "\033[38;5;75m";       // Cyan: For input names
+                       const QString COLOR_VALUE = "\033[38;5;153m";      // Light Blue: For variable/input/output values
+                       const QString COLOR_HEADER = "\033[38;5;141m";     // Dark Purple: For section headers
 
-  code += "// Semantic Color Mappings\n";
-  code += "const QString COLOR_STATE = \"\\033[38;5;93m\";      // Purple: For state names\n";
-  code += "const QString COLOR_TRANSITION = \"\\033[38;5;39m\"; // Blueish: For transition arrows/info\n";
-  code += "const QString COLOR_SOURCE = \"\\033[38;5;102m\";    // Gray: For source state names in transitions\n";
-  code += "const QString COLOR_TARGET = \"\\033[38;5;84m\";     // Green: For target state names in transitions\n";
-  code += "const QString COLOR_COMMAND = \"\\033[38;5;231m\";   // Whitish: For commands, keywords\n";
-  code += "const QString COLOR_INPUT = \"\\033[38;5;75m\";      // Cyan: For input names\n";
-  code += "const QString COLOR_VALUE = \"\\033[38;5;153m\";     // Light Blue: For variable/input/output values\n";
-  code += "const QString COLOR_HEADER = \"\\033[38;5;141m\";    // Dark Purple: For section headers\n\n";
+                       // Status & Logging Colors
+                       const QString COLOR_INFO = "\033[38;5;39m";      // Blue: For general info/debug messages
+                       const QString COLOR_NOTICE = "\033[38;5;102m";   // Grayish: For separators, less important info
+                       const QString COLOR_WARNING = "\033[38;5;220m";  // Yellow: For warnings
+                       const QString COLOR_ERROR = "\033[38;5;196m";    // Red: For errors
+                       const QString COLOR_SUCCESS = "\033[38;5;84m";   // Greener: For success messages
 
-  code += "// Status & Logging Colors\n";
-  code += "const QString COLOR_INFO = \"\\033[38;5;39m\";       // Blue: For general info/debug messages\n";
-  code += "const QString COLOR_NOTICE = \"\\033[38;5;102m\";    // Grayish: For separators, less important info\n";
-  code += "const QString COLOR_WARNING = \"\\033[38;5;220m\";   // Yellow: For warnings\n";
-  code += "const QString COLOR_ERROR = \"\\033[38;5;196m\";     // Red: For errors\n";
-  code += "const QString COLOR_SUCCESS = \"\\033[38;5;84m\";    // Greener: For success messages\n\n";
+                       // Timeout Specific Colors
+                       const QString TIMEOUT_STARTED = "\033[38;5;177m";  // Pinkish: Timeout timer started
+                       const QString TIMEOUT_EXPIRED = "\033[38;5;213m";  // Magenta: Timeout timer expired
 
-  code += "// Timeout Specific Colors\n";
-  code += "const QString TIMEOUT_STARTED = \"\\033[38;5;177m\"; // Pinkish: Timeout timer started\n";
-  code += "const QString TIMEOUT_EXPIRED = \"\\033[38;5;213m\"; // Magenta: Timeout timer expired\n\n";
+                       const QString STATE_HEADER = ANSI_BOLD + COLOR_STATE + "════════ STATE: " + ANSI_RESET;
+                       const QString COMMAND_HEADER = ANSI_BOLD + COLOR_COMMAND + "⟫ COMMAND: " + ANSI_RESET;
+                       const QString SECTION_SEPARATOR = COLOR_NOTICE + "───────────────────────────────────────────────────" + ANSI_RESET;
+                       const QString DOUBLE_SEPARATOR = COLOR_TRANSITION + "═══════════════════════════════════════════════════" + ANSI_RESET;
 
-  code += "const QString STATE_HEADER = ANSI_BOLD + COLOR_STATE + \"════════ STATE: \" + ANSI_RESET;\n";
-  code += "const QString COMMAND_HEADER = ANSI_BOLD + COLOR_COMMAND + \"⟫ COMMAND: \" + ANSI_RESET;\n";
-  code += "const QString SECTION_SEPARATOR = COLOR_NOTICE + \"───────────────────────────────────────────────────\" + ANSI_RESET;\n";
-  code += "const QString DOUBLE_SEPARATOR = COLOR_TRANSITION + \"═══════════════════════════════════════════════════\" + ANSI_RESET;\n\n";
+                       /**
+                        * @brief Prints a log message.
+                        * @param message Log message to display.
+                        */
+                       void log(const QString& message) {
+                         QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss.zzz");
+                         qDebug().noquote() << "[" << timeStr << "]" << message;
+                       }
 
-  code += "/**\n";
-  code += " * @brief Prints a log message.\n";
-  code += " * @param message Log message to display.\n";
-  code += " */\n";
-  code += "void log(const QString& message) {\n";
-  code += "    QString timeStr = QDateTime::currentDateTime().toString(\"HH:mm:ss.zzz\");\n";
-  code += "    qDebug().noquote() << \"[\" << timeStr << \"]\" << message;\n";
-  code += "}\n\n";
+                       /**
+                        * @brief Logs state transitions for monitoring.
+                        * @param stateName State name being entered.
+                        */
+                       void logStateChange(const QString& stateName) {
+                         log(DOUBLE_SEPARATOR);
+                         log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + stateName + ANSI_RESET + " ENTERED");
+                         log(SECTION_SEPARATOR);
+                         log("Executing onEntry action for state: " + ANSI_BOLD + stateName + ANSI_RESET);
+                         log(SECTION_SEPARATOR);
+                       }
 
-  code += "/**\n";
-  code += " * @brief Logs state transitions for monitoring.\n";
-  code += " * @param stateName State name being entered.\n";
-  code += " */\n";
-  code += "void logStateChange(const QString& stateName) {\n";
-  code += "    log(DOUBLE_SEPARATOR);\n";
-  code += "    log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + stateName + ANSI_RESET + \" ENTERED\");\n";
-  code += "    log(SECTION_SEPARATOR);\n";
-  code += "    log(\"Executing onEntry action for state: \" + ANSI_BOLD + stateName + ANSI_RESET);\n";
-  code += "    log(SECTION_SEPARATOR);\n";
-  code += "}\n\n";
+                       /**
+                        * @brief Logs input values for monitoring.
+                        * @param input Input name.
+                        * @param value Input value.
+                        */
+                       void logInputEvent(const QString& input, const QString& value) {
+                         log("Input value: " + ANSI_BOLD + input + ANSI_RESET + " = " + COLOR_VALUE + value + ANSI_RESET);
+                       }
 
-  code += "/**\n";
-  code += " * @brief Logs input values for monitoring.\n";
-  code += " * @param input Input name.\n";
-  code += " * @param value Input value.\n";
-  code += " */\n";
-  code += "void logInputEvent(const QString& input, const QString& value) {\n";
-  code += "    log(\"Input value: \" + ANSI_BOLD + input + ANSI_RESET + \" = \" + COLOR_VALUE + value + ANSI_RESET);\n";
-  code += "}\n\n";
+                       /**
+                        * @brief Logs output values for monitoring.
+                        * @param output Output name.
+                        * @param value Output value.
+                        */
+                       void logOutputEvent(const QString& output, const QString& value) {
+                         log("Output value: " + ANSI_BOLD + output + ANSI_RESET + " = " + COLOR_VALUE + value + ANSI_RESET);
+                       }
 
-  code += "/**\n";
-  code += " * @brief Logs output values for monitoring.\n";
-  code += " * @param output Output name.\n";
-  code += " * @param value Output value.\n";
-  code += " */\n";
-  code += "void logOutputEvent(const QString& output, const QString& value) {\n";
-  code += "    log(\"Output value: \" + ANSI_BOLD + output + ANSI_RESET + \" = \" + COLOR_VALUE + value + ANSI_RESET);\n";
-  code += "}\n\n";
+                       /**
+                        * @brief Prints a debug message if debugEnabled is true.
+                        * @param message Debug message to display.
+                        */
+                       void debug(const QString& message) {
+                         if (!debugEnabled) return;
+                         QString timeStr = QDateTime::currentDateTime().toString("HH:mm:ss.zzz");
+                         QString prefix = COLOR_INFO + "• DEBUG" + ANSI_RESET + ": ";
+                         qDebug().noquote() << "[" << timeStr << "]" << prefix << message;
+                       }
 
-  code += "/**\n";
-  code += " * @brief Prints a debug message if debugEnabled is true.\n";
-  code += " * @param message Debug message to display.\n";
-  code += " */\n";
-  code += "void debug(const QString& message) {\n";
-  code += "    if (!debugEnabled) return;\n";
-  code += "    QString timeStr = QDateTime::currentDateTime().toString(\"HH:mm:ss.zzz\");\n";
-  code += "    QString prefix = COLOR_INFO + \"• DEBUG\" + ANSI_RESET + \": \";\n";
-  code += "    qDebug().noquote() << \"[\" << timeStr << \"]\" << prefix << message;\n";
-  code += "}\n\n";
-
-  code += "/**\n";
-  code += " * @brief Displays all available commands and valid inputs.\n";
-  code += " * @param fsmName Name of the FSM.\n";
-  code += " * @param fsmDescription Description of the FSM.\n";
-  code += " * @param validInputs Set of valid input names.\n";
-  code += " * @param helpLines List of command descriptions to display.\n";
-  code += " */\n";
-  code += "void showHelp(const QString& fsmName, const QString& fsmDescription, const QSet<QString>& validInputs, const QStringList& helpLines) {\n";
-  code += "    log(DOUBLE_SEPARATOR);\n";
-  code += "    log(ANSI_BOLD + COLOR_HEADER + \"Machine: \" + ANSI_RESET + COLOR_STATE + fsmName + ANSI_RESET);\n";
-  code += "    if (!fsmDescription.isEmpty()) {\n";
-  code += "        log(fsmDescription);\n";
-  code += "    }\n";
-  code += "    log(DOUBLE_SEPARATOR);\n";
-  code += "    log(ANSI_BOLD + COLOR_COMMAND + \"AVAILABLE COMMANDS:\" + ANSI_RESET);\n";
-  code += "    for (const QString& line : helpLines) {\n";
-  code += "        log(line);\n";
-  code += "    }\n";
-  code += "    log(SECTION_SEPARATOR);\n";
-  code += "    if (!validInputs.isEmpty()) {\n";
-  code += "        log(ANSI_BOLD + COLOR_INPUT + \"VALID INPUTS:\" + ANSI_RESET);\n";
-  code += "        QStringList sortedInputs = validInputs.values();\n";
-  code += "        sortedInputs.sort();\n";
-  code += "        for (const QString& input : sortedInputs) {\n";
-  code += "            log(\"  \" + COLOR_INPUT + input + ANSI_RESET);\n";
-  code += "        }\n";
-  code += "    }\n";
-  code += "    log(SECTION_SEPARATOR);\n";
-  code += "}\n\n";
-
+                       /**
+                        * @brief Displays all available commands and valid inputs.
+                        * @param fsmName Name of the FSM.
+                        * @param fsmDescription Description of the FSM.
+                        * @param validInputs Set of valid input names.
+                        * @param helpLines List of command descriptions to display.
+                        */
+                       void showHelp(const QString& fsmName, const QString& fsmDescription, const QSet<QString>& validInputs, const QStringList& helpLines) {
+                         log(DOUBLE_SEPARATOR);
+                         log(ANSI_BOLD + COLOR_HEADER + "Machine: " + ANSI_RESET + COLOR_STATE + fsmName + ANSI_RESET);
+                         if (!fsmDescription.isEmpty()) {
+                           log(fsmDescription);
+                         }
+                         log(DOUBLE_SEPARATOR);
+                         log(ANSI_BOLD + COLOR_COMMAND + "AVAILABLE COMMANDS:" + ANSI_RESET);
+                         for (const QString& line : helpLines) {
+                           log(line);
+                         }
+                         log(SECTION_SEPARATOR);
+                         if (!validInputs.isEmpty()) {
+                           log(ANSI_BOLD + COLOR_INPUT + "VALID INPUTS:" + ANSI_RESET);
+                           QStringList sortedInputs = validInputs.values();
+                           sortedInputs.sort();
+                           for (const QString& input : sortedInputs) {
+                             log("  " + COLOR_INPUT + input + ANSI_RESET);
+                           }
+                         }
+                         log(SECTION_SEPARATOR);
+                       }
+  )cpp";
   return code;
 }
 
@@ -630,181 +629,29 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += " * Classes and Main function with QStateMachine\n";
   code += " ******************************************************************************/\n";
 
+  code += generateInputEventClass();
+  code += generateGeneratedTransitionClass();
+
+  code += R"cpp(void clearOutgoingTimers(const QString& stateName) {
+                  debug(QString("clearOutgoingTimers('%1')").arg(stateName));
+                  for (QAbstractTransition* t : fsm.findChildren<QAbstractTransition*>()) {
+                    auto ut = dynamic_cast<GeneratedTransition*>(t);
+                    if (!ut) continue;
+                    const QString& from = ut->fromStateName();
+                    const QString& to = ut->toStateName();
+                    if (from == stateName && from != to) {
+                      ut->resetTimerArmed();
+                      ut->stopTimer();
+                      debug(QString("Stopped timer and reset for transition %1 → %2").arg(from, to));
+                    }
+                  }
+                }
+  )cpp";
+
   State* initial = fsm->getInitialState();
   QMap<QString, State*> allStates = fsm->getStates();
 
   QString initialStateName = initial ? initial->getName() : "UNKNOWN";
-
-  code += "/**\n";
-  code += " * @brief Custom event for input changes.\n";
-  code += " */\n";
-  code += "class InputEvent : public QEvent {\n";
-  code += "public:\n";
-  code += "    static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2); // Custom event type for input changes\n";
-  code += "    InputEvent(const QString& name, const QString& value) \n";
-  code += "        : QEvent(InputChangedType), m_name(name), m_value(value) {}\n";
-  code += "    QString name() const { return m_name; }\n";
-  code += "    QString value() const { return m_value; }\n\n";
-
-  code += "private:\n";
-  code += "    QString m_name;\n";
-  code += "    QString m_value;\n";
-  code += "};\n\n";
-
-  code += "/**\n";
-  code += " * @brief Transition class handling both conditions and delays, generated for runtime.\n";
-  code += " */\n";
-  code += "class GeneratedTransition : public QAbstractTransition {\n";
-  code += "public:\n";
-  code += "    /**\n";
-  code += "     * @brief Constructor for a transition that handles both conditions and delays.\n";
-  code += "     * @param condition A lambda function that evaluates to a boolean.\n";
-  code += "     * @param delayFn A lambda function that returns the delay in milliseconds (live value).\n";
-  code += "     * @param fromState Source state name (for logging).\n";
-  code += "     * @param toState Target state name (for logging).\n";
-  code += "     */\n";
-  code += "    explicit GeneratedTransition(std::function<bool()> condition = []() { return true; },\n";
-  code += "                             std::function<int()> delayFn = []() { return 0; },\n";
-  code += "                             const QString& fromState = QString(),\n";
-  code += "                             const QString& toState = QString())\n";
-  code += "        : m_condition(std::move(condition)),\n";
-  code += "          m_delayFn(std::move(delayFn)),\n";
-  code += "          m_fromState(fromState),\n";
-  code += "          m_toState(toState),\n";
-  code += "          m_timer(new QTimer(this)),\n";
-  code += "          m_conditionMet(false),\n";
-  code += "          m_timerExpired(false),\n";
-  code += "          m_initialDelay(-1)\n";
-  code += "    {\n";
-  code += "        m_timer->setSingleShot(true);\n";
-  code += "        connect(m_timer, &QTimer::timeout, this, &GeneratedTransition::triggerTransition);\n";
-  code += "    }\n\n";
-  code += "    void resetTimerArmed() { m_timerArmed = false; m_initialDelay = -1; }\n";
-  code += "    void stopTimer() { if (m_timer && m_timer->isActive()) m_timer->stop(); }\n";
-  code += "    QString fromStateName() const { return m_fromState; }\n";
-  code += "    QString toStateName() const { return m_toState; }\n\n";
-  code += "protected:\n";
-  code += "    bool eventTest(QEvent* event) override {\n";
-  code += "        if (event->type() == QEvent::User + 1 && m_timerExpired) { // Custom event type\n";
-  code += "            m_timerExpired = false;\n";
-  code += "            // Re-evaluate the condition in case it changed during the delay\n";
-  code += "            if (m_condition()) {\n";
-  code += "                return true;\n";
-  code += "            } else {\n";
-  code += "                m_conditionMet = false;\n";
-  code += "                cancelTimerIfActive(\"Condition is no longer met (input or variable changed).\");\n";
-  code += "                return false;\n";
-  code += "            }\n";
-  code += "        }\n";
-  code += "        try {\n";
-  code += "            m_conditionMet = m_condition();\n";
-  code += "            debug(\"Evaluating transition from \" + m_fromState + \" to \" + m_toState + \": \" + (m_conditionMet ? \"true\" : \"false\"));\n";
-  code += "            if (!m_conditionMet) {\n";
-  code += "                cancelTimerIfActive(\"Condition is no longer met (input or variable changed).\");\n";
-  code += "                return false;\n";
-  code += "            }\n";
-  code += "            if (m_initialDelay == -1) {\n";
-  code += "                m_initialDelay = m_delayFn();\n";
-  code += "                debug(\"Initial delay for transition \" + m_fromState + \" → \" + m_toState + \": \" + QString::number(m_initialDelay) + \" ms\");\n";
-  code += "            }\n";
-  code += "            const int effDelay = m_initialDelay;\n";
-  code += "            if (effDelay > 0) {\n";
-  code += "                if (!m_timerArmed && m_initialDelay == effDelay) {\n";
-  code += "                    logTransitionStart(effDelay);\n";
-  code += "                    sendTimerEvent(\"timerStart\", m_fromState, m_toState, effDelay);\n";
-  code += "                    m_timer->start(effDelay);\n";
-  code += "                    m_timerArmed = true;\n";
-  code += "                }\n";
-  code += "                return false;\n";
-  code += "            }\n";
-  code += "            return m_conditionMet;\n";
-  code += "        } catch (const std::exception& e) {\n";
-  code += "            log(\"Error evaluating transition condition: \" + QString::fromStdString(e.what()));\n";
-  code += "            return false;\n";
-  code += "        } catch (...) {\n";
-  code += "            log(\"Unknown error evaluating transition condition\");\n";
-  code += "            return false;\n";
-  code += "        }\n";
-  code += "    }\n\n";
-  code += "    void onTransition(QEvent* event) override {\n";
-  code += "        Q_UNUSED(event);\n";
-  code += "        m_conditionMet = false;\n";
-  code += "        m_timerArmed = false;\n";
-  code += "        m_timerExpired = false;\n";
-  code += "        m_initialDelay = -1;\n";
-  code += "    }\n\n";
-  code += "private slots:\n";
-  code += "    void triggerTransition() {\n";
-  code += "        if (m_condition()) {\n";
-  code += "            m_timerExpired = true;\n";
-  code += "            log(TIMEOUT_EXPIRED + ANSI_BOLD + \"▶ Timeout expired\" + ANSI_RESET + \" for transition \" +\n";
-  code += "                COLOR_SOURCE + m_fromState + ANSI_RESET +\n";
-  code += "                COLOR_TRANSITION + \" → \" +\n";
-  code += "                COLOR_TARGET + m_toState + ANSI_RESET +\n";
-  code += "                ANSI_RESET + \" (delay: \" + ANSI_BOLD + QString::number(m_initialDelay) + \" ms)\" + ANSI_RESET);\n";
-  code += "            sendTimerEvent(\"timerExpired\", m_fromState, m_toState);\n";
-  code += "            QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1)); // Custom event type\n";
-  code += "            machine()->postEvent(customEvent);\n";
-  code += "        } else {\n";
-  code += "            m_conditionMet = false;\n";
-  code += "            cancelTimerIfActive(\"Condition became false before timeout expired.\");\n";
-  code += "            debug(\"Condition no longer valid after delay for transition \" +\n";
-  code += "                  m_fromState + \" → \" + m_toState +\n";
-  code += "                  \", not triggering\");\n";
-  code += "        }\n";
-  code += "    }\n\n";
-  code += "private:\n";
-  code += "    void cancelTimerIfActive(const QString& reason = QString()) {\n";
-  code += "        if (m_timer && m_timer->isActive()) {\n";
-  code += "            QString msg = \"Cancelling timer for transition \" + m_fromState + \" → \" + m_toState;\n";
-  code += "            if (!reason.isEmpty()) {\n";
-  code += "                msg += \": \" + reason;\n";
-  code += "            }\n";
-  code += "            log(msg);\n";
-  code += "            m_timer->stop();\n";
-  code += "            m_timerArmed = false;\n";
-  code += "            m_initialDelay = -1;\n";
-  code += "        }\n";
-  code += "    }\n\n";
-  code += "    void logTransitionStart(int effDelay) {\n";
-  code += "        log(TIMEOUT_STARTED + ANSI_BOLD + \"▶ Timeout started\" + ANSI_RESET + \" for transition \" +\n";
-  code += "            COLOR_SOURCE + m_fromState + ANSI_RESET +\n";
-  code += "            COLOR_TRANSITION + \" → \" +\n";
-  code += "            COLOR_TARGET + m_toState + ANSI_RESET +\n";
-  code += "            ANSI_RESET + \" (delay: \" + ANSI_BOLD + QString::number(effDelay) + \" ms)\" + ANSI_RESET);\n";
-  code += "        debug(\"Condition met for transition \" +\n";
-  code += "              COLOR_SOURCE + m_fromState + ANSI_RESET + \" → \" +\n";
-  code += "              COLOR_TARGET + m_toState + ANSI_RESET +\n";
-  code += "              \", starting \" + COLOR_VALUE + QString::number(effDelay) + \"ms\" + ANSI_RESET + \" delay timer\");\n";
-  code += "    }\n\n";
-  code += "    std::function<bool()> m_condition;\n";
-  code += "    std::function<int()> m_delayFn;\n";
-  code += "    QString m_fromState;\n";
-  code += "    QString m_toState;\n";
-  code += "    QTimer* m_timer;\n";
-  code += "    bool m_conditionMet;\n";
-  code += "    bool m_timerArmed = false;\n";
-  code += "    bool m_timerExpired = false;\n";
-  code += "    int m_initialDelay = -1;\n";
-  code += "};\n\n";
-
-  code += "/**\n";
-  code += " * @brief Zastaví všechny aktivní timeouty pro odchozí přechody z daného stavu (kromě self-transitions).\n";
-  code += " */\n";
-  code += "void clearOutgoingTimers(const QString& stateName) {\n";
-  code += "    debug(QString(\"clearOutgoingTimers('%1')\").arg(stateName));\n";
-  code += "    for (QAbstractTransition* t : fsm.findChildren<QAbstractTransition*>()) {\n";
-  code += "        auto ut = dynamic_cast<GeneratedTransition*>(t);\n";
-  code += "        if (!ut) continue;\n";
-  code += "        const QString& from = ut->fromStateName();\n";
-  code += "        const QString& to = ut->toStateName();\n";
-  code += "        if (from == stateName && from != to) {\n";
-  code += "            ut->resetTimerArmed();\n";
-  code += "            ut->stopTimer();\n";
-  code += "            debug(QString(\"Stopped timer and reset for transition %1 → %2\").arg(from, to));\n";
-  code += "        }\n";
-  code += "    }\n";
-  code += "}\n\n";
 
   code += "/**\n";
   code += " * @brief Main function that uses QStateMachine for state management.\n";
@@ -945,288 +792,9 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    showHelp(fsm.objectName(), fsm.property(\"description\").toString(), validInputNames, helpLines);\n";
   code += "    qDebug().noquote() << \"\";\n\n";
 
-  code += "    FILE* terminalInput = fdopen(dup(STDIN_FILENO), \"r\");\n";
-  code += "    if (!terminalInput) {\n";
-  code += "        debug(\"Error: Could not open terminal input\");\n";
-  code += "        return 1;\n";
-  code += "    }\n\n";
+  code += generateTerminalInputHandler(fsm);
 
-  code += "    int terminalFd = fileno(terminalInput);\n";
-  code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n\n";
-
-  code += "    // QSocketNotifier::activated lambda: terminal input processing\n";
-  code += "    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {\n";
-  code += "        char buffer[256];\n";
-  code += "        if (fgets(buffer, sizeof(buffer), terminalInput)) {\n";
-  code += "            QString inputLine = QString::fromLocal8Bit(buffer).trimmed();\n";
-  code += "            \n";
-  code += "            if (inputLine.isEmpty()) { return; }\n";
-  code += "            \n";
-  code += "            if (inputLine == \"/exit\") {\n";
-  code += "                log(\"Quit command received. Terminating application.\");\n";
-  code += "                broadcastShutdownEvent(\"Server is shutting down due to /exit command. All clients will be disconnected.\");\n";
-  code += "                closeAndCleanupAllSockets();\n";
-  code += "                QCoreApplication::quit();\n";
-  code += "                return;\n";
-  code += "            }\n";
-  code += "            \n";
-  code += "            if (inputLine == \"/help\") {\n";
-  code += "                showHelp(fsm.objectName(), fsm.property(\"description\").toString(), validInputNames, helpLines);\n";
-  code += "                return;\n";
-  code += "            }\n";
-  code += "            \n";
-  code += "            if (inputLine == \"/status\") {\n";
-  code += "                QString currentState = fsm.configuration().isEmpty() ? \"UNKNOWN\" : (*fsm.configuration().begin())->objectName();\n";
-  code += "                log(\"Current state: \" + ANSI_BOLD + COLOR_STATE + currentState + ANSI_RESET);\n";
-  code += "                // Show debug state\n";
-  code += "                log(SECTION_SEPARATOR);\n";
-  code += "                log(ANSI_BOLD + COLOR_HEADER + \"DEBUG STATE:\" + ANSI_RESET);\n";
-  code += "                log(QString(\"  Debug output is \") + (debugEnabled ? (COLOR_SUCCESS + \"ENABLED\" + ANSI_RESET) : (COLOR_WARNING + \"DISABLED\" + ANSI_RESET)));\n";
-  code += "                // Show client connection status\n";
-  code += "                log(SECTION_SEPARATOR);\n";
-  code += "                log(ANSI_BOLD + COLOR_HEADER + \"CLIENT CONNECTIONS:\" + ANSI_RESET);\n";
-  code += "                for (QTcpSocket* clientSocket : clientSockets) {\n";
-  code += "                    if (clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
-  code += "                        log(\"  \" + COLOR_SUCCESS + \"Client connected\" + ANSI_RESET + \" (\" + clientSocket->peerAddress().toString() + \")\");\n";
-  code += "                    } else {\n";
-  code += "                        log(\"  \" + COLOR_WARNING + \"Client disconnected\" + ANSI_RESET);\n";
-  code += "                    }\n";
-  code += "                }\n";
-  code += "                // Show inputs\n";
-  code += "                log(SECTION_SEPARATOR);\n";
-  code += "                log(ANSI_BOLD + COLOR_HEADER + \"INPUTS:\" + ANSI_RESET);\n";
-  code += "                for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {\n";
-  code += "                    log(\"  \" + COLOR_COMMAND + it.key() + ANSI_RESET + \" = \" + COLOR_VALUE + it.value() + ANSI_RESET);\n";
-  code += "                }\n";
-  code += "                // Show outputs\n";
-  code += "                log(SECTION_SEPARATOR);\n";
-  code += "                log(ANSI_BOLD + COLOR_HEADER + \"OUTPUTS:\" + ANSI_RESET);\n";
-  code += "                for (auto it = outputs.constBegin(); it != outputs.constEnd(); ++it) {\n";
-  code += "                    log(\"  \" + COLOR_COMMAND + it.key() + ANSI_RESET + \" = \" + COLOR_VALUE + it.value() + ANSI_RESET);\n";
-  code += "                }\n";
-  code += "                // Show internal variables\n";
-  code += "                log(SECTION_SEPARATOR);\n";
-  code += "                log(ANSI_BOLD + COLOR_HEADER + \"INTERNAL VARIABLES:\" + ANSI_RESET);\n";
-  QMap<QString, Variable*> variables = fsm->getVariables();
-  for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
-    Variable* var = it.value();
-    QString varName = var->getName();
-    code += "                log(\"  \" + COLOR_COMMAND + \"" + varName + "\" + ANSI_RESET + \" = \" + COLOR_VALUE + QVariant::fromValue(" + varName + ").toString() + ANSI_RESET);\n";
-  }
-  code += "                log(SECTION_SEPARATOR);\n";
-  code += "                return;\n";
-  code += "            }\n";
-  code += "            \n";
-  code += "            if (inputLine == \"/debugon\") {\n";
-  code += "                debugEnabled = true;\n";
-  code += "                log(\"Debug output enabled.\");\n";
-  code += "                return;\n";
-  code += "            }\n";
-  code += "            if (inputLine == \"/debugoff\") {\n";
-  code += "                debugEnabled = false;\n";
-  code += "                log(\"Debug output disabled.\");\n";
-  code += "                return;\n";
-  code += "            }\n";
-  code += "            \n";
-  code += "            QRegularExpression inputRegex(\"^(\\\\w+)(?:=(.*))?$\");\n";
-  code += "            QRegularExpressionMatch match = inputRegex.match(inputLine);\n";
-  code += "            \n";
-  code += "            if (match.hasMatch()) {\n";
-  code += "                QString name = match.captured(1);\n";
-  code += "                QString value = match.captured(2);\n";
-  code += "                \n";
-  code += "                if (!validInputNames.contains(name)) {\n";
-  code += "                    log(\"Invalid input name: \" + ANSI_BOLD + COLOR_ERROR + name + ANSI_RESET);\n";
-  code += "                    return;\n";
-  code += "                }\n";
-  code += "                \n";
-  code += "                if (!value.isEmpty()) {\n";
-  code += "                    // SET mode: store the new value and trigger event\n";
-  code += "                    debug(\"SET MODE for '\" + name + \"' with value '\" + value + \"'\");\n";
-  code += "                    inputs[name] = value;\n";
-  code += "                    logInputEvent(name, value);\n";
-  code += "                    setInputCalled(name);\n";
-  code += "                    fsm.postEvent(new InputEvent(name, value));\n";
-  code += "                } else {\n";
-  code += "                    // CALL mode: treat as pure event without changing stored value\n";
-  code += "                    debug(\"CALL MODE for '\" + name + \"'\");\n";
-  code += "                    QString lastValue = inputs.contains(name) ? inputs[name] : QString();\n";
-  code += "                    logInputEvent(name, lastValue);\n";
-  code += "                    setInputCalled(name);\n";
-  code += "                    fsm.postEvent(new InputEvent(name, lastValue));\n";
-  code += "                }\n";
-  code += "            } else {\n";
-  code += "                log(\"Unrecognized command: \" + ANSI_BOLD + COLOR_ERROR + inputLine + ANSI_RESET);\n";
-  code += "            }\n";
-  code += "        } else {\n";
-  code += "            log(DOUBLE_SEPARATOR);\n";
-  code += "            log(ANSI_BOLD + COLOR_WARNING + \"EOF (Ctrl+D) received. Exiting application.\" + ANSI_RESET);\n";
-  code += "            log(DOUBLE_SEPARATOR);\n";
-  code += "            if (terminalInput) {\n";
-  code += "                fclose(terminalInput);\n";
-  code += "                terminalInput = nullptr;\n";
-  code += "            }\n";
-  code += "            broadcastShutdownEvent(\"Server is shutting down due to EOF (Ctrl+D) on terminal. All clients will be disconnected.\");\n";
-  code += "            closeAndCleanupAllSockets();\n";
-  code += "            QCoreApplication::quit();\n";
-  code += "        }\n";
-  code += "    });\n\n";
-
-  code += "    // TCP communication\n";
-  code += "    server.listen(hostAddr, port);\n";
-  code += "    log(QString(\"Listening for TCP connections on %1:%2\").arg(hostAddr.toString()).arg(port));\n";
-  code += "    // QTcpServer::newConnection lambda\n";
-  code += "    QObject::connect(&server, &QTcpServer::newConnection, [&]() {\n";
-  code += "        while (server.hasPendingConnections()) {\n";
-  code += "            QTcpSocket* socket = server.nextPendingConnection();\n";
-  code += "            clientSockets.insert(socket);\n";
-  code += "            log(\"Client connected from \" + socket->peerAddress().toString());\n";
-  code += "            // QTcpSocket::readyRead lambda: reads data from the socket.\n";
-  code += "            QObject::connect(socket, &QTcpSocket::readyRead, [socket, FSM_XML](void) {\n";
-  code += "                while (socket->canReadLine()) {\n";
-  code += "                    QString line = QString::fromUtf8(socket->readLine()).trimmed();\n";
-  code += "                    debug(\"TCP: Received line: \" + line);\n";
-  code += "                    if (line.isEmpty()) { continue; }\n";
-  code += "                    if (!line.startsWith(\"<\")) {\n";
-  code += "                        debug(\"TCP: Non-XML command received: \" + line);\n";
-  code += "                        sendError(ERR_MALFORMED_XML, \"Malformed XML\", socket);\n";
-  code += "                        continue;\n";
-  code += "                    }\n";
-  code += "                    QDomDocument doc;\n";
-  code += "                    if (!doc.setContent(line)) {\n";
-  code += "                        debug(\"TCP: Malformed XML received: \" + line);\n";
-  code += "                        sendError(ERR_MALFORMED_XML, \"Malformed XML\", socket);\n";
-  code += "                        continue;\n";
-  code += "                    }\n";
-  code += "                    QDomElement root = doc.documentElement();\n";
-  code += "                    QString type = root.attribute(\"type\");\n";
-  code += "                    if (type == \"set\") {\n";
-  code += "                        QString name = root.firstChildElement(\"name\").text();\n";
-  code += "                        QString value = root.firstChildElement(\"value\").text();\n";
-  code += "                        if (inputs.contains(name)) {\n";
-  code += "                            inputs[name] = value;\n";
-  code += "                            setInputCalled(name);\n";
-  code += "                            fsm.postEvent(new InputEvent(name, value));\n";
-  code += "                            log(\"Input '\" + name + \"' set to '\" + value + \"' via TCP\");\n";
-  code += "                        } else {\n";
-  code += "                            debug(\"TCP: Unknown input '\" + name + \"' in set command\");\n";
-  code += "                            sendError(ERR_UNKNOWN_INPUT, \"Unknown input\", socket);\n";
-  code += "                        }\n";
-  code += "                        continue;\n";
-  code += "                    } else if (type == \"call\") {\n";
-  code += "                        QString name = root.firstChildElement(\"name\").text();\n";
-  code += "                        if (inputs.contains(name)) {\n";
-  code += "                            setInputCalled(name);\n";
-  code += "                            fsm.postEvent(new InputEvent(name, inputs[name]));\n";
-  code += "                            log(\"Input '\" + name + \"' called via TCP\");\n";
-  code += "                        } else {\n";
-  code += "                            debug(\"TCP: Unknown input '\" + name + \"' in call command\");\n";
-  code += "                            sendError(ERR_UNKNOWN_INPUT, \"Unknown input\", socket);\n";
-  code += "                        }\n";
-  code += "                        continue;\n";
-  code += "                    } else if (type == \"status\") {\n";
-  code += "                        QString state = fsm.configuration().isEmpty()\n";
-  code += "                            ? \"UNKNOWN\"\n";
-  code += "                            : (*fsm.configuration().begin())->objectName();\n";
-  code += "                        QString statusXml = generateStatusXml(state);\n";
-  code += "                        QByteArray msg = buildEvent(statusXml);\n";
-  code += "                        socket->write(msg);\n";
-  code += "                        socket->flush();\n";
-  code += "                        debug(\"TCP: Sent status XML\");\n";
-  code += "                        continue;\n";
-  code += "                    } else if (type == \"help\") {\n";
-  code += "                        QString helpMsg = \"<event type=\\\"log\\\"><message>Supported commands: set, call, status, reqFSM, help, disconnect, shutdown</message></event>\";\n";
-  code += "                        socket->write(buildEvent(helpMsg));\n";
-  code += "                        socket->flush();\n";
-  code += "                        debug(\"TCP: Sent help message\");\n";
-  code += "                        continue;\n";
-  code += "                    } else if (type == \"reqFSM\") {\n";
-  code += "                        QString fsmMsgLine = QString::fromUtf8(FSM_XML).replace('\\n', ' ').replace('\\r', ' ');\n";
-  code += "                        QString fsmMsg = QString(\"<event type=\\\"fsm\\\"><model><![CDATA[%1]]></model></event>\").arg(fsmMsgLine);\n";
-  code += "                        socket->write(buildEvent(fsmMsg));\n";
-  code += "                        socket->flush();\n";
-  code += "                        debug(\"TCP: FSM model XML sent to client\");\n";
-  code += "                        continue;\n";
-  code += "                    } else if (type == \"disconnect\") {\n";
-  code += "                        QString disconnectMsg = \"<event type=\\\"disconnect\\\"><message>Disconnecting client</message></event>\";\n";
-  code += "                        socket->write(buildEvent(disconnectMsg));\n";
-  code += "                        socket->flush();\n";
-  code += "                        socket->disconnectFromHost();\n";
-  code += "                        debug(\"TCP: Client requested disconnect via socket communication\");\n";
-  code += "                        continue;\n";
-  code += "                    } else if (type == \"shutdown\") {\n";
-  code += "                        broadcastShutdownEvent(\"Server is shutting down due to a TCP shutdown command. All clients will be disconnected.\");\n";
-  code += "                        log(\"Shutdown command received via socket communication. Shutting down server.\");\n";
-  code += "                        closeAndCleanupAllSockets();\n";
-  code += "                        QCoreApplication::quit();\n";
-  code += "                        continue;\n";
-  code += "                    } else if (type == \"pong\") {\n";
-  code += "                        if (awaitingPong.contains(socket)) {\n";
-  code += "                            awaitingPong.remove(socket);\n";
-  code += "                            if (pingTimers.contains(socket)) {\n";
-  code += "                                QTimer* t = pingTimers.take(socket);\n";
-  code += "                                if (t) { t->stop(); t->deleteLater(); }\n";
-  code += "                            }\n";
-  code += "                            debug(\"Received pong from a client.\");\n";
-  code += "                        }\n";
-  code += "                        continue;\n";
-  code += "                    } else {\n";
-  code += "                        debug(\"TCP: Unknown XML command received: \" + type);\n";
-  code += "                        sendError(ERR_UNKNOWN_COMMAND, \"Unknown command\", socket);\n";
-  code += "                        continue;\n";
-  code += "                    }\n";
-  code += "                }\n";
-  code += "            });\n\n";
-
-  code += "            // QTcpSocket::disconnected lambda\n";
-  code += "            QObject::connect(socket, &QTcpSocket::disconnected, [socket]() {\n";
-  code += "                log(\"Client disconnected\");\n";
-  code += "                cleanupSocket(socket);\n";
-  code += "            });\n\n";
-
-  code += "            // QTcpSocket::error lambda\n";
-  code += "            // Done this way to avoid ambiguity because in Qt5.9 there are multiple overloaded error signals\n";
-  code += "            QObject::connect(socket,\n";
-  code += "                 // Explicitly choosing the right signal overload\n";
-  code += "                static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),\n";
-  code += "                [socket](QAbstractSocket::SocketError socketError) {\n";
-  code += "                    log(QString(\"Socket error occurred: %1\").arg(socket->errorString()));\n";
-  code += "                    cleanupSocket(socket);\n";
-  code += "                }\n";
-  code += "            );\n";
-  code += "        }\n";
-  code += "    });\n";
-
-  code += "    QTimer* pingIntervalTimer = new QTimer(&app);\n";
-  code += "    pingIntervalTimer->setInterval(20000); // 20s \n";
-  code += "    // QTimer::timeout (pingIntervalTimer lambda: Periodically sends ping messages to all clients for keepalive mechanism.\n";
-  code += "    QObject::connect(pingIntervalTimer, &QTimer::timeout, [&]() {\n";
-  code += "        for (QTcpSocket* clientSocket : clientSockets) {\n";
-  code += "            if (!awaitingPong.contains(clientSocket)) {\n";
-  code += "                // Send ping\n";
-  code += "                QString pingMsg = \"<event type=\\\"ping\\\"/>\";\n";
-  code += "                clientSocket->write(buildEvent(pingMsg));\n";
-  code += "                clientSocket->flush();\n";
-  code += "                awaitingPong.insert(clientSocket);\n";
-  code += "                debug(\"Sent ping to a client.\");\n\n";
-
-  code += "                // Expect pong\n";
-  code += "                QTimer* pongTimer = new QTimer(clientSocket);\n";
-  code += "                pongTimer->setSingleShot(true);\n";
-  code += "                // QTimer::timeout (pongTimer): Handles keepalive timeout for individual clients.\n";
-  code += "                QObject::connect(pongTimer, &QTimer::timeout, [clientSocket]() {\n";
-  code += "                    debug(\"A client timed out.\");\n";
-  code += "                    QString shutdownMsg = \"<event type=\\\"shutdown\\\"><message>Keepalive timeout</message></event>\";\n";
-  code += "                    clientSocket->write(buildEvent(shutdownMsg));\n";
-  code += "                    clientSocket->flush();\n";
-  code += "                    cleanupSocket(clientSocket);\n";
-  code += "                });\n";
-  code += "                pingTimers[clientSocket] = pongTimer;\n";
-  code += "                pongTimer->start(10000); // 10 s\n";
-  code += "            }\n";
-  code += "        }\n";
-  code += "    });\n";
-  code += "    pingIntervalTimer->start();\n";
+  code += generateTcpXmlProtocolServer(fsm);
 
   code += "    debug(ANSI_BOLD + COLOR_HEADER + \"INITIALIZING STATE MACHINE\" + ANSI_RESET);\n";
   code += "    fsm.start();\n";
@@ -1237,4 +805,460 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "}\n";
 
   return code;
+}
+
+/**
+ * @brief Generates TCP XML protocol server logic.
+ * @param fsm FSM containing the states and transitions.
+ * @return Code section as QString.
+ */
+QString CodeGenerator::generateTcpXmlProtocolServer(FSM* fsm) {
+  QString code = R"cpp(server.listen(hostAddr, port);
+                       log(QString("Listening for TCP connections on %1:%2").arg(hostAddr.toString()).arg(port));
+                       // QTcpServer::newConnection lambda
+                       QObject::connect(&server, &QTcpServer::newConnection, [&]() {
+                         while (server.hasPendingConnections()) {
+                           QTcpSocket* socket = server.nextPendingConnection();
+                           clientSockets.insert(socket);
+                           log("Client connected from " + socket->peerAddress().toString());
+                           // QTcpSocket::readyRead lambda: reads data from the socket.
+                           QObject::connect(socket, &QTcpSocket::readyRead, [socket, FSM_XML](void) {
+                             while (socket->canReadLine()) {
+                               QString line = QString::fromUtf8(socket->readLine()).trimmed();
+                               debug("TCP: Received line: " + line);
+                               if (line.isEmpty()) {
+                                 continue;
+                               }
+                               if (!line.startsWith("<")) {
+                                 debug("TCP: Non-XML command received: " + line);
+                                 sendError(ERR_MALFORMED_XML, "Malformed XML", socket);
+                                 continue;
+                               }
+                               QDomDocument doc;
+                               if (!doc.setContent(line)) {
+                                 debug("TCP: Malformed XML received: " + line);
+                                 sendError(ERR_MALFORMED_XML, "Malformed XML", socket);
+                                 continue;
+                               }
+                               QDomElement root = doc.documentElement();
+                               QString type = root.attribute("type");
+                               if (type == "set") {
+                                 QString name = root.firstChildElement("name").text();
+                                 QString value = root.firstChildElement("value").text();
+                                 if (inputs.contains(name)) {
+                                   inputs[name] = value;
+                                   setInputCalled(name);
+                                   fsm.postEvent(new InputEvent(name, value));
+                                   log("Input '" + name + "' set to '" + value + "' via TCP");
+                                 } else {
+                                   debug("TCP: Unknown input '" + name + "' in set command");
+                                   sendError(ERR_UNKNOWN_INPUT, "Unknown input", socket);
+                                 }
+                                 continue;
+                               } else if (type == "call") {
+                                 QString name = root.firstChildElement("name").text();
+                                 if (inputs.contains(name)) {
+                                   setInputCalled(name);
+                                   fsm.postEvent(new InputEvent(name, inputs[name]));
+                                   log("Input '" + name + "' called via TCP");
+                                 } else {
+                                   debug("TCP: Unknown input '" + name + "' in call command");
+                                   sendError(ERR_UNKNOWN_INPUT, "Unknown input", socket);
+                                 }
+                                 continue;
+                               } else if (type == "status") {
+                                 QString state = fsm.configuration().isEmpty()
+                                                     ? "UNKNOWN"
+                                                     : (*fsm.configuration().begin())->objectName();
+                                 QString statusXml = generateStatusXml(state);
+                                 QByteArray msg = buildEvent(statusXml);
+                                 socket->write(msg);
+                                 socket->flush();
+                                 debug("TCP: Sent status XML");
+                                 continue;
+                               } else if (type == "help") {
+                                 QString helpMsg = "<event type=\"log\"><message>Supported commands: set, call, status, reqFSM, help, disconnect, shutdown</message></event>";
+                                 socket->write(buildEvent(helpMsg));
+                                 socket->flush();
+                                 debug("TCP: Sent help message");
+                                 continue;
+                               } else if (type == "reqFSM") {
+                                 QString fsmMsgLine = QString::fromUtf8(FSM_XML).replace('\n', ' ').replace('\r', ' ');
+                                 QString fsmMsg = QString("<event type=\"fsm\"><model><![CDATA[%1]]></model></event>").arg(fsmMsgLine);
+                                 socket->write(buildEvent(fsmMsg));
+                                 socket->flush();
+                                 debug("TCP: FSM model XML sent to client");
+                                 continue;
+                               } else if (type == "disconnect") {
+                                 QString disconnectMsg = "<event type=\"disconnect\"><message>Disconnecting client</message></event>";
+                                 socket->write(buildEvent(disconnectMsg));
+                                 socket->flush();
+                                 socket->disconnectFromHost();
+                                 debug("TCP: Client requested disconnect via socket communication");
+                                 continue;
+                               } else if (type == "shutdown") {
+                                 broadcastShutdownEvent("Server is shutting down due to a TCP shutdown command. All clients will be disconnected.");
+                                 log("Shutdown command received via socket communication. Shutting down server.");
+                                 closeAndCleanupAllSockets();
+                                 QCoreApplication::quit();
+                                 continue;
+                               } else if (type == "pong") {
+                                 if (awaitingPong.contains(socket)) {
+                                   awaitingPong.remove(socket);
+                                   if (pingTimers.contains(socket)) {
+                                     QTimer* t = pingTimers.take(socket);
+                                     if (t) {
+                                       t->stop();
+                                       t->deleteLater();
+                                     }
+                                   }
+                                   debug("Received pong from a client.");
+                                 }
+                                 continue;
+                               } else {
+                                 debug("TCP: Unknown XML command received: " + type);
+                                 sendError(ERR_UNKNOWN_COMMAND, "Unknown command", socket);
+                                 continue;
+                               }
+                             }
+                           });
+
+                           // QTcpSocket::disconnected lambda
+                           QObject::connect(socket, &QTcpSocket::disconnected, [socket]() {
+                             log("Client disconnected");
+                             cleanupSocket(socket);
+                           });
+
+                           // QTcpSocket::error lambda
+                           // Done this way to avoid ambiguity because in Qt5.9 there are multiple overloaded error signals
+                           QObject::connect(socket,
+                                            // Explicitly choosing the right signal overload
+                                            static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
+                                            [socket](QAbstractSocket::SocketError socketError) {
+                                              log(QString("Socket error occurred: %1").arg(socket->errorString()));
+                                              cleanupSocket(socket);
+                                            });
+                         }
+                       });
+
+                       QTimer* pingIntervalTimer = new QTimer(&app);
+                       pingIntervalTimer->setInterval(20000);  // 20s
+                       // QTimer::timeout (pingIntervalTimer lambda: Periodically sends ping messages to all clients for keepalive mechanism.
+                       QObject::connect(pingIntervalTimer, &QTimer::timeout, [&]() {
+                         for (QTcpSocket* clientSocket : clientSockets) {
+                           if (!awaitingPong.contains(clientSocket)) {
+                             // Send ping
+                             QString pingMsg = "<event type=\"ping\"/>";
+                             clientSocket->write(buildEvent(pingMsg));
+                             clientSocket->flush();
+                             awaitingPong.insert(clientSocket);
+                             debug("Sent ping to a client.\n");
+
+                             // Expect pong
+                             QTimer* pongTimer = new QTimer(clientSocket);
+                             pongTimer->setSingleShot(true);
+                             // QTimer::timeout (pongTimer): Handles keepalive timeout for individual clients.
+                             QObject::connect(pongTimer, &QTimer::timeout, [clientSocket]() {
+                               debug("A client timed out.");
+                               QString shutdownMsg = "<event type=\"shutdown\"><message>Keepalive timeout</message></event>";
+                               clientSocket->write(buildEvent(shutdownMsg));
+                               clientSocket->flush();
+                               cleanupSocket(clientSocket);
+                             });
+                             pingTimers[clientSocket] = pongTimer;
+                             pongTimer->start(10000);  // 10 s
+                           }
+                         }
+                       });
+                       pingIntervalTimer->start();
+  )cpp";
+  return code;
+}
+
+/**
+ * @brief Generates terminal input handler logic.
+ * @param fsm FSM containing the states and transitions.
+ * @return Code section as QString.
+ */
+QString CodeGenerator::generateTerminalInputHandler(FSM* fsm) {
+  QString code = R"cpp(FILE* terminalInput = fdopen(dup(STDIN_FILENO), "r");
+                       if (!terminalInput) {
+                         debug("Error: Could not open terminal input");
+                         return 1;
+                       }
+
+                       int terminalFd = fileno(terminalInput);
+                       QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);
+
+                       // QSocketNotifier::activated lambda: terminal input processing
+    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {
+  char buffer[256];
+  if (fgets(buffer, sizeof(buffer), terminalInput)) {
+    QString inputLine = QString::fromLocal8Bit(buffer).trimmed();
+
+    if (inputLine.isEmpty()) {
+      return;
+    }
+
+    if (inputLine == "/exit") {
+      log("Quit command received. Terminating application.");
+      broadcastShutdownEvent("Server is shutting down due to /exit command. All clients will be disconnected.");
+      closeAndCleanupAllSockets();
+      QCoreApplication::quit();
+      return;
+    }
+
+    if (inputLine == "/help") {
+      showHelp(fsm.objectName(), fsm.property("description").toString(), validInputNames, helpLines);
+      return;
+    }
+
+    if (inputLine == "/status") {
+      QString currentState = fsm.configuration().isEmpty() ? "UNKNOWN" : (*fsm.configuration().begin())->objectName();
+      log("Current state: " + ANSI_BOLD + COLOR_STATE + currentState + ANSI_RESET);
+      // Show debug state
+      log(SECTION_SEPARATOR);
+      log(ANSI_BOLD + COLOR_HEADER + "DEBUG STATE:" + ANSI_RESET);
+      log(QString("  Debug output is ") + (debugEnabled ? (COLOR_SUCCESS + "ENABLED" + ANSI_RESET) : (COLOR_WARNING + "DISABLED" + ANSI_RESET)));
+      // Show client connection status
+      log(SECTION_SEPARATOR);
+      log(ANSI_BOLD + COLOR_HEADER + "CLIENT CONNECTIONS:" + ANSI_RESET);
+      for (QTcpSocket* clientSocket : clientSockets) {
+        if (clientSocket->state() == QAbstractSocket::ConnectedState) {
+          log("  " + COLOR_SUCCESS + "Client connected" + ANSI_RESET + " (" + clientSocket->peerAddress().toString() + ")");
+        } else {
+          log("  " + COLOR_WARNING + "Client disconnected" + ANSI_RESET);
+        }
+      }
+      // Show inputs
+      log(SECTION_SEPARATOR);
+      log(ANSI_BOLD + COLOR_HEADER + "INPUTS:" + ANSI_RESET);
+      for (auto it = inputs.constBegin(); it != inputs.constEnd(); ++it) {
+        log("  " + COLOR_COMMAND + it.key() + ANSI_RESET + " = " + COLOR_VALUE + it.value() + ANSI_RESET);
+      }
+      // Show outputs
+      log(SECTION_SEPARATOR);
+      log(ANSI_BOLD + COLOR_HEADER + "OUTPUTS:" + ANSI_RESET);
+      for (auto it = outputs.constBegin(); it != outputs.constEnd(); ++it) {
+        log("  " + COLOR_COMMAND + it.key() + ANSI_RESET + " = " + COLOR_VALUE + it.value() + ANSI_RESET);
+      }
+      // Show internal variables
+      log(SECTION_SEPARATOR);
+      log(ANSI_BOLD + COLOR_HEADER + "INTERNAL VARIABLES:" + ANSI_RESET);
+  )cpp";
+  QMap<QString, Variable*> variables = fsm->getVariables();
+  for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
+    Variable* var = it.value();
+    QString varName = var->getName();
+    code += "                log(\"  \" + COLOR_COMMAND + \"" + varName + "\" + ANSI_RESET + \" = \" + COLOR_VALUE + QVariant::fromValue(" + varName + ").toString() + ANSI_RESET);\n";
+  }
+  code += R"cpp(log(SECTION_SEPARATOR);
+                return;
+                }
+
+                if (inputLine == "/debugon") {
+                  debugEnabled = true;
+                  log("Debug output enabled.");
+                  return;
+                }
+                if (inputLine == "/debugoff") {
+                  debugEnabled = false;
+                  log("Debug output disabled.");
+                  return;
+                }
+
+                QRegularExpression inputRegex("^(\\w+)(?:=(.*))?$");
+                QRegularExpressionMatch match = inputRegex.match(inputLine);
+
+                if (match.hasMatch()) {
+                  QString name = match.captured(1);
+                  QString value = match.captured(2);
+
+                  if (!validInputNames.contains(name)) {
+                    log("Invalid input name: " + ANSI_BOLD + COLOR_ERROR + name + ANSI_RESET);
+                    return;
+                  }
+
+                  if (!value.isEmpty()) {
+                    // SET mode: store the new value and trigger event
+                    debug("SET MODE for '" + name + "' with value '" + value + "'");
+                    inputs[name] = value;
+                    logInputEvent(name, value);
+                    setInputCalled(name);
+                    fsm.postEvent(new InputEvent(name, value));
+                  } else {
+                    // CALL mode: treat as pure event without changing stored value
+                    debug("CALL MODE for '" + name + "'");
+                    QString lastValue = inputs.contains(name) ? inputs[name] : QString();
+                    logInputEvent(name, lastValue);
+                    setInputCalled(name);
+                    fsm.postEvent(new InputEvent(name, lastValue));
+                  }
+                } else {
+                  log("Unrecognized command: " + ANSI_BOLD + COLOR_ERROR + inputLine + ANSI_RESET);
+                }
+                }
+                else {
+                  log(DOUBLE_SEPARATOR);
+                  log(ANSI_BOLD + COLOR_WARNING + "EOF (Ctrl+D) received. Exiting application." + ANSI_RESET);
+                  log(DOUBLE_SEPARATOR);
+                  if (terminalInput) {
+                    fclose(terminalInput);
+                    terminalInput = nullptr;
+                  }
+                  broadcastShutdownEvent("Server is shutting down due to EOF (Ctrl+D) on terminal. All clients will be disconnected.");
+                  closeAndCleanupAllSockets();
+                  QCoreApplication::quit();
+                }
+                });
+  )cpp";
+  return code;
+}
+
+QString CodeGenerator::generateInputEventClass() {
+  return R"cpp(
+    /**
+     * @brief Custom event for input changes.
+     */
+    class InputEvent : public QEvent {
+     public:
+      static const QEvent::Type InputChangedType = static_cast<QEvent::Type>(QEvent::User + 2);  // Custom event type for input changes
+      InputEvent(const QString& name, const QString& value)
+          : QEvent(InputChangedType), m_name(name), m_value(value) {}
+      QString name() const { return m_name; }
+      QString value() const { return m_value; }
+
+     private:
+      QString m_name;
+      QString m_value;
+    };
+  )cpp";
+}
+
+QString CodeGenerator::generateGeneratedTransitionClass() {
+  return R"cpp(
+    /**
+     * @brief Transition class handling both conditions and delays, generated for runtime.
+     */
+    class GeneratedTransition : public QAbstractTransition {
+     public:
+      explicit GeneratedTransition(std::function<bool()> condition = []() { return true; }, std::function<int()> delayFn = []() { return 0; }, const QString& fromState = QString(), const QString& toState = QString()) : m_condition(std::move(condition)), m_delayFn(std::move(delayFn)), m_fromState(fromState), m_toState(toState), m_timer(new QTimer(this)), m_conditionMet(false), m_timerArmed(false), m_timerExpired(false), m_initialDelay(-1) {
+        m_timer->setSingleShot(true);
+        connect(m_timer, &QTimer::timeout, this, &GeneratedTransition::triggerTransition);
+      }
+      void resetTimerArmed() {
+        m_timerArmed = false;
+        m_initialDelay = -1;
+      }
+      void stopTimer() {
+        if (m_timer && m_timer->isActive()) m_timer->stop();
+      }
+      QString fromStateName() const { return m_fromState; }
+      QString toStateName() const { return m_toState; }
+
+     protected:
+      bool eventTest(QEvent* event) override {
+        if (event->type() == QEvent::User + 1 && m_timerExpired) {
+          m_timerExpired = false;
+          if (m_condition()) {
+            return true;
+          } else {
+            m_conditionMet = false;
+            cancelTimerIfActive("Condition is no longer met (input or variable changed).");
+            return false;
+          }
+        }
+        try {
+          m_conditionMet = m_condition();
+          debug("Evaluating transition from " + m_fromState + " to " + m_toState + ": " + (m_conditionMet ? "true" : "false"));
+          if (!m_conditionMet) {
+            cancelTimerIfActive("Condition is no longer met (input or variable changed).");
+            return false;
+          }
+          if (m_initialDelay == -1) {
+            m_initialDelay = m_delayFn();
+            debug("Initial delay for transition " + m_fromState + " → " + m_toState + ": " + QString::number(m_initialDelay) + " ms");
+          }
+          const int effDelay = m_initialDelay;
+          if (effDelay > 0) {
+            if (!m_timerArmed && m_initialDelay == effDelay) {
+              logTransitionStart(effDelay);
+              sendTimerEvent("timerStart", m_fromState, m_toState, effDelay);
+              m_timer->start(effDelay);
+              m_timerArmed = true;
+            }
+            return false;
+          }
+          return m_conditionMet;
+        } catch (const std::exception& e) {
+          log("Error evaluating transition condition: " + QString::fromStdString(e.what()));
+          return false;
+        } catch (...) {
+          log("Unknown error evaluating transition condition");
+          return false;
+        }
+      }
+      void onTransition(QEvent* event) override {
+        Q_UNUSED(event);
+        m_conditionMet = false;
+        m_timerArmed = false;
+        m_timerExpired = false;
+        m_initialDelay = -1;
+      }
+     private slots:
+      void triggerTransition() {
+        if (m_condition()) {
+          m_timerExpired = true;
+          log(TIMEOUT_EXPIRED + ANSI_BOLD + "▶ Timeout expired" + ANSI_RESET + " for transition " +
+              COLOR_SOURCE + m_fromState + ANSI_RESET +
+              COLOR_TRANSITION + " → " +
+              COLOR_TARGET + m_toState + ANSI_RESET +
+              ANSI_RESET + " (delay: " + ANSI_BOLD + QString::number(m_initialDelay) + " ms)" + ANSI_RESET);
+          sendTimerEvent("timerExpired", m_fromState, m_toState);
+          QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1));
+          machine()->postEvent(customEvent);
+        } else {
+          m_conditionMet = false;
+          cancelTimerIfActive("Condition became false before timeout expired.");
+          debug("Condition no longer valid after delay for transition " +
+                m_fromState + " → " + m_toState +
+                ", not triggering");
+        }
+      }
+
+     private:
+      void cancelTimerIfActive(const QString& reason = QString()) {
+        if (m_timer && m_timer->isActive()) {
+          QString msg = "Cancelling timer for transition " + m_fromState + " → " + m_toState;
+          if (!reason.isEmpty()) {
+            msg += ": " + reason;
+          }
+          log(msg);
+          m_timer->stop();
+          m_timerArmed = false;
+          m_initialDelay = -1;
+        }
+      }
+      void logTransitionStart(int effDelay) {
+        log(TIMEOUT_STARTED + ANSI_BOLD + "▶ Timeout started" + ANSI_RESET + " for transition " +
+            COLOR_SOURCE + m_fromState + ANSI_RESET +
+            COLOR_TRANSITION + " → " +
+            COLOR_TARGET + m_toState + ANSI_RESET +
+            ANSI_RESET + " (delay: " + ANSI_BOLD + QString::number(effDelay) + " ms)" + ANSI_RESET);
+        debug("Condition met for transition " +
+              COLOR_SOURCE + m_fromState + ANSI_RESET + " → " +
+              COLOR_TARGET + m_toState + ANSI_RESET +
+              ", starting " + COLOR_VALUE + QString::number(effDelay) + "ms" + ANSI_RESET + " delay timer");
+      }
+      std::function<bool()> m_condition;
+      std::function<int()> m_delayFn;
+      QString m_fromState;
+      QString m_toState;
+      QTimer* m_timer;
+      bool m_conditionMet;
+      bool m_timerArmed = false;
+      bool m_timerExpired = false;
+      int m_initialDelay = -1;
+    };
+  )cpp";
 }
