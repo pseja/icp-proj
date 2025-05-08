@@ -124,11 +124,11 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
                 }
 
                 /**
-                 * @brief Converts a string to an integer.
+                 * @brief Converts a QString to an integer.
                  * @param str String to convert.
                  * @return Integer value, or 0 if conversion fails.
                  */
-                int atoi(const QString& str) {
+                int Qtoi(const QString& str) {
                   bool ok = false;
                   int value = str.toInt(&ok);
                   return ok ? value : 0;
