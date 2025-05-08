@@ -61,6 +61,11 @@ void GuiClient::sendShutdown() {
   sendCommand(xml);
 }
 
+void GuiClient::sendPong() {
+  QString pongXml = "<command type=\"pong\"/>";
+  sendCommand(pongXml);
+}
+
 void GuiClient::onReadyRead() {
   while (socket->canReadLine()) {
     QString line = QString::fromUtf8(socket->readLine()).trimmed();
@@ -106,6 +111,9 @@ void GuiClient::onReadyRead() {
         QString code = root.firstChildElement("code").text();
         QString msg = root.firstChildElement("message").text();
         qWarning() << "[ERROR] code:" << code << ", message:" << msg;
+      } else if (type == "ping") {
+        sendPong();
+        qDebug() << "[PING] Received ping, sent pong.";
       } else if (type == "status") {
         QDomElement statusElem = root.firstChildElement("status");
         QString state = statusElem.firstChildElement("state").text();

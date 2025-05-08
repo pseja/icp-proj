@@ -266,6 +266,13 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
   code += "    if (clientSockets.contains(socket)) {\n";
   code += "        clientSockets.remove(socket);\n";
   code += "    }\n";
+  code += "    if (awaitingPong.contains(socket)) {\n";
+  code += "        awaitingPong.remove(socket);\n";
+  code += "    }\n";
+  code += "    if (pingTimers.contains(socket)) {\n";
+  code += "        QTimer* t = pingTimers.take(socket);\n";
+  code += "        if (t) { t->stop(); t->deleteLater(); }\n";
+  code += "    }\n";
   code += "    socket->deleteLater();\n";
   code += "}\n\n";
 
@@ -389,7 +396,9 @@ QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
   code += "bool debugEnabled = false;\n";
   code += "QSet<QTcpSocket*> clientSockets;\n";
   code += "QMap<QString, QVariant> variables;\n";
-  code += "QMap<QPair<QString, QString>, QPair<qint64, int>> timers;\n\n";
+  code += "QMap<QPair<QString, QString>, QPair<qint64, int>> timers; // [(from,to),(startime,duration)]\n\n";
+  code += "QMap<QTcpSocket*, QTimer*> pingTimers; // Tracks pingpong keepalive timers per client\n";
+  code += "QSet<QTcpSocket*> awaitingPong;        // Tracks clients waiting for pong\n\n";
 
   QMap<QString, Variable*> variables = fsm->getVariables();
   if (!variables.isEmpty()) {
@@ -834,7 +843,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
 
   code += "    std::signal(SIGINT, [](int) {\n";
   code += "        log(DOUBLE_SEPARATOR);\n";
-  code += "        log(ANSI_BOLD + COLOR_WARNING + \"SIGINT (Ctrl+C) received. Exiting application.\" + ANSI_RESET);\n";
+  code += "        log(ANSI_BOLD + COLOR_WARNING + \"SIGINT (Ctrl+C) recieved. Exiting application.\" + ANSI_RESET);\n";
   code += "        log(DOUBLE_SEPARATOR);\n";
   code += "        broadcastShutdownEvent(\"Server is shutting down due to SIGINT (Ctrl+C). All clients will be disconnected.\");\n";
   code += "        closeAndCleanupAllSockets();\n";
@@ -1147,6 +1156,16 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                        closeAndCleanupAllSockets();\n";
   code += "                        QCoreApplication::quit();\n";
   code += "                        continue;\n";
+  code += "                    } else if (type == \"pong\") {\n";
+  code += "                        if (awaitingPong.contains(socket)) {\n";
+  code += "                            awaitingPong.remove(socket);\n";
+  code += "                            if (pingTimers.contains(socket)) {\n";
+  code += "                                QTimer* t = pingTimers.take(socket);\n";
+  code += "                                if (t) { t->stop(); t->deleteLater(); }\n";
+  code += "                            }\n";
+  code += "                            debug(\"Received pong from a client.\");\n";
+  code += "                        }\n";
+  code += "                        continue;\n";
   code += "                    } else {\n";
   code += "                        debug(\"TCP: Unknown XML command received: \" + type);\n";
   code += "                        sendError(ERR_UNKNOWN_COMMAND, \"Unknown command\", socket);\n";
@@ -1164,6 +1183,34 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "            });\n";
   code += "        }\n";
   code += "    });\n";
+
+  code += "    QTimer* pingIntervalTimer = new QTimer(&app);\n";
+  code += "    pingIntervalTimer->setInterval(20000); // 20s \n";
+  code += "    QObject::connect(pingIntervalTimer, &QTimer::timeout, [&]() {\n";
+  code += "        for (QTcpSocket* clientSocket : clientSockets) {\n";
+  code += "            if (!awaitingPong.contains(clientSocket)) {\n";
+  code += "                // Send ping\n";
+  code += "                QString pingMsg = \"<event type=\\\"ping\\\"/>\";\n";
+  code += "                clientSocket->write(buildEvent(pingMsg));\n";
+  code += "                clientSocket->flush();\n";
+  code += "                awaitingPong.insert(clientSocket);\n";
+  code += "                debug(\"Sent ping to a client.\");\n";
+  code += "                // Expect pong\n";
+  code += "                QTimer* pongTimer = new QTimer(clientSocket);\n";
+  code += "                pongTimer->setSingleShot(true);\n";
+  code += "                QObject::connect(pongTimer, &QTimer::timeout, [clientSocket]() {\n";
+  code += "                    debug(\"A client timed out.\");\n";
+  code += "                    QString shutdownMsg = \"<event type=\\\"shutdown\\\"><message>Keepalive timeout</message></event>\";\n";
+  code += "                    clientSocket->write(buildEvent(shutdownMsg));\n";
+  code += "                    clientSocket->flush();\n";
+  code += "                    cleanupSocket(clientSocket);\n";
+  code += "                });\n";
+  code += "                pingTimers[clientSocket] = pongTimer;\n";
+  code += "                pongTimer->start(10000); // 10 s\n";
+  code += "            }\n";
+  code += "        }\n";
+  code += "    });\n";
+  code += "    pingIntervalTimer->start();\n";
 
   code += "    debug(ANSI_BOLD + COLOR_HEADER + \"INITIALIZING STATE MACHINE\" + ANSI_RESET);\n";
   code += "    fsm.start();\n";

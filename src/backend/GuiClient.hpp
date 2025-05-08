@@ -18,6 +18,7 @@ class GuiClient : public QObject {
   void sendReqFSM();
   void sendDisconnect();
   void sendShutdown();
+  void sendPong();
 
  public slots:
   void onReadyRead();
