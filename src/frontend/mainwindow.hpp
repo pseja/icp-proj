@@ -6,8 +6,8 @@
 #include <qobjectdefs.h>
 #include <qvector.h>
 #include "AutomatView.hpp"
-#include "src/frontend/StateItem.hpp"
-#include "src/backend/fsm.hpp"
+#include "StateItem.hpp"
+#include "backend/fsm.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

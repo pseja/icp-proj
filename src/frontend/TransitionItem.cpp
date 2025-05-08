@@ -1,5 +1,5 @@
 #include "TransitionItem.hpp"
-#include "src/frontend/StateItem.hpp"
+#include "StateItem.hpp"
 #include <QPen>
 #include <QPainter>
 #include <qgraphicsscene.h>

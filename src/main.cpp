@@ -5,7 +5,10 @@
 #include <QTextStream>
 #include <QThread>
 #include <QTimer>
-
+#include "backend/fsm.hpp"
+#include "backend/logger.hpp"
+#include "backend/xmlparser.hpp"
+#include "frontend/mainwindow.hpp" // for MainWindow
 #include "backend/CodeGenerator.hpp"
 #include "backend/GuiClient.hpp"
 #include "backend/fsm.hpp"
@@ -14,6 +17,10 @@
 
 int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
+  MainWindow w;
+  w.show();
+
+  qInstallMessageHandler(Logger::messageHandler);
 
   // // Create an FSM object
   // FSM fsm;
@@ -47,6 +54,7 @@ int main(int argc, char* argv[]) {
   // }
   // return 0;
 
+  /*
   GuiClient* client = new GuiClient(&app);
 
   QTimer::singleShot(0, [client]() {
@@ -86,6 +94,6 @@ int main(int argc, char* argv[]) {
     client->sendShutdown();
   });
   QTimer::singleShot(6000, &app, &QCoreApplication::quit);
-
+  */
   return app.exec();
 }

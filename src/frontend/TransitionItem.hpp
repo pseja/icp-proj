@@ -9,7 +9,7 @@
 #include <qgraphicsitem.h>
 #include <qobjectdefs.h>
 #include <QObject>
-#include "src/backend/transition.hpp"
+#include "backend/transition.hpp"
 #include "StateItem.hpp"
 
 class TransitionItem : public QObject, public QGraphicsPathItem {

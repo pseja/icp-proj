@@ -20,6 +20,11 @@ file(GLOB_RECURSE SRC_FILES
 add_executable(icp-proj ${SRC_FILES})
 
 target_include_directories(icp-proj PRIVATE src)
+target_include_directories(icp-proj PRIVATE
+    ${CMAKE_BINARY_DIR}/icp-proj_autogen/include
+    ${CMAKE_BINARY_DIR}/icp-proj_autogen/include/src/frontend
+    ${CMAKE_BINARY_DIR}/icp-proj_autogen/include/frontend
+)
 target_link_libraries(icp-proj PRIVATE Qt5::Core Qt5::Widgets Qt5::Gui Qt5::Xml Qt5::Network)
 
 file(GLOB GENERATED_FSMS generated/*.cpp)
