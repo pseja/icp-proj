@@ -7,6 +7,7 @@
 #include <qvector.h>
 #include "AutomatView.hpp"
 #include "StateItem.hpp"
+#include "backend/GuiClient.hpp"
 #include "backend/fsm.hpp"
 
 QT_BEGIN_NAMESPACE
@@ -46,6 +47,7 @@ private:
   StateItem *selectedState = nullptr;
   void loadAutomat(const QVector<StateItem *> &states);
   QVector<TransitionItem*> transitionItemsForSelectedState;
-  TransitionItem* selectedTransition = nullptr;
+  TransitionItem *selectedTransition = nullptr;
+  GuiClient *client;
 };
 #endif // MAINWINDOW_HPP

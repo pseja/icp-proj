@@ -26,6 +26,7 @@
 #include <QFileDialog>
 #include <cmath>
 #include <QProcess>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -42,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
   automatView->setGeometry(710, 30, 1205, 960);
   fsm = new FSM("Default FSM");
   fsm->addVariable(new Variable("int", "dummy", 0));
+  client = new GuiClient(this);
   // setCentralWidget(automatView);
   
   connect(automatView, &AutomatView::stateSelected, this,&MainWindow::updateStateInfo);
@@ -320,4 +322,8 @@ void MainWindow::runFSM() {
     return;
   }
   qDebug() << "Server is running RAAAAHHHH:" << serverProcess->processId();
+
+  QTimer::singleShot(750, this, [this]() {
+    client->connectToServer();
+  });
 }
