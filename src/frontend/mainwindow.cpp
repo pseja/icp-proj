@@ -18,6 +18,7 @@
 #include <qmap.h>
 #include <qprocess.h>
 #include <qradiobutton.h>
+#include <qregularexpression.h>
 #include <qtextedit.h>
 #include <qvector.h>
 #include <QLineEdit>
@@ -28,6 +29,7 @@
 #include <cmath>
 #include <QProcess>
 #include <QTimer>
+#include <QDateTime>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -40,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
   automatView = new AutomatView(fsm, this);
   automatView->setMinimumSize(400, 300);
   ui->logConsole->setStyleSheet("background-color:rgb(203, 202, 202);");
-  ui->lineEdit_2->setStyleSheet("background-color:rgb(160, 160, 160);");
+  ui->console->setStyleSheet("background-color:rgb(138, 138, 138);");
   automatView->setGeometry(710, 30, 1205, 960);
   fsm = new FSM("Default FSM");
   fsm->addVariable(new Variable("int", "dummy", 0));
@@ -57,8 +59,15 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->buttonBox, &QDialogButtonBox::accepted, this,&MainWindow::saveTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
-  connect(client, &GuiClient::onReadyRead, this, &MainWindow::onReadyRead);
+  connect(ui->console, &QLineEdit::returnPressed, this, &MainWindow::onConsoleEnter);
+  //connect(client, &GuiClient::onReadyRead, this, &MainWindow::onReadyRead);
   connect(client, &GuiClient::stateChange, this, &MainWindow::stateChanged);
+  connect(client, &GuiClient::printoutput, this, &MainWindow::printoutput);
+  connect(client, &GuiClient::timerstart, this, &MainWindow::timerstart);
+  connect(client, &GuiClient::timerend, this, &MainWindow::timerend);
+  connect(client, &GuiClient::printmsg, this, &MainWindow::printmsg);
+  connect(client, &GuiClient::printerr, this, &MainWindow::printerr);
+  connect(client, &GuiClient::printlog, this, &MainWindow::printlog);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -172,6 +181,71 @@ void MainWindow::stateChanged(QString stateName) {
     } else {
       state->setBrush(Qt::cyan);
       state->setPen(QPen(Qt::black, 1));
+    }
+  }
+}
+
+void MainWindow::printoutput(const QString &name, const QString &value) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": " + "[OUTPUT] " + name + " = " + value);
+}
+void MainWindow::timerstart(const QString &from, const QString &to, const QString &ms) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": Timer started from " + from + " to " + to + " for " + ms + " ms");
+  for (QGraphicsItem *item : automatView->scene()->items()) {
+    if (typeid(*item) != typeid(TransitionItem)) {continue;}
+    TransitionItem *trans = dynamic_cast<TransitionItem *>(item);
+    if (trans->getFrom()->state->getName() == from && trans->getTo()->state->getName() == to) {
+      trans->startBlinking();
+    }
+  }
+}
+void MainWindow::timerend(const QString &from, const QString &to) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": Timer ended, transitioning from " + from + " to " + to);
+  for (QGraphicsItem *item : automatView->scene()->items()) {
+    if (typeid(*item) != typeid(TransitionItem)) {continue;}
+    TransitionItem *trans = dynamic_cast<TransitionItem *>(item);
+    if (trans->getFrom()->state->getName() == from && trans->getTo()->state->getName() == to) {
+      trans->stopBlinking();
+    }
+  }
+}
+void MainWindow::printmsg(const QString &msg) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": [MESSAGE] " + msg);
+}
+void MainWindow::printerr(const QString &msg, const QString &code) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": [ATTENTION ERROR] " + msg + " (Error code: " + code + ")");
+}
+void MainWindow::printlog(const QString &msg) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": " + msg);
+}
+
+//mini parser for console commands
+void MainWindow::onConsoleEnter() {
+  QString command = ui->console->text();
+  if (command.isEmpty()) return;
+  QRegularExpression expressionCommand(R"(^\s*([a-zA-Z_][\w]*)\s*=\s*(.+)$)");
+  QRegularExpressionMatch match = expressionCommand.match(command);
+  if (match.hasMatch()) {
+    QString identifier = match.captured(1);
+    QString value = match.captured(2);
+    client->sendSet(identifier, value);
+    QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+    ui->logConsole->appendPlainText(now + ": " + identifier + " = " + value);
+    ui->console->clear();
+  } else {
+    if (command == "run") {}
+    else if (command == "help") {}
+    else if (command == "version") {
+    } else {
+      QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+      ui->logConsole->appendPlainText(now + ": " + command);
+      client->sendCommand(command);
+      ui->console->clear();
     }
   }
 }

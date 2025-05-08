@@ -323,7 +323,7 @@
      <string>Refresh</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit_2">
+   <widget class="QLineEdit" name="console">
     <property name="geometry">
      <rect>
       <x>0</x>

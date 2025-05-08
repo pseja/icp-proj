@@ -25,7 +25,12 @@ class GuiClient : public QObject {
 
 signals:
   void stateChange(const QString& state);
-  void output(const QString& name, const QString& value);
+  void printoutput(const QString &name, const QString &value);
+  void timerstart(const QString &from, const QString &to, const QString &ms);
+  void timerend(const QString &from, const QString &to);
+  void printmsg(const QString &msg);
+  void printerr(const QString &msg, const QString &code);
+  void printlog(const QString &msg);
  private:
   QTcpSocket* socket;
   QString m_host;

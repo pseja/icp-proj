@@ -30,6 +30,13 @@ private slots:
     void updateStateInfo(StateItem *state);
     void on_addStateButton_clicked();
     void stateChanged(QString stateName);
+    void printoutput(const QString &name, const QString &value);
+    void timerstart(const QString &from, const QString &to, const QString &ms);
+    void timerend(const QString &from, const QString &to);
+    void printmsg(const QString &msg);
+    void printerr(const QString &msg, const QString &code);
+    void printlog(const QString &msg);
+    void onConsoleEnter();
 public slots:
   void handleStateDeleted();
   void addState(StateItem *state);
@@ -40,7 +47,7 @@ public slots:
   void saveTransition();
   void runFSM();
   void saveVars();
-  void onReadyRead(const QString &data);
+  //void onReadyRead(const QString &data);
 
 private:
   FSM *fsm;

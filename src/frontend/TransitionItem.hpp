@@ -9,8 +9,10 @@
 #include <qgraphicsitem.h>
 #include <qobjectdefs.h>
 #include <QObject>
+#include <qpen.h>
 #include "backend/transition.hpp"
 #include "StateItem.hpp"
+#include <QTimer>
 
 class TransitionItem : public QObject, public QGraphicsPathItem {
   Q_OBJECT
@@ -23,6 +25,19 @@ public:
     StateItem *getTo();
     QString getLabel() const { return label->toPlainText(); }
     void setLabel(const QString &text) { label->setPlainText(text); }
+    
+    void startBlinking() {
+      if (!blinking) {
+        blink = new QTimer(this);
+        connect(blink, &QTimer::timeout, this, &TransitionItem::setBlinking);
+        blinking = false;
+      }
+      blink->start(300);
+    }
+    void stopBlinking() {
+      if (blink) blink->stop();
+      setPen(QPen(Qt::black, 2));
+    }
 
 protected:
 //  void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
@@ -35,6 +50,12 @@ private:
   StateItem *toState;
   QGraphicsTextItem *label;
   int offsetIndex;
+  QTimer *blink = nullptr;
+  bool blinking = false;
+  void setBlinking() {
+    blinking = !blinking;
+    setPen(QPen(blinking ? Qt::green : Qt::black, 2));
+  }
 };
 
 #endif // STATEITEM_HPP

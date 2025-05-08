@@ -91,15 +91,18 @@ void GuiClient::onReadyRead() {
       } else if (type == "output") {
         QString name = root.firstChildElement("name").text();
         QString value = root.firstChildElement("value").text();
+        emit printoutput(name, value);
         qDebug() << "[OUTPUT]" << name << "=" << value;
       } else if (type == "timerStart") {
         QString from = root.firstChildElement("from").text();
         QString to = root.firstChildElement("to").text();
         QString ms = root.firstChildElement("ms").text();
+        emit timerstart(from, to, ms);
         qDebug() << "[TIMER START] from" << from << "to" << to << ms << "ms";
       } else if (type == "timerExpired") {
         QString from = root.firstChildElement("from").text();
         QString to = root.firstChildElement("to").text();
+        emit timerend(from, to);
         qDebug() << "[TIMER EXPIRED] from" << from << "to" << to;
       } else if (type == "fsm") {
         QString model = root.firstChildElement("model").text();
@@ -107,10 +110,12 @@ void GuiClient::onReadyRead() {
         qDebug().noquote() << model;
       } else if (type == "log" || type == "disconnect" || type == "shutdown") {
         QString msg = root.firstChildElement("message").text();
+        emit printmsg(msg);
         qDebug() << "[SERVER]" << msg;
       } else if (type == "error") {
         QString code = root.firstChildElement("code").text();
         QString msg = root.firstChildElement("message").text();
+        emit printerr(msg, code);
         qWarning() << "[ERROR] code:" << code << ", message:" << msg;
       } else if (type == "ping") {
         sendPong();
