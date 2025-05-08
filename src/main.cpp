@@ -16,7 +16,7 @@
 #include "frontend/mainwindow.hpp"
 
 int main(int argc, char* argv[]) {
-  QCoreApplication app(argc, argv);
+  QApplication app(argc, argv);
   MainWindow w;
   w.show();
 
