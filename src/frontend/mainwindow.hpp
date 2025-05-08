@@ -37,6 +37,7 @@ public slots:
   void editTransition(QListWidgetItem *item);
   void saveTransition();
   void runFSM();
+  void saveVars();
 
 private:
   FSM *fsm;

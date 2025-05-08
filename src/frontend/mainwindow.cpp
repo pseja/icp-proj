@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonBox, &QDialogButtonBox::accepted, this,&MainWindow::saveTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
+  connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -85,6 +86,18 @@ void MainWindow::updateStateInfo(StateItem *state) {
   if (radio) {
     radio->setChecked(selectedState->state->isInitial());
   }
+
+  QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+  textEdit->clear();
+  for (QString in : fsm->getInputs()) { textEdit->append(in); }
+
+  QTextEdit *textEdit1 = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+  textEdit1->clear();
+  for (QString out : fsm->getOutputs()) { textEdit1->append(out); }
+
+  QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+  textEdit2->clear();
+  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
 
   QListWidget *widget = ui->groupBox->findChild<QListWidget *>("listWidget");
   widget->clear();
@@ -140,6 +153,41 @@ void MainWindow::saveFSM() {
   if (!fileName.isEmpty()) {
     XMLParser::FSMtoXML(*fsm, fileName);
   }
+}
+
+void MainWindow::saveVars() {
+  QLineEdit *inputsLine = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_3");
+  QLineEdit *outputsLine = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_4");
+  QLineEdit *varName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_5");
+  QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
+  QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
+
+  QString input = inputsLine->text();
+  QString output = outputsLine->text();
+  QString variable = varName->text();
+  QString type = typeEdit->text();
+  QString value = valueEdit->text();
+
+  if (variable.isEmpty() || type.isEmpty() || value.isEmpty()) {
+    qDebug() << "Variable name, type, or value is empty.";
+    return;
+  }
+
+  fsm->addVariable(new Variable(type, variable, value));
+  fsm->addInput(input);
+  fsm->addOutput(output);
+
+  QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+  textEdit->clear();
+  for (QString in : fsm->getInputs()) { textEdit->append(in); }
+
+  QTextEdit *textEdit1 = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+  textEdit1->clear();
+  for (QString out : fsm->getOutputs()) { textEdit1->append(out); }
+
+  QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+  textEdit2->clear();
+  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
 }
 
 void MainWindow::editTransition(QListWidgetItem *item) {
@@ -216,7 +264,17 @@ void MainWindow::loadFSM() {
         automatView->scene()->addItem(transItem);
       }
     }
-    
+      QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+      textEdit->clear();
+      for (QString in : fsm->getInputs()) { textEdit->append(in); }
+
+      QTextEdit *textEdit1 = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+      textEdit1->clear();
+      for (QString out : fsm->getOutputs()) { textEdit1->append(out); }
+
+      QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+      textEdit2->clear();
+      for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
   }
 }
 
