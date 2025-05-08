@@ -894,6 +894,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
     code += "    " + stateLower + "State->setObjectName(\"" + stateName + "\");\n";
 
     QString onEntry = state->getCode();
+    code += "    // QState::entered lambda: handles state entry logic, including logging, updating state, and running onEntry actions.\n";
     code += "    QObject::connect(" + stateLower + "State, &QState::entered, [=]() {\n";
     code += "        QString prevStateName = globalPrevStateName;\n";
     code += "        QString currentStateName = \"" + stateName + "\";\n";
@@ -953,6 +954,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    int terminalFd = fileno(terminalInput);\n";
   code += "    QSocketNotifier* inputNotifier = new QSocketNotifier(terminalFd, QSocketNotifier::Read);\n\n";
 
+  code += "    // QSocketNotifier::activated lambda: terminal input processing\n";
   code += "    QObject::connect(inputNotifier, &QSocketNotifier::activated, [&]() {\n";
   code += "        char buffer[256];\n";
   code += "        if (fgets(buffer, sizeof(buffer), terminalInput)) {\n";
@@ -1071,13 +1073,13 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "    });\n\n";
 
   code += "    // TCP communication\n";
-  code += "    server.listen(hostAddr, port);\n";
-  code += "    log(QString(\"Listening for TCP connections on %1:%2\").arg(hostAddr.toString()).arg(port));\n";
+  code += "    // QTcpServer::newConnection lambda\n";
   code += "    QObject::connect(&server, &QTcpServer::newConnection, [&]() {\n";
   code += "        while (server.hasPendingConnections()) {\n";
   code += "            QTcpSocket* socket = server.nextPendingConnection();\n";
   code += "            clientSockets.insert(socket);\n";
   code += "            log(\"Client connected from \" + socket->peerAddress().toString());\n";
+  code += "            // QTcpSocket::readyRead lambda: reads data from the socket.\n";
   code += "            QObject::connect(socket, &QTcpSocket::readyRead, [socket, FSM_XML](void) {\n";
   code += "                while (socket->canReadLine()) {\n";
   code += "                    QString line = QString::fromUtf8(socket->readLine()).trimmed();\n";
@@ -1172,20 +1174,30 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                        continue;\n";
   code += "                    }\n";
   code += "                }\n";
-  code += "            });\n";
+  code += "            });\n\n";
+
+  code += "            // QTcpSocket::disconnected lambda\n";
   code += "            QObject::connect(socket, &QTcpSocket::disconnected, [socket]() {\n";
   code += "                log(\"Client disconnected\");\n";
   code += "                cleanupSocket(socket);\n";
-  code += "            });\n";
-  code += "            QObject::connect(socket, &QTcpSocket::errorOccurred, [socket](QAbstractSocket::SocketError socketError) {\n";
-  code += "                log(QString(\"Socket error occurred: %1\").arg(socket->errorString()));\n";
-  code += "                cleanupSocket(socket);\n";
-  code += "            });\n";
+  code += "            });\n\n";
+
+  code += "            // QTcpSocket::error lambda\n";
+  code += "            // Done this way to avoid ambiguity because in Qt5.9 there are multiple overloaded error signals\n";
+  code += "            QObject::connect(socket,\n";
+  code += "                 // Explicitly choosing the right signal overload\n";
+  code += "                static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),\n";
+  code += "                [socket](QAbstractSocket::SocketError socketError) {\n";
+  code += "                    log(QString(\"Socket error occurred: %1\").arg(socket->errorString()));\n";
+  code += "                    cleanupSocket(socket);\n";
+  code += "                }\n";
+  code += "            );\n";
   code += "        }\n";
   code += "    });\n";
 
   code += "    QTimer* pingIntervalTimer = new QTimer(&app);\n";
   code += "    pingIntervalTimer->setInterval(20000); // 20s \n";
+  code += "    // QTimer::timeout (pingIntervalTimer lambda: Periodically sends ping messages to all clients for keepalive mechanism.\n";
   code += "    QObject::connect(pingIntervalTimer, &QTimer::timeout, [&]() {\n";
   code += "        for (QTcpSocket* clientSocket : clientSockets) {\n";
   code += "            if (!awaitingPong.contains(clientSocket)) {\n";
@@ -1194,10 +1206,12 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
   code += "                clientSocket->write(buildEvent(pingMsg));\n";
   code += "                clientSocket->flush();\n";
   code += "                awaitingPong.insert(clientSocket);\n";
-  code += "                debug(\"Sent ping to a client.\");\n";
+  code += "                debug(\"Sent ping to a client.\");\n\n";
+
   code += "                // Expect pong\n";
   code += "                QTimer* pongTimer = new QTimer(clientSocket);\n";
   code += "                pongTimer->setSingleShot(true);\n";
+  code += "                // QTimer::timeout (pongTimer): Handles keepalive timeout for individual clients.\n";
   code += "                QObject::connect(pongTimer, &QTimer::timeout, [clientSocket]() {\n";
   code += "                    debug(\"A client timed out.\");\n";
   code += "                    QString shutdownMsg = \"<event type=\\\"shutdown\\\"><message>Keepalive timeout</message></event>\";\n";
