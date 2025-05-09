@@ -1,0 +1,5 @@
+<automaton name="variables only">
+    <variables>
+        <variable name="timeout" value="5000" />
+    </variables>
+</automaton>

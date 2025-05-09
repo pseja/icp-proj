@@ -13,6 +13,7 @@
  */
 
 #include "xmlparser.hpp"
+#include <qchar.h>
 #include <qglobal.h>
 #include <qnumeric.h>
 
@@ -36,7 +37,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     file.close();
 
-    qInfo() << "Parsing XML file: " << file_path;
+    qInfo() << "Parsing XML file:" << file_path;
 
     // Get the root element and check if it's <automaton>
     QDomElement root = document.documentElement();
@@ -80,7 +81,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         qInfo() << "Comment:" << state_machine.getComment();
     }
 
-    // Fetch the inputs and outputs
+    // Fetch the inputs
     QDomElement inputs_node = root.firstChildElement("inputs");
     if (inputs_node.isNull())
     {
@@ -88,7 +89,6 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
     }
     else
     {
-        // Fetch the inputs
         QDomElement input_node = inputs_node.firstChildElement("input");
         qInfo() << "Inputs:";
         while (!input_node.isNull())
@@ -129,7 +129,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         {
             if (!output_node.hasAttribute("name") || output_node.attribute("name").isEmpty())
             {
-                qCritical() << "Invalid XML: <output> element has no \"name\" attribute or it's empty";
+                qCritical() << "Invalid XML format: <output> element has no \"name\" attribute or it's empty";
                 return false;
             }
 
@@ -148,6 +148,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         }
     }
 
+    // Fetch the variables
     QDomElement variables_node = root.firstChildElement("variables");
     if (variables_node.isNull())
     {
@@ -159,10 +160,18 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         qInfo() << "Variables:";
         while (!variable_node.isNull())
         {
-            if (!variable_node.hasAttribute("name") || !variable_node.hasAttribute("type") ||
-                !variable_node.hasAttribute("value"))
+            if (!variable_node.hasAttribute("name") || variable_node.attribute("name").isEmpty() ||
+                !variable_node.hasAttribute("type") || variable_node.attribute("type").isEmpty() ||
+                !variable_node.hasAttribute("value") || variable_node.attribute("value").isEmpty())
             {
-                qCritical() << "Invalid XML: <variable> element is missing required attributes";
+                qCritical()
+                    << "Invalid XML format: <variable> element is missing required attributes or they are empty";
+                return false;
+            }
+
+            if (variable_node.attributes().count() > 3)
+            {
+                qCritical() << "Invalid XML format: The <variable> element has additional attributes";
                 return false;
             }
 
@@ -180,6 +189,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         }
     }
 
+    // Fetch the states
     QDomElement states_node = root.firstChildElement("states");
     if (states_node.isNull())
     {
@@ -225,6 +235,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
         qInfo() << "Parsed" << state_machine.getStates().size() << "states";
     }
 
+    // Fetch the transitions
     QDomElement transitions_node = root.firstChildElement("transitions");
     if (transitions_node.isNull())
     {
@@ -322,9 +333,15 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
         qInfo() << "Set comment to:" << state_machine.getComment();
     }
 
-    qInfo() << "Creating inputs node";
-    QDomElement inputs_node = document.createElement("inputs");
-    for (const auto &input : state_machine.getInputs())
+    QSet<QString> inputs = state_machine.getInputs();
+    QDomElement inputs_node;
+    if (!inputs.isEmpty())
+    {
+        qInfo() << "Creating inputs node";
+        inputs_node = document.createElement("inputs");
+    }
+
+    for (const auto &input : inputs)
     {
         qInfo() << "Creating input node";
         QDomElement input_node = document.createElement("input");
@@ -334,9 +351,15 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
     }
     root.appendChild(inputs_node);
 
-    qInfo() << "Creating outputs node";
-    QDomElement outputs_node = document.createElement("outputs");
-    for (const auto &output : state_machine.getOutputs())
+    QSet<QString> outputs = state_machine.getOutputs();
+    QDomElement outputs_node;
+    if (!outputs.isEmpty())
+    {
+        qInfo() << "Creating outputs node";
+        outputs_node = document.createElement("outputs");
+    }
+
+    for (const auto &output : outputs)
     {
         qInfo() << "Creating output node";
         QDomElement output_node = document.createElement("output");
@@ -346,9 +369,15 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
     }
     root.appendChild(outputs_node);
 
-    qInfo() << "Creating variables node";
-    QDomElement variables_node = document.createElement("variables");
-    for (const auto &variable : state_machine.getVariables())
+    QMap<QString, Variable *> variables = state_machine.getVariables();
+    QDomElement variables_node;
+    if (!variables.isEmpty())
+    {
+        qInfo() << "Creating variables node";
+        variables_node = document.createElement("variables");
+    }
+
+    for (const auto &variable : variables)
     {
         qInfo() << "Creating variable node";
         QDomElement variable_node = document.createElement("variable");
@@ -361,9 +390,15 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
     }
     root.appendChild(variables_node);
 
-    qInfo() << "Creating states node";
-    QDomElement states_node = document.createElement("states");
-    for (const auto &state : state_machine.getStates())
+    QMap<QString, State *> states = state_machine.getStates();
+    QDomElement states_node;
+    if (!states.isEmpty())
+    {
+        qInfo() << "Creating states node";
+        states_node = document.createElement("states");
+    }
+
+    for (const auto &state : states)
     {
         qInfo() << "Creating state node";
         QDomElement state_node = document.createElement("state");
@@ -387,9 +422,15 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
     }
     root.appendChild(states_node);
 
-    qInfo() << "Creating transitions node";
-    QDomElement transitions_node = document.createElement("transitions");
     QMultiMap<QString, Transition *> transitions = state_machine.getTransitions();
+    QDomElement transitions_node;
+
+    if (!transitions.isEmpty())
+    {
+        qInfo() << "Creating transitions node";
+        transitions_node = document.createElement("transitions");
+    }
+
     for (auto it = transitions.begin(); it != transitions.end(); it++)
     {
         QString from_state_name = it.key();

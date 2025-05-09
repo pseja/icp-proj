@@ -1,0 +1,5 @@
+<automaton name="variables only">
+    <variables>
+        <variable type="int" value="5000" />
+    </variables>
+</automaton>
