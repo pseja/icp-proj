@@ -1,0 +1,6 @@
+<automaton name="states only">
+    <states>
+        <state name="state" initial="true">
+        </state>
+    </states>
+</automaton>

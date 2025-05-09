@@ -1,0 +1,18 @@
+<automaton name="transitions only">
+    <variables>
+        <variable name="timeout" type="int" value="5000" />
+    </variables>
+    <states>
+        <state name="IDLE" initial="true" />
+        <state name="ACTIVE" />
+        <state name="TIMING" />
+    </states>
+    <transitions>
+        <transition from="IDLE" to="ACTIVE">
+            <condition event="in" extra="extra"><![CDATA[atoi(valueof("in")) == 1]]></condition>
+        </transition>
+        <transition from="TIMING" to="IDLE">
+            <delay>timeout</delay>
+        </transition>
+    </transitions>
+</automaton>
