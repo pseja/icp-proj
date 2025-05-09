@@ -14,24 +14,24 @@
     </variables>
     <states>
         <state name="IDLE" initial="true">
-            <code>if (defined("set_to")) timeout = atoi(valueof("set_to"));output("out", 0);output("rt", 0);</code>
+            <code>if (defined("set_to")) {timeout = Qtoi(valueof("set_to"));output("out", 0);output("rt", 0);}</code>
         </state>
         <state name="ACTIVE">
-            <code>if (defined("set_to")) timeout = atoi(valueof("set_to"));output("out", 1);output("rt", timeout);</code>
+            <code>if (defined("set_to")) {timeout = Qtoi(valueof("set_to"));output("out", 1);output("rt", timeout);}</code>
         </state>
         <state name="TIMING">
-            <code>if (defined("set_to")) timeout = atoi(valueof("set_to"));output("rt", timeout - elapsed());</code>
+            <code>if (defined("set_to")) {timeout = Qtoi(valueof("set_to"));output("rt", (timeout - elapsed()));}</code>
         </state>
     </states>
     <transitions>
         <transition from="IDLE" to="ACTIVE">
-            <condition event="in">atoi(valueof("in")) == 1</condition>
+            <condition event="in">Qtoi(valueof("in")) == 1</condition>
         </transition>
         <transition from="ACTIVE" to="TIMING">
-            <condition event="in">atoi(valueof("in")) == 0</condition>
+            <condition event="in">Qtoi(valueof("in")) == 0</condition>
         </transition>
         <transition from="TIMING" to="ACTIVE">
-            <condition event="in">atoi(valueof("in")) == 1</condition>
+            <condition event="in">Qtoi(valueof("in")) == 1</condition>
         </transition>
         <transition from="TIMING" to="IDLE">
             <delay>timeout</delay>

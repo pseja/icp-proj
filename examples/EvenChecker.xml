@@ -1,0 +1,35 @@
+<automaton name="EvenChecker">
+    <comment>Checks if the input number is even and prints a message.</comment>
+    <inputs>
+        <input name="num"/>
+    </inputs>
+    <outputs>
+        <output name="is_even"/>
+    </outputs>
+    <variables>
+        <variable name="delay" type="int" value="1000"/>
+    </variables>
+    <states>
+        <state name="WAIT" initial="true"/>
+        <state name="EVEN">
+            <code>output("is_even", 1);</code>
+        </state>
+        <state name="ODD">
+            <code>output("is_even", 0);</code>
+        </state>
+    </states>
+    <transitions>
+        <transition from="WAIT" to="EVEN">
+            <condition event="num">Qtoi(valueof("num")) % 2 == 0</condition>
+        </transition>
+        <transition from="WAIT" to="ODD">
+            <condition event="num">Qtoi(valueof("num")) % 2 != 0</condition>
+        </transition>
+        <transition from="EVEN" to="WAIT">
+            <delay>delay3000</delay>
+        </transition>
+        <transition from="ODD" to="WAIT">
+            <delay>delay3000</delay>
+        </transition>
+    </transitions>
+</automaton>

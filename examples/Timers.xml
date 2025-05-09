@@ -1,0 +1,66 @@
+<automaton name="ParallelTimeouts">
+    <inputs>
+        <input name="start"/>
+        <input name="reset"/>
+    </inputs>
+    <outputs>
+        <output name="info"/>
+        <output name="done1"/>
+        <output name="done2"/>
+    </outputs>
+    <variables>
+        <variable name="wait_time1" type="int" value="2000"/>
+        <variable name="wait_time2" type="int" value="3000"/>
+    </variables>
+    <states>
+        <state name="IDLE" initial="true">
+            <code>
+                output("info", "entered IDLE");
+            </code>
+        </state>
+        <state name="WAITING1">
+            <code>
+                output("info", "entered WAITING1");
+            </code>
+        </state>
+        <state name="WAITING2">
+            <code>
+                output("info", "entered WAITING2");
+            </code>
+        </state>
+        <state name="DONE1">
+            <code>
+                output("done1", "1");
+                output("info", "DONE1");
+            </code>
+        </state>
+        <state name="DONE2">
+            <code>
+                output("done2", "1");
+                output("info", "DONE2");
+            </code>
+        </state>
+    </states>
+    <transitions>
+        <transition from="IDLE" to="WAITING1">
+            <condition event="start"/>
+            <delay>wait_time1</delay>
+        </transition>
+        <transition from="IDLE" to="WAITING2">
+            <condition event="start"/>
+            <delay>wait_time2</delay>
+        </transition>
+        <transition from="WAITING1" to="DONE1">
+        <condition event="reset"/>
+        </transition>
+        <transition from="WAITING2" to="DONE2">
+        <condition event="reset"/>
+        </transition>
+        <transition from="DONE1" to="IDLE">
+            <condition event="reset"/>
+        </transition>
+        <transition from="DONE2" to="IDLE">
+            <condition event="reset"/>
+        </transition>
+    </transitions>
+</automaton>
