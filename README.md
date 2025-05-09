@@ -66,9 +66,9 @@ In this context, an interpreted finite state machine refers to a [Moore-type](ht
     - `ACTIVE`: `{ if {defined("set_to")} { timeout = atoi(valueof("set_to"))}; output("out", 1); output("rt", timeout); }`
     - `TIMING`: `{ if {defined("set_to")} { timeout = atoi(valueof("set_to"))}; output("rt", timeout - elapsed() ); }`
 - **Transitions**:
-    - `IDLE` → `ACTIVE`: `in [ atoi(vlaueof("in")) == 1 ]`
-    - `ACTIVE` → `TIMING`: `in [ atoi(vlaueof("in")) == 0 ]`
-    - `TIMING` → `ACTIVE`: `in [ atoi(vlaueof("in")) == 1 ]`
+    - `IDLE` → `ACTIVE`: `in [ atoi(valueof("in")) == 1 ]`
+    - `ACTIVE` → `TIMING`: `in [ atoi(valueof("in")) == 0 ]`
+    - `TIMING` → `ACTIVE`: `in [ atoi(valueof("in")) == 1 ]`
     - `TIMING` → `IDLE`: `@ timeout`
     - `IDLE` → `IDLE`: `set_to`
     - `ACTIVE` → `ACTIVE`: `set_to`

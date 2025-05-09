@@ -5,7 +5,10 @@
 #include <QTextStream>
 #include <QThread>
 #include <QTimer>
-
+#include "backend/fsm.hpp"
+#include "backend/logger.hpp"
+#include "backend/xmlparser.hpp"
+#include "frontend/mainwindow.hpp" // for MainWindow
 #include "backend/CodeGenerator.hpp"
 #include "backend/GuiClient.hpp"
 #include "backend/fsm.hpp"
@@ -13,7 +16,11 @@
 #include "frontend/mainwindow.hpp"
 
 int main(int argc, char* argv[]) {
-  QCoreApplication app(argc, argv);
+  QApplication app(argc, argv);
+  MainWindow w;
+  w.show();
+
+  qInstallMessageHandler(Logger::messageHandler);
 
   // // Create an FSM object
   // FSM fsm;
@@ -47,23 +54,8 @@ int main(int argc, char* argv[]) {
   // }
   // return 0;
 
-  // --host and --port arguments
-  QString hostStr = "127.0.0.1";
-  quint16 port = 54323;
-  for (int i = 1; i < argc; ++i) {
-    QString arg = argv[i];
-    if (arg == "--host" && i + 1 < argc) {
-      hostStr = argv[++i];
-    } else if (arg == "--port" && i + 1 < argc) {
-      bool ok = false;
-      int p = QString(argv[++i]).toInt(&ok);
-      if (ok && p > 1024 && p < 65536) {
-        port = static_cast<quint16>(p);
-      }
-    }
-  }
-
-  GuiClient* client = new GuiClient(hostStr, port, &app);
+  /*
+  GuiClient* client = new GuiClient(&app);
 
   QTimer::singleShot(0, [client]() {
     client->connectToServer();
@@ -102,6 +94,6 @@ int main(int argc, char* argv[]) {
     client->sendShutdown();
   });
   QTimer::singleShot(6000, &app, &QCoreApplication::quit);
-
+  */
   return app.exec();
 }

@@ -28,11 +28,11 @@ GuiClient::GuiClient(const QString& host, quint16 port, QObject* parent) : QObje
  * Logs the result of the connection attempt.
  */
 void GuiClient::connectToServer() {
-    socket->connectToHost(m_host, m_port);
+    socket->connectToHost("127.0.0.1", 4242);
     if (socket->waitForConnected(3000)) {
-        Logger::messageHandler(QtInfoMsg, {}, QString("Connected to %1:%2").arg(m_host).arg(m_port));
+        Logger::messageHandler(QtInfoMsg, {}, "Connected to 127.0.0.1:4242");
     } else {
-        Logger::messageHandler(QtCriticalMsg, {}, "Failed to connect after 3 seconds: " + socket->errorString());
+        Logger::messageHandler(QtCriticalMsg, {}, "Failed to connect: " + socket->errorString());
     }
 }
 
@@ -144,33 +144,39 @@ void GuiClient::onReadyRead() {
             if (type == "stateChange") {
                 QString state = root.firstChildElement("name").text();
                 qDebug() << "[STATE]" << state;
+                emit stateChange(state);
             } else if (type == "output") {
                 QString name = root.firstChildElement("name").text();
                 QString value = root.firstChildElement("value").text();
+                emit printoutput(name, value);
                 qDebug() << "[OUTPUT]" << name << "=" << value;
             } else if (type == "timerStart") {
                 QString from = root.firstChildElement("from").text();
                 QString to = root.firstChildElement("to").text();
                 QString ms = root.firstChildElement("ms").text();
+                emit timerstart(from, to, ms);
                 qDebug() << "[TIMER START] from" << from << "to" << to << ms << "ms";
             } else if (type == "timerExpired") {
                 QString from = root.firstChildElement("from").text();
                 QString to = root.firstChildElement("to").text();
+                emit timerend(from, to);
                 qDebug() << "[TIMER EXPIRED] from" << from << "to" << to;
             } else if (type == "fsm") {
                 QString model = root.firstChildElement("model").text();
                 qDebug() << "[FSM XML RECEIVED]";
                 qDebug().noquote() << model;
-            } else if (type == "log" || type == "disconnect" || type == "shutdown") {
+            } else if (type == "log" || type == "disconnect") {
                 QString msg = root.firstChildElement("message").text();
+                emit printmsg(msg);
                 qDebug() << "[SERVER]" << msg;
             } else if (type == "error") {
                 QString code = root.firstChildElement("code").text();
                 QString msg = root.firstChildElement("message").text();
+                emit printerr(msg, code);
                 qWarning() << "[ERROR] code:" << code << ", message:" << msg;
             } else if (type == "ping") {
-                sendPong();
-                qDebug() << "[PING] Received ping, sent pong.";
+                    sendPong();
+                    qDebug() << "[PING] Received ping, sent pong.";
             } else if (type == "status") {
                 QDomElement statusElem = root.firstChildElement("status");
                 QString state = statusElem.firstChildElement("state").text();
