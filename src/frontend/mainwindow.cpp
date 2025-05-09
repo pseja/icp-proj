@@ -54,6 +54,10 @@ MainWindow::MainWindow(QWidget *parent)
   ui->groupBox_3->move(0, 0);
   showFSMInfo();
   ui->groupBox->setVisible(false);
+
+  //this will be done later, requires cmake moficiation and new speacial xml file
+  //ui->pushButton->setIcon(QIcon(":/icons/11209980.png"));
+  //ui->pushButton->setIconSize(QSize(25, 25));
   // setCentralWidget(automatView);
   
   //-------------------------AUTOMAT VIEW SIGNALS-----------------
@@ -68,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::loadFSM);
   connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
+  connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
   connect(ui->console, &QLineEdit::returnPressed, this, &MainWindow::onConsoleEnter);
   connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
   connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,&MainWindow::saveState);
@@ -192,6 +197,24 @@ void MainWindow::updateStateInfo(StateItem *state) {
         transitionItemsForSelectedState.append(trans);
       }
     }
+  }
+}
+
+void MainWindow::resizeCode() {
+  QTextEdit *textEdit = ui->groupBox->findChild<QTextEdit *>("textEdit");
+  //if (!textEdit) {return;}
+
+  if (textEdit->pos() == QPoint(40, 90)) {
+    textEdit->move(10, 90);
+    textEdit->resize(331, 311);
+    ui->pushButton->move(10, 410);
+    return;
+  }
+  if (textEdit) {
+    ui->pushButton->move(10, 90);
+    textEdit->move(40, 90);
+    textEdit->resize(645, 425);
+    textEdit->raise();
   }
 }
 

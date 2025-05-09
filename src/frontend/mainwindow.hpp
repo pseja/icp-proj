@@ -38,6 +38,7 @@ private slots:
     void printlog(const QString &msg);
     void onConsoleEnter();
     void showFSMInfo();
+    void resizeCode();
 public slots:
   void handleStateDeleted();
   void addState(StateItem *state);
