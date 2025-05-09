@@ -1289,20 +1289,18 @@ QString CodeGenerator::generateGeneratedTransitionClass() {
             bool eventTest(QEvent* event) override {
                 if (event->type() == QEvent::User + 1 && m_timerExpired) {
                     m_timerExpired = false;
-                    if (m_condition()) {
-                        return true;
-                    } else {
-                        m_conditionMet = false;
-                        cancelTimerIfActive("Condition is no longer met (input or variable changed).");
-                        return false;
-                    }
+                    return true;
                 }
                 try {
                     m_conditionMet = m_condition();
                     debug("Evaluating transition from " + m_fromState + " to " + m_toState + ": " +
                           (m_conditionMet ? "true" : "false"));
+                    if (m_timerArmed) {
+                        debug("returing false Timer already armed for transition " + m_fromState + " → " + m_toState);
+                        return false;
+                    }
                     if (!m_conditionMet) {
-                        cancelTimerIfActive("Condition is no longer met (input or variable changed).");
+                        debug("Condition is no longer met for transition " + m_fromState + " → " + m_toState);
                         return false;
                     }
                     if (m_initialDelay == -1) {
@@ -1338,23 +1336,14 @@ QString CodeGenerator::generateGeneratedTransitionClass() {
             }
            private slots:
             void triggerTransition() {
-                if (m_condition()) {
-                    m_timerExpired = true;
-                    log(TIMEOUT_EXPIRED + ANSI_BOLD + "▶ Timeout expired" + ANSI_RESET + " for transition " +
-                        COLOR_SOURCE + m_fromState + ANSI_RESET + COLOR_TRANSITION + " → " + COLOR_TARGET + m_toState +
-                        ANSI_RESET + ANSI_RESET + " (delay: " + ANSI_BOLD + QString::number(m_initialDelay) + " ms)" +
-                        ANSI_RESET);
-                    sendTimerEvent("timerExpired", m_fromState, m_toState);
-                    QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1));
-                    machine()->postEvent(customEvent);
-                } else {
-                    m_conditionMet = false;
-                    cancelTimerIfActive("Condition became false before timeout expired.");
-                    debug("Condition no longer valid after delay for transition " + m_fromState + " → " + m_toState +
-                          ", not triggering");
-                }
+                m_timerExpired = true;
+                log(TIMEOUT_EXPIRED + ANSI_BOLD + "▶ Timeout expired" + ANSI_RESET + " for transition " + COLOR_SOURCE +
+                    m_fromState + ANSI_RESET + COLOR_TRANSITION + " → " + COLOR_TARGET + m_toState + ANSI_RESET + ANSI_RESET +
+                    " (delay: " + ANSI_BOLD + QString::number(m_initialDelay) + " ms)" + ANSI_RESET);
+                sendTimerEvent("timerExpired", m_fromState, m_toState);
+                QEvent* customEvent = new QEvent(static_cast<QEvent::Type>(QEvent::User + 1));
+                machine()->postEvent(customEvent);
             }
-
            private:
             void cancelTimerIfActive(const QString& reason = QString()) {
                 if (m_timer && m_timer->isActive()) {
@@ -1370,11 +1359,11 @@ QString CodeGenerator::generateGeneratedTransitionClass() {
             }
             void logTransitionStart(int effDelay) {
                 log(TIMEOUT_STARTED + ANSI_BOLD + "▶ Timeout started" + ANSI_RESET + " for transition " + COLOR_SOURCE +
-                    m_fromState + ANSI_RESET + COLOR_TRANSITION + " → " + COLOR_TARGET + m_toState + ANSI_RESET +
-                    ANSI_RESET + " (delay: " + ANSI_BOLD + QString::number(effDelay) + " ms)" + ANSI_RESET);
+                    m_fromState + ANSI_RESET + COLOR_TRANSITION + " → " + COLOR_TARGET + m_toState + ANSI_RESET + ANSI_RESET +
+                    " (delay: " + ANSI_BOLD + QString::number(effDelay) + " ms)" + ANSI_RESET);
                 debug("Condition met for transition " + COLOR_SOURCE + m_fromState + ANSI_RESET + " → " + COLOR_TARGET +
-                      m_toState + ANSI_RESET + ", starting " + COLOR_VALUE + QString::number(effDelay) + "ms" +
-                      ANSI_RESET + " delay timer");
+                      m_toState + ANSI_RESET + ", starting " + COLOR_VALUE + QString::number(effDelay) + "ms" + ANSI_RESET +
+                      " delay timer");
             }
             std::function<bool()> m_condition;
             std::function<int()> m_delayFn;
