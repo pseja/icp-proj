@@ -2,38 +2,37 @@
  * @file xmlparser.cpp
  * @brief Implements the XMLParser class for parsing XML files into FSM objects and exporting FSM objects to XML.
  *
- * This file contains the implementation of the XMLParser class, including methods for reading an XML file
- * and converting it into a finite state machine (FSM) object, as well as exporting an FSM object into an XML file.
- *
- * The XMLParser class handles parsing states, transitions, variables, inputs, and outputs from the XML format
- * and populates the FSM object accordingly.
- *
  * @author Lukas Pseja (xpsejal00)
  * @date 04-04-2025
  */
 
 #include "xmlparser.hpp"
+
 #include <qchar.h>
 #include <qglobal.h>
 #include <qnumeric.h>
 
-bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
-{
-    QString xml_content;
+#include "logger.hpp"
+
+bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
     QFile file(file_path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qCritical() << "Couldn't open file" << file_path;
         return false;
     }
 
     QDomDocument document;
-    if (!document.setContent(&file))
-    {
+    if (!document.setContent(&file)) {
         qCritical() << "Couldn't set content of file" << file_path;
         file.close();
         return false;
     }
+
+    // save the initial XML as one line
+    file.seek(0);
+    QString xml_content = file.readAll();
+    xml_content = xml_content.replace("\n", "").replace("\r", "");
+    state_machine.setInitialFSMXML(xml_content);
 
     file.close();
 
@@ -41,23 +40,20 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Get the root element and check if it's <automaton>
     QDomElement root = document.documentElement();
-    if (root.tagName() != "automaton")
-    {
+    if (root.tagName() != "automaton") {
         qCritical() << "Invalid XML format: Root element is not <automaton>";
         return false;
     }
 
     // Check if the root element has the required "name" attribute and it's not empty
-    if (!root.hasAttribute("name") || root.attribute("name").isEmpty())
-    {
+    if (!root.hasAttribute("name") || root.attribute("name").isEmpty()) {
         qCritical()
             << "Invalid XML format: The automaton element is missing the required \"name\" attribute or it's empty";
         return false;
     }
 
     // Check if there are additional attributes besides "name"
-    if (root.attributes().count() > 1)
-    {
+    if (root.attributes().count() > 1) {
         qCritical() << "The root element has additional attributes besides \"name\"";
         return false;
     }
@@ -69,12 +65,9 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Fetch optional comment node
     QDomElement comment_node = root.firstChildElement("comment");
-    if (comment_node.isNull())
-    {
+    if (comment_node.isNull()) {
         qWarning() << "No comment found in XML";
-    }
-    else
-    {
+    } else {
         // Fetch the comment text and set it
         QString comment = comment_node.text();
         state_machine.setComment(comment);
@@ -83,25 +76,19 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Fetch the inputs
     QDomElement inputs_node = root.firstChildElement("inputs");
-    if (inputs_node.isNull())
-    {
+    if (inputs_node.isNull()) {
         qWarning() << "No <inputs> element found in XML";
-    }
-    else
-    {
+    } else {
         QDomElement input_node = inputs_node.firstChildElement("input");
         qInfo() << "Inputs:";
-        while (!input_node.isNull())
-        {
-            if (!input_node.hasAttribute("name") || input_node.attribute("name").isEmpty())
-            {
+        while (!input_node.isNull()) {
+            if (!input_node.hasAttribute("name") || input_node.attribute("name").isEmpty()) {
                 qCritical() << "Invalid XML format: <input> element has no \"name\" attribute or it's empty";
                 return false;
             }
 
             // Check if there are additional attributes besides "name"
-            if (input_node.attributes().count() > 1)
-            {
+            if (input_node.attributes().count() > 1) {
                 qCritical() << "Invalid XML format: The <input> element has additional attributes besides \"name\"";
                 return false;
             }
@@ -117,25 +104,19 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Fetch the outputs
     QDomElement outputs_node = root.firstChildElement("outputs");
-    if (outputs_node.isNull())
-    {
+    if (outputs_node.isNull()) {
         qWarning() << "No <outputs> element found in XML";
-    }
-    else
-    {
+    } else {
         QDomElement output_node = outputs_node.firstChildElement("output");
         qInfo() << "Outputs:";
-        while (!output_node.isNull())
-        {
-            if (!output_node.hasAttribute("name") || output_node.attribute("name").isEmpty())
-            {
+        while (!output_node.isNull()) {
+            if (!output_node.hasAttribute("name") || output_node.attribute("name").isEmpty()) {
                 qCritical() << "Invalid XML format: <output> element has no \"name\" attribute or it's empty";
                 return false;
             }
 
             // Check if there are additional attributes besides "name"
-            if (output_node.attributes().count() > 1)
-            {
+            if (output_node.attributes().count() > 1) {
                 qCritical() << "Invalid XML format: The <output> element has additional attributes besides \"name\"";
                 return false;
             }
@@ -150,27 +131,21 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Fetch the variables
     QDomElement variables_node = root.firstChildElement("variables");
-    if (variables_node.isNull())
-    {
+    if (variables_node.isNull()) {
         qWarning() << "No <variables> element found in XML";
-    }
-    else
-    {
+    } else {
         QDomElement variable_node = variables_node.firstChildElement("variable");
         qInfo() << "Variables:";
-        while (!variable_node.isNull())
-        {
+        while (!variable_node.isNull()) {
             if (!variable_node.hasAttribute("name") || variable_node.attribute("name").isEmpty() ||
                 !variable_node.hasAttribute("type") || variable_node.attribute("type").isEmpty() ||
-                !variable_node.hasAttribute("value") || variable_node.attribute("value").isEmpty())
-            {
+                !variable_node.hasAttribute("value") || variable_node.attribute("value").isEmpty()) {
                 qCritical()
                     << "Invalid XML format: <variable> element is missing required attributes or they are empty";
                 return false;
             }
 
-            if (variable_node.attributes().count() > 3)
-            {
+            if (variable_node.attributes().count() > 3) {
                 qCritical() << "Invalid XML format: The <variable> element has additional attributes";
                 return false;
             }
@@ -191,16 +166,12 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Fetch the states
     QDomElement states_node = root.firstChildElement("states");
-    if (states_node.isNull())
-    {
+    if (states_node.isNull()) {
         qWarning() << "No <states> element found in XML";
-    }
-    else
-    {
+    } else {
         QDomElement state_node = states_node.firstChildElement("state");
         qInfo() << "States:";
-        while (!state_node.isNull())
-        {
+        while (!state_node.isNull()) {
             QString state_name = state_node.attribute("name");
             bool is_initial = state_node.attribute("initial").toLower() == "true";
 
@@ -210,10 +181,8 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
             qInfo() << "State" << state_name << "created";
 
-            if (is_initial)
-            {
-                if (state_machine.getInitialState() != nullptr)
-                {
+            if (is_initial) {
+                if (state_machine.getInitialState() != nullptr) {
                     qCritical() << "Invalid XML: Multiple initial states found";
                     return false;
                 }
@@ -237,15 +206,11 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
 
     // Fetch the transitions
     QDomElement transitions_node = root.firstChildElement("transitions");
-    if (transitions_node.isNull())
-    {
+    if (transitions_node.isNull()) {
         qWarning() << "No <transitions> element found in XML";
-    }
-    else
-    {
+    } else {
         QDomElement transition_node = transitions_node.firstChildElement("transition");
-        while (!transition_node.isNull())
-        {
+        while (!transition_node.isNull()) {
             QString from_state_name = transition_node.attribute("from");
             QString to_state_name = transition_node.attribute("to");
 
@@ -253,8 +218,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
             State *to_state = state_machine.getState(to_state_name);
 
             if (!state_machine.getStates().contains(from_state_name) ||
-                !state_machine.getStates().contains(to_state_name))
-            {
+                !state_machine.getStates().contains(to_state_name)) {
                 qCritical() << "Invalid transition: Transition from" << from_state_name << "to" << to_state_name
                             << "cannot be created because one or both of the states don't exist";
             }
@@ -267,21 +231,18 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
             QString delay_variable_name;
             Variable *delay_variable = nullptr;
 
-            if (!condition_node.isNull())
-            {
+            if (!condition_node.isNull()) {
                 condition_event = condition_node.attribute("event");
                 condition_code = condition_node.text();
                 qInfo() << "Condition event" << condition_event << "and code" << condition_code << "for transition from"
                         << from_state_name << "to" << to_state_name;
             }
 
-            if (!delay_node.isNull())
-            {
+            if (!delay_node.isNull()) {
                 delay_variable_name = delay_node.text();
                 delay_variable = state_machine.getVariable(delay_variable_name);
 
-                if (delay_variable == nullptr)
-                {
+                if (delay_variable == nullptr) {
                     qCritical() << "Invalid XML: Delay variable" << delay_variable_name << "not found";
                     return false;
                 }
@@ -289,8 +250,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
                         << "to" << to_state_name << "with value" << delay_variable->getValue().toString();
             }
 
-            if (condition_event.isEmpty() && delay_variable == nullptr)
-            {
+            if (condition_event.isEmpty() && delay_variable == nullptr) {
                 qCritical() << "Invalid XML: No valid <condition> or <delay> for transition from" << from_state_name
                             << "to" << to_state_name;
                 continue;
@@ -313,8 +273,7 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine)
     return true;
 }
 
-bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
-{
+bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path) {
     qInfo() << "Starting to export FSM to XML file:" << file_path;
     QDomDocument document;
 
@@ -324,8 +283,7 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
     qInfo() << "Set FSM name to:" << state_machine.getName();
     document.appendChild(root);
 
-    if (!state_machine.getComment().isEmpty())
-    {
+    if (!state_machine.getComment().isEmpty()) {
         qInfo() << "Creating comment node";
         QDomElement comment_node = document.createElement("comment");
         comment_node.appendChild(document.createTextNode(state_machine.getComment()));
@@ -335,14 +293,12 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
 
     QSet<QString> inputs = state_machine.getInputs();
     QDomElement inputs_node;
-    if (!inputs.isEmpty())
-    {
+    if (!inputs.isEmpty()) {
         qInfo() << "Creating inputs node";
         inputs_node = document.createElement("inputs");
     }
 
-    for (const auto &input : inputs)
-    {
+    for (const auto &input : inputs) {
         qInfo() << "Creating input node";
         QDomElement input_node = document.createElement("input");
         input_node.setAttribute("name", input);
@@ -353,14 +309,12 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
 
     QSet<QString> outputs = state_machine.getOutputs();
     QDomElement outputs_node;
-    if (!outputs.isEmpty())
-    {
+    if (!outputs.isEmpty()) {
         qInfo() << "Creating outputs node";
         outputs_node = document.createElement("outputs");
     }
 
-    for (const auto &output : outputs)
-    {
+    for (const auto &output : outputs) {
         qInfo() << "Creating output node";
         QDomElement output_node = document.createElement("output");
         output_node.setAttribute("name", output);
@@ -371,14 +325,12 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
 
     QMap<QString, Variable *> variables = state_machine.getVariables();
     QDomElement variables_node;
-    if (!variables.isEmpty())
-    {
+    if (!variables.isEmpty()) {
         qInfo() << "Creating variables node";
         variables_node = document.createElement("variables");
     }
 
-    for (const auto &variable : variables)
-    {
+    for (const auto &variable : variables) {
         qInfo() << "Creating variable node";
         QDomElement variable_node = document.createElement("variable");
         variable_node.setAttribute("name", variable->getName());
@@ -392,26 +344,22 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
 
     QMap<QString, State *> states = state_machine.getStates();
     QDomElement states_node;
-    if (!states.isEmpty())
-    {
+    if (!states.isEmpty()) {
         qInfo() << "Creating states node";
         states_node = document.createElement("states");
     }
 
-    for (const auto &state : states)
-    {
+    for (const auto &state : states) {
         qInfo() << "Creating state node";
         QDomElement state_node = document.createElement("state");
         state_node.setAttribute("name", state->getName());
         qInfo() << "Set state name to:" << state->getName();
-        if (state->isInitial())
-        {
+        if (state->isInitial()) {
             state_node.setAttribute("initial", "true");
             qInfo() << "Set state" << state->getName() << "as initial";
         }
 
-        if (!state->getCode().isEmpty())
-        {
+        if (!state->getCode().isEmpty()) {
             qInfo() << "Creating code node";
             QDomElement code_node = document.createElement("code");
             code_node.appendChild(document.createTextNode(state->getCode()));
@@ -425,14 +373,12 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
     QMultiMap<QString, Transition *> transitions = state_machine.getTransitions();
     QDomElement transitions_node;
 
-    if (!transitions.isEmpty())
-    {
+    if (!transitions.isEmpty()) {
         qInfo() << "Creating transitions node";
         transitions_node = document.createElement("transitions");
     }
 
-    for (auto it = transitions.begin(); it != transitions.end(); it++)
-    {
+    for (auto it = transitions.begin(); it != transitions.end(); it++) {
         QString from_state_name = it.key();
         Transition *transition = it.value();
 
@@ -442,8 +388,7 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
         transition_node.setAttribute("to", transition->getTo()->getName());
         qInfo() << "Set transition from" << transition->getFrom()->getName() << "to" << transition->getTo()->getName();
 
-        if (!transition->getEvent().isEmpty())
-        {
+        if (!transition->getEvent().isEmpty()) {
             qInfo() << "Creating condition node";
             QDomElement condition_node = document.createElement("condition");
             condition_node.setAttribute("event", transition->getEvent());
@@ -453,8 +398,7 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
             transition_node.appendChild(condition_node);
         }
 
-        if (transition->getDelay() != -1)
-        {
+        if (transition->getDelay() != -1) {
             qInfo() << "Creating delay node";
             QDomElement delay_node = document.createElement("delay");
             delay_node.appendChild(document.createTextNode(transition->getDelayVariableName()));
@@ -468,15 +412,14 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path)
 
     qInfo() << "Exporting FSM to XML file:" << file_path;
     QFile file(file_path);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-    {
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qCritical() << "Couldn't open file" << file_path;
         return false;
     }
 
     qInfo() << "Writing XML content to file";
     QTextStream stream(&file);
-    stream << document.toString(4); // 4 space indentation
+    stream << document.toString(4);  // 4 space indentation
     file.close();
 
     qInfo() << "Successully exported FSM to XML file:" << file_path;
