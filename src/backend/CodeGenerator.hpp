@@ -10,7 +10,6 @@
 #include <QObject>
 #include <QString>
 
-// Forward declarations
 class FSM;
 class State;
 class Transition;
@@ -44,13 +43,5 @@ class CodeGenerator : public QObject {
     QString generateTerminalInputHandler(FSM *fsm);
     QString generateInputEventClass();
     QString generateGeneratedTransitionClass();
-
-    /**
-     * @brief Generate transition code based on a transition
-     * @param transition The transition to generate code for
-     * @param sourceState The source state
-     * @param targetState The target state
-     * @return Generated C++ code for the transition
-     */
     QString generateTransitionCode(Transition *transition, const State *sourceState, const State *targetState);
 };

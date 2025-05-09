@@ -121,7 +121,7 @@ void GuiClient::sendPong() {
 /**
  * @brief Handle incoming data from the FSM server.
  *
- * Processes all received XML events and commands from the server.
+ * Processes all received XML events and commands.
  */
 void GuiClient::onReadyRead() {
     while (socket->canReadLine()) {
@@ -177,12 +177,12 @@ void GuiClient::onReadyRead() {
                 qDebug() << "[STATUS] State:" << state;
                 QDomElement inputs = statusElem.firstChildElement("inputs");
                 for (QDomElement input = inputs.firstChildElement("input"); !input.isNull();
-                    input = input.nextSiblingElement("input")) {
+                     input = input.nextSiblingElement("input")) {
                     qDebug() << "  [INPUT]" << input.attribute("name") << "=" << input.text();
                 }
                 QDomElement outputs = statusElem.firstChildElement("outputs");
                 for (QDomElement output = outputs.firstChildElement("output"); !output.isNull();
-                    output = output.nextSiblingElement("output")) {
+                     output = output.nextSiblingElement("output")) {
                     qDebug() << "  [OUTPUT]" << output.attribute("name") << "=" << output.text();
                 }
                 QDomElement vars = statusElem.firstChildElement("variables");
@@ -195,7 +195,7 @@ void GuiClient::onReadyRead() {
                 }
                 QDomElement timers = statusElem.firstChildElement("timers");
                 for (QDomElement timer = timers.firstChildElement("timer"); !timer.isNull();
-                    timer = timer.nextSiblingElement("timer")) {
+                     timer = timer.nextSiblingElement("timer")) {
                     QString from = timer.firstChildElement("from").text();
                     QString to = timer.firstChildElement("to").text();
                     QString ms = timer.firstChildElement("ms").text();

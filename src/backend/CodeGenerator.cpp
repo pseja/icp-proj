@@ -413,9 +413,7 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
 }
 
 /**
- * @brief Generate global variable declarations for the FSM and its variables.
- *
- * Declares standard and custom variables required for the generated FSM code.
+ * @brief Generate global declarations for standard and custom variables required for the generated FSM code.
  *
  * @param fsm Pointer to the FSM object containing variable definitions.
  * @return C++ code section with variable declarations as a QString.
@@ -451,9 +449,9 @@ QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
 }
 
 /**
- * @brief Generate logging and runtime monitoring functions for the FSM.
+ * @brief Generate runtime monitoring functions for the FSM.
  *
- * Provides logging, debug, and help display utilities for state transitions,
+ * Also provides logging, debug, and help display utilities for state transitions,
  * events, and debugging.
  *
  * @return C++ code section with runtime monitoring functions as a QString.
@@ -665,8 +663,7 @@ QString CodeGenerator::generateTransitionCode(Transition* transition, const Stat
 /**
  * @brief Generate the main function and core classes for the FSM application.
  *
- * Generates the main() function, state setup, transitions, and event loop for
- * the generated FSM code.
+ * Additionally state setup, transitions, and event an loop.
  *
  * @param fsm Pointer to the FSM object containing states and transitions.
  * @return C++ code section with the main function and related classes as a
@@ -1221,7 +1218,7 @@ QString CodeGenerator::generateTerminalInputHandler(FSM* fsm) {
 /**
  * @brief Generate the InputEvent class for FSM input events.
  *
- * Defines a custom QEvent subclass for input changes in the generated FSM code.
+ * Defines a custom QEvent subclass for input changes.
  *
  * @return C++ code section with the InputEvent class as a QString.
  */
