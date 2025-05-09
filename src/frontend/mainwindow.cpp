@@ -74,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
   connect(ui->buttonClear, &QPushButton::pressed, this, &MainWindow::clearFSM);
+  connect(ui->buttonRefresh, &QPushButton::pressed, this, &MainWindow::refreshFSM);
   connect(ui->console, &QLineEdit::returnPressed, this, &MainWindow::onConsoleEnter);
   connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
   connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,&MainWindow::saveState);
@@ -541,4 +542,60 @@ void MainWindow::clearFSM() {
     qDebug() << "Clearing FSM done";
     showFSMInfo();
   }
+}
+
+void MainWindow::refreshFSM() {
+  QString tempPath = QDir::temp().filePath("fsm_refresh.xml");
+  XMLParser::FSMtoXML(*fsm, tempPath);
+
+  clearFSM();
+  XMLParser::XMLtoFSM(tempPath, *fsm);
+
+  int cols = ceil(sqrt(fsm->getStates().size()));
+  int spacing = 120;
+  int row = 0, col = 0;
+  QMap<State*, StateItem*> state_map;
+  for (State *state : fsm->getStates()) {
+    StateItem *stateItem = new StateItem(state->getName(), state->getCode());
+    stateItem->state = state;
+    stateItem->setPos(100 + col * spacing, 100 + row * spacing);
+    automatView->scene()->addItem(stateItem);
+    state_map[state] = stateItem;
+    if (++col >= cols) { col = 0; ++row; }
+  }
+
+  QMap<QPair<QString, QString>, int> transition_count;
+  for (Transition *transition : fsm->getTransitions()) {
+    qDebug() << "Transition from" << transition->getFrom()->getName()
+              << "to" << transition->getTo()->getName();
+    State *from = transition->getFrom();
+    State *to = transition->getTo();
+    StateItem *fromItem = state_map.value(from, nullptr);
+    StateItem *toItem = state_map.value(to, nullptr);
+    if (!fromItem || !toItem) {
+      qDebug() << "Pointer mismatch for transition from" << from->getName() << "to" << to->getName();
+    }
+    if (fromItem && toItem) {
+      QPair<QString, QString> pair(from->getName(), to->getName());
+      int count = transition_count.value(pair, 0);
+      qDebug() << "Transition count for" << pair << ":" << count;
+      transition_count[pair] = count + 1;
+
+      TransitionItem *transItem = new TransitionItem(fromItem, toItem, nullptr, count);
+      transItem->transition = transition;
+      transItem->setLabel(transition->getCondition());
+      automatView->scene()->addItem(transItem);
+    }
+  }
+    QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+    textEdit->clear();
+    for (QString in : fsm->getInputs()) { textEdit->append(in); }
+
+    QTextEdit *textEdit1 = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+    textEdit1->clear();
+    for (QString out : fsm->getOutputs()) { textEdit1->append(out); }
+
+    QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+    textEdit2->clear();
+    for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
 }
