@@ -172,6 +172,11 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
         QDomElement state_node = states_node.firstChildElement("state");
         qInfo() << "States:";
         while (!state_node.isNull()) {
+            if (!state_node.hasAttribute("name") || state_node.attribute("name").isEmpty()) {
+                qCritical() << "Invalid XML format: <state> element has no \"name\" attribute or it's empty";
+                return false;
+            }
+
             QString state_name = state_node.attribute("name");
             bool is_initial = state_node.attribute("initial").toLower() == "true";
 
@@ -199,6 +204,11 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
             qInfo() << "Code" << state->getCode() << "set for state" << state_name;
 
             state_node = state_node.nextSiblingElement("state");
+        }
+
+        if (state_machine.getInitialState() == nullptr) {
+            qCritical() << "Invalid XML: No initial state found";
+            return false;
         }
 
         qInfo() << "Parsed" << state_machine.getStates().size() << "states";
