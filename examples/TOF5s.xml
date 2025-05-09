@@ -11,22 +11,25 @@
     </variables>
     <states>
         <state name="IDLE" initial="true">
-            <code>output("out", 0);</code>
+            <code><![CDATA[output("out", 0);]]></code>
         </state>
         <state name="ACTIVE">
-            <code>output("out", 1);</code>
+            <code><![CDATA[output("out", 1);]]></code>
         </state>
         <state name="TIMING"/>
     </states>
     <transitions>
         <transition from="IDLE" to="ACTIVE">
             <condition event="in">Qtoi(valueof("in")) == 1</condition>
+            <condition event="in"><![CDATA[atoi(valueof("in")) == 1]]></condition>
         </transition>
         <transition from="ACTIVE" to="TIMING">
             <condition event="in">Qtoi(valueof("in")) == 0</condition>
+            <condition event="in"><![CDATA[atoi(valueof("in")) == 0]]></condition>
         </transition>
         <transition from="TIMING" to="ACTIVE">
             <condition event="in">Qtoi(valueof("in")) == 1</condition>
+            <condition event="in"><![CDATA[atoi(valueof("in")) == 1]]></condition>
         </transition>
         <transition from="TIMING" to="IDLE">
             <delay>timeout</delay>
