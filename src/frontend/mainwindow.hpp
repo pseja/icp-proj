@@ -9,6 +9,7 @@
 #include "StateItem.hpp"
 #include "backend/GuiClient.hpp"
 #include "backend/fsm.hpp"
+#include <QMessageBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -39,6 +40,7 @@ private slots:
     void onConsoleEnter();
     void showFSMInfo();
     void resizeCode();
+    void clearFSM();
 public slots:
   void handleStateDeleted();
   void addState(StateItem *state);

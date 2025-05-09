@@ -271,7 +271,7 @@
      <string>RUN automat</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="buttonGenerate">
+   <widget class="QPushButton" name="buttonClear">
     <property name="geometry">
      <rect>
       <x>860</x>
@@ -281,7 +281,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Generate</string>
+     <string>Clear</string>
     </property>
    </widget>
    <widget class="QPushButton" name="buttonRefresh">

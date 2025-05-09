@@ -73,6 +73,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
+  connect(ui->buttonClear, &QPushButton::pressed, this, &MainWindow::clearFSM);
   connect(ui->console, &QLineEdit::returnPressed, this, &MainWindow::onConsoleEnter);
   connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
   connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,&MainWindow::saveState);
@@ -506,4 +507,38 @@ void MainWindow::runFSM() {
   QTimer::singleShot(750, this, [this]() {
     client->connectToServer();
   });
+}
+
+void MainWindow::clearFSM() {
+  auto answer = QMessageBox::question(this, "Clear FSM", "Are you sure you want to clear the FSM?", QMessageBox::Yes | QMessageBox::No);
+  if (answer == QMessageBox::Yes) {
+    automatView->scene()->clear();
+    selectedState = nullptr;
+    selectedTransition = nullptr;
+    transitionItemsForSelectedState.clear();
+    qDebug() << "Clearing FSM vars";
+    //segfaulting here because some cast wont provide clear function
+    auto clearWidget = [](QWidget* w) {
+      if (auto line = qobject_cast<QLineEdit*>(w)) line->clear();
+      else if (auto text = qobject_cast<QTextEdit*>(w)) text->clear();
+      else if (auto list = qobject_cast<QListWidget*>(w)) list->clear();
+    };
+    for (QWidget *w : ui->groupBox->findChildren<QWidget*>()) {
+      clearWidget(w);
+    }
+    qDebug() << "Clearing FSM groupbox";
+    for (QWidget *w : ui->groupBox_3->findChildren<QWidget*>()) {
+      clearWidget(w);
+    }
+    qDebug() << "Clearing FSM groupbox 3";
+    ui->logConsole->clear();
+    ui->listWidget->clear();
+    ui->lineEdit->clear();
+    ui->textEdit->clear();
+    qDebug() << "Clearing FSM done";
+    delete fsm;
+    fsm = new FSM("Default FSM");
+    qDebug() << "Clearing FSM done";
+    showFSMInfo();
+  }
 }
