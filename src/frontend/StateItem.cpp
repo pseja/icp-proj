@@ -21,10 +21,14 @@ StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *pa
   //state->setName("State");
   //stateName = "State";
   textItem->setPlainText(state->getName());
-  
+  QRectF ell = boundingRect();
+  QRectF text = textItem->boundingRect();
+  qreal x = ell.center().x() - text.width() / 2;
+  qreal y = ell.center().y() - text.height() / 2;
+  textItem->setPos(x, y);
 
-  QRectF bounds = boundingRect();
-  textItem->setPos(bounds.center() - textItem->boundingRect().center());
+  //QRectF bounds = boundingRect();
+  //textItem->setPos(bounds.center() - textItem->boundingRect().center());
 }
 
 void StateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
@@ -49,6 +53,13 @@ void StateItem::updateState(const QString &newName, const QString &newCode, bool
   textItem->setPlainText(newName);
   state->setCode(newCode);
   state->setInitial(initial);
+
+  textItem->setPlainText(state->getName());
+  QRectF ell = boundingRect();
+  QRectF text = textItem->boundingRect();
+  qreal x = ell.center().x() - text.width() / 2;
+  qreal y = ell.center().y() - text.height() / 2;
+  textItem->setPos(x, y);
 }
 //QString StateItem::getName() { return stateName; }
 //QString StateItem::getCodeSegment() {return codeSegment;}
