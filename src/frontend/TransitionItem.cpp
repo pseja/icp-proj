@@ -1,5 +1,6 @@
 #include "TransitionItem.hpp"
 #include "StateItem.hpp"
+#include "backend/transition.hpp"
 #include <QPen>
 #include <QPainter>
 #include <qgraphicsscene.h>
@@ -17,6 +18,8 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
     //setting color and axis position of transition line
     setPen(QPen(Qt::black, 2));
     setZValue(-10);
+    setFlags(QGraphicsItem::ItemIsSelectable);
+    //setAcceptHoverEvents(true);
     fromState = startState;
     toState = endState;
     QPointF p1 = startState->pos();
@@ -64,7 +67,7 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
         label = new QGraphicsTextItem(transition->getCondition(), this);
         label->setDefaultTextColor(Qt::darkRed);
         label->setPos(ellipseRect.center().x(), ellipseRect.top() - 20);
-        setZValue(-20);
+        setZValue(-10 - offsetIndex);
     } else {
 
 
@@ -152,7 +155,7 @@ void TransitionItem::updatePosition() {
 
             setPath(path);
             if (label) label->setPos(ellipseRect.center().x(), ellipseRect.top() - 20);
-            setZValue(-20);
+            setZValue(-10 - offsetIndex);
             return;
     }
 
@@ -182,3 +185,15 @@ StateItem* TransitionItem::getFrom() {
 StateItem* TransitionItem::getTo() {
   return toState;
 }
+
+/*
+void TransitionItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
+    setZValue(10);
+    QGraphicsPathItem::hoverEnterEvent(event);
+}
+
+void TransitionItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
+    setZValue(-20); // nebo původní hodnota
+    QGraphicsPathItem::hoverLeaveEvent(event);
+}
+*/

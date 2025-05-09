@@ -166,19 +166,15 @@ void MainWindow::updateStateInfo(StateItem *state) {
     radio->setChecked(selectedState->state->isInitial());
   }
 
-  /* pottentially useless now redoing design
-  QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
-  textEdit->clear();
-  for (QString in : fsm->getInputs()) { textEdit->append(in); }
+  QLineEdit *eventLine = ui->groupBox->findChild<QLineEdit *>("eventLineEdit");
+  QLineEdit *conditionLine = ui->groupBox->findChild<QLineEdit *>("conditionLineEdit");
+  QLineEdit *delayLine = ui->groupBox->findChild<QLineEdit *>("delayLineEdit");
+  QLineEdit *delayVarLine = ui->groupBox->findChild<QLineEdit *>("delayVarLineEdit");
+  eventLine->clear();
+  conditionLine->clear();
+  delayLine->clear();
+  delayVarLine->clear();
 
-  QTextEdit *textEdit1 = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
-  textEdit1->clear();
-  for (QString out : fsm->getOutputs()) { textEdit1->append(out); }
-
-  QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
-  textEdit2->clear();
-  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
-  */
 
   QListWidget *widget = ui->groupBox->findChild<QListWidget *>("listWidget");
   widget->clear();
@@ -393,18 +389,21 @@ void MainWindow::editTransition(QListWidgetItem *item) {
 }
 
 void MainWindow::saveTransition() {
-    if (!selectedTransition) return;
+  if (!selectedTransition) return;
 
-    QLineEdit *lineEdit = ui->groupBox->findChild<QLineEdit *>("eventLineEdit");
-    QLineEdit *conditionEdit = ui->groupBox->findChild<QLineEdit *>("conditionLineEdit");
-    QLineEdit *delayEdit = ui->groupBox->findChild<QLineEdit *>("delayLineEdit");
-    QLineEdit *delayVarEdit = ui->groupBox->findChild<QLineEdit *>("delayVarLineEdit");
+  QLineEdit *lineEdit = ui->groupBox->findChild<QLineEdit *>("eventLineEdit");
+  QLineEdit *conditionEdit = ui->groupBox->findChild<QLineEdit *>("conditionLineEdit");
+  QLineEdit *delayEdit = ui->groupBox->findChild<QLineEdit *>("delayLineEdit");
+  QLineEdit *delayVarEdit = ui->groupBox->findChild<QLineEdit *>("delayVarLineEdit");
+  if(lineEdit->text().isEmpty() && conditionEdit->text().isEmpty() &&
+     delayEdit->text().isEmpty() && delayVarEdit->text().isEmpty()) {return;}
 
-    selectedTransition->transition->setEvent(lineEdit->text());
-    selectedTransition->transition->setCondition(conditionEdit->text());
-    selectedTransition->setLabel(conditionEdit->text());
-    selectedTransition->transition->setDelay(delayEdit->text().toInt());
-    selectedTransition->transition->setDelayVariableName(delayVarEdit->text());
+  selectedTransition->transition->setEvent(lineEdit->text());
+  selectedTransition->transition->setCondition(conditionEdit->text());
+  selectedTransition->setLabel(conditionEdit->text());
+  selectedTransition->transition->setDelay(delayEdit->text().toInt());
+  selectedTransition->transition->setDelayVariableName(delayVarEdit->text());
+  selectedTransition = nullptr;
 }
 
 void MainWindow::loadFSM() {

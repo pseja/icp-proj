@@ -21,6 +21,8 @@ public:
     explicit TransitionItem(StateItem *fromState, StateItem *toState, QGraphicsItem *parent = nullptr, int offset = 0);
     Transition *transition;
     void updatePosition();
+    //void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    //void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
     StateItem* getFrom();
     StateItem *getTo();
     QString getLabel() const { return label->toPlainText(); }

@@ -88,6 +88,16 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
         StateItem *state = dynamic_cast<StateItem *>(item);
         emit stateSelected(state);
         break;
+    } else if (typeid(*item) == typeid(TransitionItem)) {
+      TransitionItem *transition = dynamic_cast<TransitionItem *>(item);
+      qDebug() << "Transition clicked!";
+      qDebug() << "Transition from" << transition->getFrom()->state->getName()
+               << "to" << transition->getTo()->state->getName();
+      qDebug() << "Event:" << transition->transition->getEvent();
+      qDebug() << "Condition:" << transition->transition->getCondition();
+      qDebug() << "Delay:" << transition->transition->getDelay();
+      qDebug() << "Delay Variable:" << transition->transition->getDelayVariableName();
+      qDebug() << "Transition clicked END!";
     }
   }
 }
