@@ -12,10 +12,12 @@
 #include <qdialogbuttonbox.h>
 #include <qgraphicsitem.h>
 #include <qdir.h>
+#include <qlabel.h>
 #include <qlineedit.h>
 #include <qlist.h>
 #include <qlistwidget.h>
 #include <qmap.h>
+#include <qnamespace.h>
 #include <qprocess.h>
 #include <qradiobutton.h>
 #include <qregularexpression.h>
@@ -82,7 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
   //---------------------------------------------------------------
 }
 
-MainWindow::~MainWindow() { delete ui; }
+MainWindow::~MainWindow() { automatView->disconnect(); client->disconnect(); delete ui; }
 
 void MainWindow::on_addStateButton_clicked() {
 
@@ -123,6 +125,7 @@ void MainWindow::showFSMInfo() {
   QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
   QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
   QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
+  QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
 
   inputsLine->clear();
   outputsLine->clear();
@@ -130,7 +133,10 @@ void MainWindow::showFSMInfo() {
   typeEdit->clear();
   valueEdit->clear();
   fsmName->setText(fsm->getName());
+  fsmLabel->setAlignment(Qt::AlignCenter);
+  fsmLabel->setText(fsm->getName());
   
+
 }
 
 //aka clicking on state, calls this with pointer to that state
@@ -309,6 +315,7 @@ void MainWindow::saveVars() {
   QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
   QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
   QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
+  QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
 
   QString input = inputsLine->text();
   QString output = outputsLine->text();
@@ -317,20 +324,19 @@ void MainWindow::saveVars() {
   QString value = valueEdit->text();
   QString fsmNameText = fsmName->text();
 
-  if (variable.isEmpty() || type.isEmpty() || value.isEmpty()) {
-    qDebug() << "Variable name, type, or value is empty.";
-    return;
+  if (!(variable.isEmpty() || type.isEmpty() || value.isEmpty())) {
+    fsm->addVariable(new Variable(type, variable, value));
   }
 
-  fsm->addVariable(new Variable(type, variable, value));
-  fsm->addInput(input);
-  fsm->addOutput(output);
-  fsm->setName(fsmNameText);
+  input.isEmpty() ? input.clear() : fsm->addInput(input);
+  output.isEmpty() ? output.clear() : fsm->addOutput(output);
+  fsmNameText.isEmpty() ? fsmNameText.clear() : fsm->setName(fsmNameText);
   inputsLine->clear();
   outputsLine->clear();
   varName->clear();
   typeEdit->clear();
   valueEdit->clear();
+  fsmLabel->setText(fsm->getName());
 
   QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
   textEdit->clear();
