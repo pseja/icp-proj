@@ -174,6 +174,7 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
                     doc.appendChild(element);
                     clientSocket->write(buildEvent(doc.toString(-1)));
                     clientSocket->flush();
+                    debug(QString("output(): sent event to client: %1").arg(doc.toString(-1)));
                 }
             }
         }
@@ -808,7 +809,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
               log(SECTION_SEPARATOR);
               for (QTcpSocket* clientSocket : clientSockets) {
                   if (clientSocket->state() == QAbstractSocket::ConnectedState) {
-                      QString stateMsg = QString("<event type=\"stateChange\"><name>%1</name></event>").arg(currentStateName);
+                      QString stateMsg = QString("<event type=\"stateChange\"><name>%2</name></event>").arg(currentStateName);
                       clientSocket->write(buildEvent(stateMsg));
                       clientSocket->flush();
                   }
