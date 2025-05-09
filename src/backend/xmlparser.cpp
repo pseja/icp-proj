@@ -405,7 +405,10 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path) {
         if (!state->getCode().isEmpty()) {
             qInfo() << "Creating code node";
             QDomElement code_node = document.createElement("code");
-            code_node.appendChild(document.createTextNode(state->getCode()));
+
+            QDomCDATASection cdata = document.createCDATASection(state->getCode());
+            code_node.appendChild(cdata);
+
             qInfo() << "Set code to:" << state->getCode();
             state_node.appendChild(code_node);
         }
@@ -436,7 +439,10 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path) {
             QDomElement condition_node = document.createElement("condition");
             condition_node.setAttribute("event", transition->getEvent());
             qInfo() << "Set condition event to:" << transition->getEvent();
-            condition_node.appendChild(document.createTextNode(transition->getCondition()));
+
+            QDomCDATASection cdata = document.createCDATASection(transition->getCondition());
+            condition_node.appendChild(cdata);
+
             qInfo() << "Set condition code to:" << transition->getCondition();
             transition_node.appendChild(condition_node);
         }

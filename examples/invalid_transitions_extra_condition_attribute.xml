@@ -9,7 +9,7 @@
     </states>
     <transitions>
         <transition from="IDLE" to="ACTIVE">
-            <condition event="in" extra="extra">atoi(valueof("in")) == 1</condition>
+            <condition event="in" extra="extra"><![CDATA[atoi(valueof("in")) == 1]]></condition>
         </transition>
         <transition from="TIMING" to="IDLE">
             <delay>timeout</delay>

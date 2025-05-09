@@ -1,7 +1,7 @@
 <automaton name="states only">
     <states>
         <state initial="true">
-            <code>if (defined("set_to")) timeout = atoi(valueof("set_to"));output("out", 0);output("rt", 0);</code>
+            <code><![CDATA[if (defined("set_to")) timeout = atoi(valueof("set_to"));output("out", 0);output("rt", 0);]]></code>
         </state>
     </states>
 </automaton>
