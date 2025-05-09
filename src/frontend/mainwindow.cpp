@@ -327,7 +327,7 @@ void MainWindow::onConsoleEnter() {
     } else {
       QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
       ui->logConsole->appendPlainText(now + ": " + command);
-      client->sendCommand(command);
+      client->sendCall(command);
       ui->console->clear();
     }
   }
