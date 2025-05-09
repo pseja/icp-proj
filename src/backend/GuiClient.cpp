@@ -28,9 +28,9 @@ GuiClient::GuiClient(const QString& host, quint16 port, QObject* parent) : QObje
  * Logs the result of the connection attempt.
  */
 void GuiClient::connectToServer() {
-    socket->connectToHost("127.0.0.1", 4242);
+    socket->connectToHost(m_host, m_port);
     if (socket->waitForConnected(3000)) {
-        Logger::messageHandler(QtInfoMsg, {}, "Connected to 127.0.0.1:4242");
+        Logger::messageHandler(QtInfoMsg, {}, QString("Connected to %1:%2").arg(m_host).arg(m_port));
     } else {
         Logger::messageHandler(QtCriticalMsg, {}, "Failed to connect: " + socket->errorString());
     }
@@ -175,8 +175,8 @@ void GuiClient::onReadyRead() {
                 emit printerr(msg, code);
                 qWarning() << "[ERROR] code:" << code << ", message:" << msg;
             } else if (type == "ping") {
-                    sendPong();
-                    qDebug() << "[PING] Received ping, sent pong.";
+                sendPong();
+                qDebug() << "[PING] Received ping, sent pong.";
             } else if (type == "status") {
                 QDomElement statusElem = root.firstChildElement("status");
                 QString state = statusElem.firstChildElement("state").text();
