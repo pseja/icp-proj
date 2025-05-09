@@ -592,8 +592,6 @@ QString CodeGenerator::generateTransitionCode(Transition* transition, const Stat
     QString code;
     QString sourceName = const_cast<State*>(sourceState)->getName();
     QString targetName = const_cast<State*>(targetState)->getName();
-    QString sourceLower = sourceName.toLower();
-    QString targetLower = targetName.toLower();
 
     QString condition = transition->getCondition();
     QString event = transition->getEvent();
@@ -604,7 +602,7 @@ QString CodeGenerator::generateTransitionCode(Transition* transition, const Stat
     bool hasDelay = delay > 0 || (!transition->getDelayVariableName().isEmpty() && transition->isDelayedTransition());
 
     static int transitionCounter = 0;
-    QString transName = sourceLower + "To" + targetName + "Transition" + QString::number(++transitionCounter);
+    QString transName = sourceName + "_to_" + targetName + "_transition" + QString::number(++transitionCounter);
 
     code += " // Create transition: " + sourceName + " → " + targetName;
     if (hasEvent || hasCondition || hasDelay) {
@@ -656,8 +654,8 @@ QString CodeGenerator::generateTransitionCode(Transition* transition, const Stat
     code += ", " + delayProvider;
     code += ", \"" + sourceName + "\", \"" + targetName + "\"";
     code += ");\n";
-    code += "    " + sourceLower + "State->addTransition(" + transName + ");\n";
-    code += "    " + transName + "->setTargetState(" + targetLower + "State);\n\n";
+    code += "    " + sourceName + "State->addTransition(" + transName + ");\n";
+    code += "    " + transName + "->setTargetState(" + targetName + "State);\n\n";
     return code;
 }
 
@@ -788,33 +786,32 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
     for (auto it = allStates.begin(); it != allStates.end(); ++it) {
         State* state = it.value();
         QString stateName = state->getName();
-        QString stateLower = stateName.toLower();
         // clang-format off
         code += QString(R"cpp(
           QState* %1State = new QState(&fsm);
-          %1State->setObjectName("%2");
+          %1State->setObjectName("%1");
                     // QState::entered lambda: handles state entry logic, including logging, updating state, and running
                     // onEntry actions.
           QObject::connect(%1State, &QState::entered, [=]() {
               QString prevStateName = globalPrevStateName;
-              QString currentStateName = "%2";
+              QString currentStateName = "%1";
               if (prevStateName != currentStateName) {
                   qint64 now = QDateTime::currentDateTime().toMSecsSinceEpoch();
                   %1State->setProperty("entryTime", QVariant::fromValue(now));
-                  clearOutgoingTimers("%2");
+                  clearOutgoingTimers("%1");
               }
               globalPrevStateName = currentStateName;
               log(DOUBLE_SEPARATOR);
-              log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + "%2" + ANSI_RESET + " ENTERED");
+              log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + "%1" + ANSI_RESET + " ENTERED");
               log(SECTION_SEPARATOR);
               for (QTcpSocket* clientSocket : clientSockets) {
                   if (clientSocket->state() == QAbstractSocket::ConnectedState) {
-                      QString stateMsg = QString("<event type=\"stateChange\"><name>%2</name></event>").arg(currentStateName);
+                      QString stateMsg = QString("<event type=\"stateChange\"><name>%1</name></event>").arg(currentStateName);
                       clientSocket->write(buildEvent(stateMsg));
                       clientSocket->flush();
                   }
               }
-                )cpp").arg(stateLower, stateName);
+                )cpp").arg(stateName);
 
         QString onEntry = state->getCode();
         if (!onEntry.isEmpty()) {
@@ -825,7 +822,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
         code += "   log(\" \");\n";
         code += " });\n\n";
     }
-    code += " fsm.setInitialState(" + initialStateName.toLower() + "State);\n";
+    code += " fsm.setInitialState(" + initialStateName + "State);\n";
     code += " debug(\"Initial state set to \" + ANSI_BOLD + COLOR_TARGET + \"" + initialStateName + "\" + ANSI_RESET);\n\n";
     code += " debug(\"Setting up transitions...\");\n";
     // clang-format on  
@@ -863,7 +860,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
     code += R"cpp(
         debug(ANSI_BOLD + COLOR_HEADER + "INITIALIZING STATE MACHINE" + ANSI_RESET);
         fsm.start();
-        debug(COLOR_SUCCESS + "✓ Transition engine activated successfully\n\n" + ANSI_RESET);
+        debug(COLOR_SUCCESS + "FSM activated successfully\n\n" + ANSI_RESET);
         int result = app.exec();
         debug("Application terminated with code " + QString::number(result));
         return result;
@@ -1296,7 +1293,7 @@ QString CodeGenerator::generateGeneratedTransitionClass() {
                     debug("Evaluating transition from " + m_fromState + " to " + m_toState + ": " +
                           (m_conditionMet ? "true" : "false"));
                     if (m_timerArmed) {
-                        debug("returing false Timer already armed for transition " + m_fromState + " → " + m_toState);
+                        debug("Timer already armed for transition " + m_fromState + " → " + m_toState);
                         return false;
                     }
                     if (!m_conditionMet) {
