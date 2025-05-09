@@ -408,6 +408,7 @@ void MainWindow::saveTransition() {
 }
 
 void MainWindow::loadFSM() {
+  sudoclearFSM();
   QString fileName = QFileDialog::getOpenFileName(this, tr("Open FSM"), "",
                                                   tr("XML Files (*.xml)"));
   if (!fileName.isEmpty()) {
@@ -513,35 +514,39 @@ void MainWindow::runFSM() {
 void MainWindow::clearFSM() {
   auto answer = QMessageBox::question(this, "Clear FSM", "Are you sure you want to clear the FSM?", QMessageBox::Yes | QMessageBox::No);
   if (answer == QMessageBox::Yes) {
-    automatView->scene()->clear();
-    selectedState = nullptr;
-    selectedTransition = nullptr;
-    transitionItemsForSelectedState.clear();
-    qDebug() << "Clearing FSM vars";
-    //segfaulting here because some cast wont provide clear function
-    auto clearWidget = [](QWidget* w) {
-      if (auto line = qobject_cast<QLineEdit*>(w)) line->clear();
-      else if (auto text = qobject_cast<QTextEdit*>(w)) text->clear();
-      else if (auto list = qobject_cast<QListWidget*>(w)) list->clear();
-    };
-    for (QWidget *w : ui->groupBox->findChildren<QWidget*>()) {
-      clearWidget(w);
-    }
-    qDebug() << "Clearing FSM groupbox";
-    for (QWidget *w : ui->groupBox_3->findChildren<QWidget*>()) {
-      clearWidget(w);
-    }
-    qDebug() << "Clearing FSM groupbox 3";
-    ui->logConsole->clear();
-    ui->listWidget->clear();
-    ui->lineEdit->clear();
-    ui->textEdit->clear();
-    qDebug() << "Clearing FSM done";
-    delete fsm;
-    fsm = new FSM("Default FSM");
-    qDebug() << "Clearing FSM done";
-    showFSMInfo();
+    sudoclearFSM();
   }
+}
+
+void MainWindow::sudoclearFSM() {
+  automatView->scene()->clear();
+  selectedState = nullptr;
+  selectedTransition = nullptr;
+  transitionItemsForSelectedState.clear();
+  qDebug() << "Clearing FSM vars";
+  //segfaulting here because some cast wont provide clear function
+  auto clearWidget = [](QWidget* w) {
+    if (auto line = qobject_cast<QLineEdit*>(w)) line->clear();
+    else if (auto text = qobject_cast<QTextEdit*>(w)) text->clear();
+    else if (auto list = qobject_cast<QListWidget*>(w)) list->clear();
+  };
+  for (QWidget *w : ui->groupBox->findChildren<QWidget*>()) {
+    clearWidget(w);
+  }
+  qDebug() << "Clearing FSM groupbox";
+  for (QWidget *w : ui->groupBox_3->findChildren<QWidget*>()) {
+    clearWidget(w);
+  }
+  qDebug() << "Clearing FSM groupbox 3";
+  ui->logConsole->clear();
+  ui->listWidget->clear();
+  ui->lineEdit->clear();
+  ui->textEdit->clear();
+  qDebug() << "Clearing FSM done";
+  delete fsm;
+  fsm = new FSM("Default FSM");
+  qDebug() << "Clearing FSM done";
+  showFSMInfo();
 }
 
 void MainWindow::refreshFSM() {

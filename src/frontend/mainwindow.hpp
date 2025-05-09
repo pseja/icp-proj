@@ -42,6 +42,7 @@ private slots:
     void resizeCode();
     void clearFSM();
     void refreshFSM();
+    void sudoclearFSM();
 public slots:
   void handleStateDeleted();
   void addState(StateItem *state);
