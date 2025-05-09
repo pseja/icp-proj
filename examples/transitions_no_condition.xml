@@ -1,0 +1,10 @@
+<automaton name="transitions only">
+    <states>
+        <state name="IDLE" initial="true" />
+        <state name="ACTIVE" />
+    </states>
+    <transitions>
+        <transition from="IDLE" to="ACTIVE">
+        </transition>
+    </transitions>
+</automaton>

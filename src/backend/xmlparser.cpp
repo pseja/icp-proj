@@ -177,6 +177,11 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
                 return false;
             }
 
+            if (state_node.attributes().count() > 2) {
+                qCritical() << "Invalid XML format: The <state> element has additional attributes";
+                return false;
+            }
+
             QString state_name = state_node.attribute("name");
             bool is_initial = state_node.attribute("initial").toLower() == "true";
 
@@ -221,6 +226,18 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
     } else {
         QDomElement transition_node = transitions_node.firstChildElement("transition");
         while (!transition_node.isNull()) {
+            if (!transition_node.hasAttribute("from") || transition_node.attribute("from").isEmpty() ||
+                !transition_node.hasAttribute("to") || transition_node.attribute("to").isEmpty()) {
+                qCritical()
+                    << "Invalid XML format: <transition> element is missing required attributes or they are empty";
+                return false;
+            }
+
+            if (transition_node.attributes().count() > 2) {
+                qCritical() << "Invalid XML format: The <transition> element has additional attributes";
+                return false;
+            }
+
             QString from_state_name = transition_node.attribute("from");
             QString to_state_name = transition_node.attribute("to");
 
@@ -242,6 +259,16 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
             Variable *delay_variable = nullptr;
 
             if (!condition_node.isNull()) {
+                if (!condition_node.hasAttribute("event") || condition_node.attribute("event").isEmpty()) {
+                    qCritical() << "Invalid XML format: <condition> element has no \"event\" attribute or it's empty";
+                    return false;
+                }
+
+                if (condition_node.attributes().count() > 1) {
+                    qCritical() << "Invalid XML format: The <condition> element has additional attributes";
+                    return false;
+                }
+
                 condition_event = condition_node.attribute("event");
                 condition_code = condition_node.text();
                 qInfo() << "Condition event" << condition_event << "and code" << condition_code << "for transition from"
@@ -256,13 +283,19 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
                     qCritical() << "Invalid XML: Delay variable" << delay_variable_name << "not found";
                     return false;
                 }
+
                 qInfo() << "Delay variable" << delay_variable->getName() << "for transition from" << from_state_name
                         << "to" << to_state_name << "with value" << delay_variable->getValue().toString();
             }
 
             if (condition_event.isEmpty() && delay_variable == nullptr) {
-                qCritical() << "Invalid XML: No valid <condition> or <delay> for transition from" << from_state_name
-                            << "to" << to_state_name;
+                qWarning() << "Invalid XML: No valid <condition> or <delay> for transition from" << from_state_name
+                           << "to" << to_state_name;
+
+                int delay_value = -1;
+                state_machine.addTransition(from_state, to_state, condition_event, condition_code, delay_value,
+                                            delay_variable_name);
+                transition_node = transition_node.nextSiblingElement("transition");
                 continue;
             }
 
