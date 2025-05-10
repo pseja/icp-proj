@@ -71,7 +71,7 @@ private:
   QVector<TransitionItem*> transitionItemsForSelectedState;
   TransitionItem *selectedTransition = nullptr;
   GuiClient *client;
-  QProcess *serverProcess;
+  QProcess *serverProcess = nullptr;
 
 QString helpText = R"(Writing code for state actions and transition conditions
 ========================================================

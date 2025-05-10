@@ -180,19 +180,24 @@ void GuiClient::onReadyRead() {
                 sendPong();
                 qDebug() << "[PING] Received ping, sent pong.";
             } else if (type == "status") {
+                FsmStatus status;
                 QDomElement statusElem = root.firstChildElement("status");
                 QString state = statusElem.firstChildElement("state").text();
                 qDebug() << "[STATUS] State:" << state;
+                status.state = state;
+
                 QDomElement inputs = statusElem.firstChildElement("inputs");
                 for (QDomElement input = inputs.firstChildElement("input"); !input.isNull();
                      input = input.nextSiblingElement("input")) {
                     qDebug() << "  [INPUT]" << input.attribute("name") << "=" << input.text();
                 }
+
                 QDomElement outputs = statusElem.firstChildElement("outputs");
                 for (QDomElement output = outputs.firstChildElement("output"); !output.isNull();
                      output = output.nextSiblingElement("output")) {
                     qDebug() << "  [OUTPUT]" << output.attribute("name") << "=" << output.text();
                 }
+
                 QDomElement vars = statusElem.firstChildElement("variables");
                 for (QDomElement var = vars.firstChildElement("var"); !var.isNull();
                      var = var.nextSiblingElement("var")) {
@@ -201,6 +206,7 @@ void GuiClient::onReadyRead() {
                     QString varValue = var.text();
                     qDebug() << "  [VAR]" << varName << "(" << varType << ") =" << varValue;
                 }
+
                 QDomElement timers = statusElem.firstChildElement("timers");
                 for (QDomElement timer = timers.firstChildElement("timer"); !timer.isNull();
                      timer = timer.nextSiblingElement("timer")) {
@@ -209,6 +215,7 @@ void GuiClient::onReadyRead() {
                     QString ms = timer.firstChildElement("ms").text();
                     qDebug() << "  [TIMER] from" << from << "to" << to << "remaining:" << ms << "ms";
                 }
+                
             } else if (type == "shutdown") {
                 QString shutdownMsg = root.firstChildElement("message").text();
                 qDebug() << "[SHUTDOWN] Server FSM shutting down:" << shutdownMsg;

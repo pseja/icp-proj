@@ -46,7 +46,6 @@ MainWindow::MainWindow(QWidget *parent)
   ui->logConsole->setStyleSheet("background-color:rgb(203, 202, 202);");
   ui->console->setStyleSheet("background-color:rgb(138, 138, 138);");
   automatView->setGeometry(710, 30, 1205, 960);
-  fsm = new FSM("Default FSM");
   fsm->addVariable(new Variable("int", "dummy", 0));
   client = new GuiClient("127.0.0.1", 54323, this);
   ui->groupBox_3->setEnabled(true);
@@ -103,10 +102,14 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() {
   automatView->disconnect();
   client->disconnect();
+
   if (serverProcess) {
-    serverProcess->terminate();
-    serverProcess->waitForFinished();
+    if (serverProcess->state() != QProcess::NotRunning) {
+      serverProcess->terminate();
+      serverProcess->waitForFinished(1000); // wait max 1 sec
+    }
     delete serverProcess;
+    serverProcess = nullptr;
   }
   delete ui;
 }
@@ -740,6 +743,7 @@ void MainWindow::runFSM() {
   if(serverProcess) {
     serverProcess->kill();
     serverProcess->deleteLater();
+    serverProcess = nullptr;
   }
   serverProcess = new QProcess(this);
   serverProcess->setProcessEnvironment(myenv);
@@ -758,8 +762,11 @@ void MainWindow::runFSM() {
 
 void MainWindow::stopFSM() {
   if (serverProcess) {
-    serverProcess->kill();
-    serverProcess->deleteLater();
+    if (serverProcess->state() != QProcess::NotRunning) {
+      serverProcess->terminate();
+      serverProcess->waitForFinished(1000); // wait max 1 sec
+    }
+    delete serverProcess;
     serverProcess = nullptr;
     ui->logConsole->appendPlainText("[INFO] FSM server stopped.");
   }

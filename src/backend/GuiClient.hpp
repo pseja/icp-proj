@@ -11,6 +11,17 @@
 #include <QObject>
 #include <QTcpSocket>
 
+struct FsmStatus {
+    QString state;
+    QMap<QString, QString> inputs;
+    QMap<QString, QString> outputs;
+    struct Variable { QString name, type, value; };
+    QList<Variable> variables;
+    struct Timer { QString from, to, ms; };
+    QList<Timer> timers;
+};
+Q_DECLARE_METATYPE(FsmStatus)
+
 class GuiClient : public QObject {
     Q_OBJECT
    public:
@@ -37,7 +48,8 @@ signals:
   void printmsg(const QString &msg);
   void printerr(const QString &msg, const QString &code);
   void printlog(const QString &msg);
-  void requestedFSM(const QString& model);
+  void requestedFSM(const QString &model);
+  void fsmStatus(const FsmStatus& status);
  private:
   QTcpSocket* socket;
   QString m_host;
