@@ -22,6 +22,7 @@
 #include <qradiobutton.h>
 #include <qregularexpression.h>
 #include <qtextedit.h>
+#include <qtextlayout.h>
 #include <qvector.h>
 #include <QLineEdit>
 #include <qgraphicsitem.h>
@@ -90,6 +91,8 @@ MainWindow::MainWindow(QWidget *parent)
   //------------------------CLIENT SIGNALS------------------------
   connect(client, &GuiClient::stateChange, this, &MainWindow::stateChanged);
   connect(client, &GuiClient::printoutput, this, &MainWindow::printoutput);
+  connect(client, &GuiClient::printinput, this, &MainWindow::printinput);
+  connect(client, &GuiClient::printvariable, this, &MainWindow::printvariable);
   connect(client, &GuiClient::timerstart, this, &MainWindow::timerstart);
   connect(client, &GuiClient::timerend, this, &MainWindow::timerend);
   connect(client, &GuiClient::printmsg, this, &MainWindow::printmsg);
@@ -352,7 +355,38 @@ void MainWindow::stateChanged(QString stateName) {
 void MainWindow::printoutput(const QString &name, const QString &value) {
   QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
   ui->logConsole->appendPlainText(now + ": " + "[OUTPUT] " + name + " = " + value);
+  QTextEdit *output = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+  outputs.insert(name, value);
+  output->clear();
+  for (auto it = outputs.begin(); it != outputs.end(); ++it) {
+    output->append(it.key() + " = " + it.value());
+  }
 }
+void MainWindow::printinput(const QString &name, const QString &value) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": " + "[INPUT] " + name + " = " + value);
+  QTextEdit *input = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+  inputs.insert(name, value);
+  input->clear();
+  for (auto it = inputs.begin(); it != inputs.end(); ++it) {
+    input->append(it.key() + " = " + it.value());
+  }
+}
+void MainWindow::printvariable(const QString &name, const QString &value) {
+  QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+  ui->logConsole->appendPlainText(now + ": " + "[VARIABLE] " + name + " = " + value);
+  QTextEdit *variables = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+  for (Variable *var : fsm->getVariables()) {
+    if (var->getName() == name) {
+      var->setValue(value);
+    }
+  }
+  variables->clear();
+  for (Variable *var : fsm->getVariables()) {
+    variables->append(var->getName() + " = " + var->getValue().toString());
+  }
+}
+
 void MainWindow::timerstart(const QString &from, const QString &to, const QString &ms) {
   QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
   ui->logConsole->appendPlainText(now + ": Timer started from " + from + " to " + to + " for " + ms + " ms");
@@ -442,21 +476,33 @@ void MainWindow::requestedFSM(const QString &model) {
 }
 
 void MainWindow::fsmStatus(const FsmStatus &status) {
-  QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("statusEdit");
-  textEdit->clear();
+  QTextEdit *output = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+  QTextEdit *input = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+  QTextEdit *variables = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+  output->clear();
+  input->clear();
+  variables->clear();
+
   stateChanged(status.state);
-  textEdit->append("[LAST ACTIVE STATE] " + status.state);
+  ui->logConsole->appendPlainText("[LAST ACTIVE STATE] " + status.state);
+
   for (auto it = status.inputs.begin(); it != status.inputs.end(); ++it) {
-    textEdit->append("[LAST INPUT] " + it.key() + " = " + it.value());
+    ui->logConsole->appendPlainText("[LAST INPUT] " + it.key() + " = " + it.value());
+    input->append(it.key() + " = " + it.value());
+    inputs.insert(it.key(), it.value());
   }
   for (auto it = status.outputs.begin(); it != status.outputs.end(); ++it) {
-    textEdit->append("[LAST OUTPUT] " + it.key() + " = " + it.value());
+    ui->logConsole->appendPlainText("[LAST OUTPUT] " + it.key() + " = " + it.value());
+    output->append(it.key() + " = " + it.value());
+    outputs.insert(it.key(), it.value());
   }
   for (auto it = status.variables.begin(); it != status.variables.end(); ++it) {
-    textEdit->append("[LAST VARIABLE] " + it->name + " " + it->type + " = " + it->value);
+    ui->logConsole->appendPlainText("[LAST VARIABLE] " + it->name + " " + it->type + " = " + it->value);
+    variables->append(it->name + " = " + it->value);
+    fsm->getVariable(it->name)->setValue(it->value);
   }
   for (auto it = status.timers.begin(); it != status.timers.end(); ++it) {
-    textEdit->append("[LAST TIMER] " + it->from + " -> " + it->to + " " + it->ms + " ms");
+    ui->logConsole->appendPlainText("[LAST TIMER] " + it->from + " -> " + it->to + " " + it->ms + " ms");
     timerstart(it->from, it->to, it->ms);
   }
 }

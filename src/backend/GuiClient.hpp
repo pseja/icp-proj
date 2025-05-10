@@ -43,6 +43,8 @@ class GuiClient : public QObject {
 signals:
   void stateChange(const QString& state);
   void printoutput(const QString &name, const QString &value);
+  void printinput(const QString &name, const QString &value);
+  void printvariable(const QString &name, const QString &value);
   void timerstart(const QString &from, const QString &to, const QString &ms);
   void timerend(const QString &from, const QString &to);
   void printmsg(const QString &msg);

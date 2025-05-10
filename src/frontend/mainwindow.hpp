@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <qlistwidget.h>
+#include <qmap.h>
 #include <qobjectdefs.h>
 #include <qprocess.h>
 #include <qvector.h>
@@ -34,6 +35,8 @@ private slots:
     void on_addStateButton_clicked();
     void stateChanged(QString stateName);
     void printoutput(const QString &name, const QString &value);
+    void printinput(const QString &name, const QString &value);
+    void printvariable(const QString &name, const QString &value);
     void timerstart(const QString &from, const QString &to, const QString &ms);
     void timerend(const QString &from, const QString &to);
     void printmsg(const QString &msg);
@@ -73,6 +76,9 @@ private:
   TransitionItem *selectedTransition = nullptr;
   GuiClient *client;
   QProcess *serverProcess = nullptr;
+  QMap<QString, QString> inputs;
+  QMap<QString, QString> outputs;
+
 
 QString helpText = R"(Writing code for state actions and transition conditions
 ========================================================

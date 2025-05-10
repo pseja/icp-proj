@@ -151,6 +151,16 @@ void GuiClient::onReadyRead() {
                 QString value = root.firstChildElement("value").text();
                 emit printoutput(name, value);
                 qDebug() << "[OUTPUT]" << name << "=" << value;
+            } else if (type == "input") {
+                QString name = root.firstChildElement("name").text();
+                QString value = root.firstChildElement("value").text();
+                emit printinput(name, value);
+                qDebug() << "[INPUT]" << name << "=" << value;
+            } else if (type == "variable") {
+                QString name = root.firstChildElement("name").text();
+                QString value = root.firstChildElement("value").text();
+                emit printvariable(name, value);
+                qDebug() << "[VARIABLE]" << name << "=" << value;
             } else if (type == "timerStart") {
                 QString from = root.firstChildElement("from").text();
                 QString to = root.firstChildElement("to").text();

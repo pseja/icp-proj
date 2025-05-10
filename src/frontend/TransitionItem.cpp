@@ -25,7 +25,6 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
     QPointF p1 = startState->pos();
     QPointF p2 = endState->pos();
 
-    //the kitty tail algorithm, cascading (i love my kitty)
     if (fromState == toState) {
         QPointF p = fromState->pos();
         double baseAngle = 270.0;
