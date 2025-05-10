@@ -767,7 +767,12 @@ void MainWindow::runFSM() {
                              "  background: rgb(255,255,255);"
                              "  color: black;"
                              "}");
-  
+  for (QString name : fsm->getInputs()) {
+    inputs.insert(name, "");
+  }
+  for (QString name : fsm->getOutputs()) {
+    outputs.insert(name, "");
+  }
 
   QProcessEnvironment myenv = QProcessEnvironment::systemEnvironment();
   myenv.insert("LD_LIBRARY_PATH", "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib");
@@ -853,6 +858,7 @@ void MainWindow::runFSM() {
   QTimer::singleShot(750, this, [this]() {
     client->connectToServer();
   });
+  stateChanged(fsm->getInitialState()->getName());
 }
 
 void MainWindow::stopFSM() {

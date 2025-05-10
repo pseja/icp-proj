@@ -39,9 +39,9 @@ class FSM : public QStateMachine {
 
    public:
     /**
-     * @brief Constructs an FSM object with an optional parent.
+     * @brief Constructs an FSM object.
      *
-     * @param parent The parent QObject, if any.
+     * @param parent The parent object (optional).
      */
     FSM(QObject *parent = nullptr);
 
@@ -406,4 +406,9 @@ class FSM : public QStateMachine {
      * @param new_initial_fsm_xml The new initial XML representation.
      */
     void setInitialFSMXML(QString initial_fsm_xml);
+
+    /**
+     * @brief Pretty prints the FSM structure to the console.
+     */
+    void prettyPrint();
 };

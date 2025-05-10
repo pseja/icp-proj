@@ -8,6 +8,8 @@
 
 #include "fsm.hpp"
 
+#include <algorithm>
+
 #include "logger.hpp"
 
 FSM::FSM(QObject *parent) : QStateMachine(parent) {}
@@ -316,4 +318,144 @@ int FSM::removeTransitionsTo(State *state) {
     QString state_name = state->getName();
 
     return removeTransitionsTo(state_name);
+}
+
+QString truncateString(const QString &str, int header_length, int padding) {
+    if (str.length() <= header_length - padding) {
+        return str.leftJustified(header_length - padding);
+    } else {
+        return str.left(header_length - padding - 3) + "...";
+    }
+}
+
+void FSM::prettyPrint() {
+    QString header = name + (comment.isEmpty() ? "" : " - " + comment);
+    int header_length = header.length() + 2;
+    header_length = std::max(header_length, 40);
+
+    QString horizontal_border = "+" + QString(header_length, '-') + "+";
+    QString empty_line = "|" + QString(header_length, ' ') + "|";
+
+    qInfo() << horizontal_border.toStdString().c_str();
+    qInfo() << "|" << truncateString(header, header_length, 2).toStdString().c_str() << "|";
+    qInfo() << horizontal_border.toStdString().c_str();
+
+    if (!inputs.isEmpty()) {
+        QString inputs_header = "INPUTS";
+        int inputs_padding = (header_length - inputs_header.length()) / 2 - 2;
+        qInfo() << horizontal_border.toStdString().c_str();
+        qInfo() << "|" << QString(inputs_padding, ' ').toStdString().c_str() << inputs_header.toStdString().c_str()
+                << QString(header_length - inputs_padding - inputs_header.length() - 4, ' ').toStdString().c_str()
+                << "|";
+        qInfo() << horizontal_border.toStdString().c_str();
+
+        for (const QString &input : inputs.values()) {
+            qInfo() << "|" << truncateString(input, header_length, 2).toStdString().c_str() << "|";
+        }
+    }
+
+    if (!outputs.isEmpty()) {
+        QString outputs_header = "OUTPUTS";
+        int outputs_padding = (header_length - outputs_header.length()) / 2 - 2;
+        qInfo() << horizontal_border.toStdString().c_str();
+        qInfo() << "|" << QString(outputs_padding, ' ').toStdString().c_str() << outputs_header.toStdString().c_str()
+                << QString(header_length - outputs_padding - outputs_header.length() - 4, ' ').toStdString().c_str()
+                << "|";
+        qInfo() << horizontal_border.toStdString().c_str();
+
+        for (const QString &output : outputs.values()) {
+            qInfo() << "|" << truncateString(output, header_length, 2).toStdString().c_str() << "|";
+        }
+    }
+
+    if (!variable_map.isEmpty()) {
+        QString variables_header = "VARIABLES";
+        int variables_padding = (header_length - variables_header.length()) / 2 - 2;
+        qInfo() << horizontal_border.toStdString().c_str();
+        qInfo() << "|" << QString(variables_padding, ' ').toStdString().c_str()
+                << variables_header.toStdString().c_str()
+                << QString(header_length - variables_padding - variables_header.length() - 4, ' ').toStdString().c_str()
+                << "|";
+        qInfo() << horizontal_border.toStdString().c_str();
+
+        for (auto it = variable_map.constBegin(); it != variable_map.constEnd(); it++) {
+            Variable *variable = it.value();
+            QString var_line =
+                variable->getName() + " (" + variable->getType() + ") = " + variable->getValue().toString();
+            qInfo() << "|" << truncateString(var_line, header_length, 2).toStdString().c_str() << "|";
+        }
+    }
+
+    if (!state_map.isEmpty()) {
+        QString states_header = "STATES";
+        int states_padding = (header_length - states_header.length()) / 2 - 2;
+        qInfo() << "|" << QString(states_padding, ' ').toStdString().c_str() << states_header.toStdString().c_str()
+                << QString(header_length - states_padding - states_header.length() - 4, ' ').toStdString().c_str()
+                << "|";
+        qInfo() << horizontal_border.toStdString().c_str();
+
+        int state_count = 0;
+        for (auto it = state_map.constBegin(); it != state_map.constEnd(); it++, state_count++) {
+            State *state = it.value();
+            QString initial_tag = (state == initial_state) ? " [INITIAL]" : "";
+            QString state_line = "State: " + state->getName() + initial_tag;
+            qInfo() << "|" << truncateString(state_line, header_length, 2).toStdString().c_str() << "|";
+
+            if (!state->getCode().isEmpty()) {
+                QString code = state->getCode().simplified();
+                qInfo() << "| Code:" << QString(header_length - 8, ' ').toStdString().c_str() << "|";
+                qInfo() << "|" << truncateString(code, header_length, 2).toStdString().c_str() << "|";
+            }
+
+            if (state_count < state_map.size() - 1) {
+                qInfo() << "|" << QString(header_length - 2, '-').toStdString().c_str() << "|";
+            }
+        }
+    }
+
+    if (!from_transition_map.isEmpty()) {
+        QString transitions_header = "TRANSITIONS";
+        int transitions_padding = (header_length - transitions_header.length()) / 2 - 2;
+        qInfo() << horizontal_border.toStdString().c_str();
+        qInfo()
+            << "|" << QString(transitions_padding, ' ').toStdString().c_str()
+            << transitions_header.toStdString().c_str()
+            << QString(header_length - transitions_padding - transitions_header.length() - 4, ' ').toStdString().c_str()
+            << "|";
+        qInfo() << horizontal_border.toStdString().c_str();
+
+        for (auto it = from_transition_map.constBegin(); it != from_transition_map.constEnd(); it++) {
+            Transition *transition = it.value();
+
+            QString transition_info =
+                "Transition: " + transition->getFrom()->getName() + " -> " + transition->getTo()->getName();
+            qInfo() << "|" << truncateString(transition_info, header_length, 2).toStdString().c_str() << "|";
+
+            if (!transition->getEvent().isEmpty()) {
+                QString event_info = "Event: " + transition->getEvent();
+                qInfo() << "|" << truncateString(event_info, header_length, 2).toStdString().c_str() << "|";
+            }
+
+            if (!transition->getCondition().isEmpty()) {
+                QString condition_info = "Condition: " + transition->getCondition().simplified();
+                qInfo() << "|" << truncateString(condition_info, header_length, 2).toStdString().c_str() << "|";
+            }
+
+            if (transition->isDelayedTransition()) {
+                QString delay_info;
+                if (!transition->getDelayVariableName().isEmpty()) {
+                    delay_info = "Delay: " + transition->getDelayVariableName() + " ms";
+                } else {
+                    delay_info = "Delay: " + QString::number(transition->getDelay()) + " ms";
+                }
+                qInfo() << "|" << truncateString(delay_info, header_length, 2).toStdString().c_str() << "|";
+            }
+
+            if (it != from_transition_map.constEnd() - 1) {
+                qInfo() << "|" << QString(header_length - 2, '-').toStdString().c_str() << "|";
+            }
+        }
+    }
+
+    qInfo() << horizontal_border.toStdString().c_str();
 }
