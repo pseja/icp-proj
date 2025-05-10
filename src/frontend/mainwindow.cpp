@@ -172,9 +172,13 @@ void MainWindow::updateStateInfo(StateItem *state) {
   if (textedit) {
     textedit->setText(selectedState->state->getCode());
   }
-  if (radio) {
-    radio->setChecked(selectedState->state->isInitial());
-  }
+
+  bool blocked = false;
+  for (State *item : fsm->getStates()) {if(item->isInitial()) blocked = true;}
+  if (!blocked){radio->setEnabled(true); radio->setChecked(false);}
+  if (state->state->isInitial()) {radio->setEnabled(true); radio->setChecked(true);}
+  else {radio->setEnabled(false); radio->setChecked(false);}
+  
 
   /*
   QLineEdit *eventLine = ui->groupBox->findChild<QLineEdit *>("eventLineEdit");
@@ -274,6 +278,7 @@ void MainWindow::handleStateDeleted(StateItem *state) {
   for (QGraphicsItem* item : items) {
       TransitionItem* t = dynamic_cast<TransitionItem*>(item);
       if (t && (t->getFrom() == state || t->getTo() == state)) {
+        //VERY IMPORTANT NEED FSM IMPLEMENTATION OF REMOVE TRANSITION AND REMOVE STATE!!!!!!!!!!!!!!!!
         //fsm->removeTransition(t->transition);
         automatView->scene()->removeItem(t);
         delete t;
