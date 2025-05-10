@@ -129,6 +129,16 @@ void MainWindow::saveState() {
     // selectedState->setName(ui->lineEdit->text());
     // qDebug() << "trying to update code";
     // selectedState->setCodeSegment(ui->textEdit->toPlainText());
+    if (ui->lineEdit->text().isEmpty()) {
+      QMessageBox::warning(this, "Error", "State name cannot be empty.");
+      return;
+    }
+    for (State *state : fsm->getStates()) {
+      if (state != selectedState->state && state->getName() == ui->lineEdit->text()) {
+        QMessageBox::warning(this, "Error", "State name already exists.");
+        return;
+      }
+    }
     selectedState->updateState(ui->lineEdit->text(), ui->textEdit->toPlainText(), ui->radioButton_3->isChecked());
     if (ui->radioButton_3->isChecked()) {
       fsm->setInitialState(selectedState->state);
