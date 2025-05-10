@@ -43,8 +43,8 @@ void StateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     } else if (selectedAction == deleteAction) {
       qDebug() << "Mazání stavu!";
       emit stateDeleted(this);
-        scene()->removeItem(this);
-        delete this;
+        //scene()->removeItem(this);
+        //delete this;
     }
 }
 

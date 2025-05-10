@@ -29,6 +29,7 @@ public:
 private slots:
     void saveState();
     void updateStateInfo(StateItem *state);
+    void updateTransitionInfo(TransitionItem *transition);
     void on_addStateButton_clicked();
     void stateChanged(QString stateName);
     void printoutput(const QString &name, const QString &value);
@@ -44,12 +45,12 @@ private slots:
     void refreshFSM();
     void sudoclearFSM();
 public slots:
-  void handleStateDeleted();
+  void handleStateDeleted(StateItem *state);
   void addState(StateItem *state);
   void addTransition(TransitionItem *transition);
   void saveFSM();
   void loadFSM();
-  void editTransition(QListWidgetItem *item);
+  //void editTransition(QListWidgetItem *item);
   void saveTransition();
   void runFSM();
   void saveVars();

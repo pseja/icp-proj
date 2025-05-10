@@ -25,9 +25,10 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
     QPointF p1 = startState->pos();
     QPointF p2 = endState->pos();
 
+    //the kitty tail algorithm, cascading (i love my kitty)
     if (fromState == toState) {
         QPointF p = fromState->pos();
-        double baseAngle = 270.0; // nahoru
+        double baseAngle = 270.0;
         double angleStep = 30.0;
         double radius = 25.0 + 15.0 * offsetIndex;
         int maxTries = 12;
@@ -46,7 +47,7 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
             path.arcMoveTo(ellipseRect, angle);
             path.arcTo(ellipseRect, angle, -360);
 
-            //Kolizní detekce (zjednodušeně)
+            
             bool collision = false;
             if (scene()) {
                 for (QGraphicsItem* item : scene()->items(path.boundingRect())) {
@@ -184,6 +185,19 @@ StateItem* TransitionItem::getFrom() {
 
 StateItem* TransitionItem::getTo() {
   return toState;
+}
+
+void TransitionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+  QPen pen = this->pen();
+  if (isSelected()) {
+    pen.setColor(Qt::red);
+    pen.setWidth(5);
+  } else {
+    pen.setColor(Qt::black);
+    pen.setWidth(2);
+  }
+  painter->setPen(pen);
+  painter->drawPath(path());
 }
 
 /*

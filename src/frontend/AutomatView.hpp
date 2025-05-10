@@ -30,6 +30,7 @@ public:
 
 signals:
   void stateSelected(StateItem *state);
+  void transitionSelected(TransitionItem *transition);
   void addState(StateItem *state);
   void addTransition(TransitionItem *trans);
   void showFSMInfo();

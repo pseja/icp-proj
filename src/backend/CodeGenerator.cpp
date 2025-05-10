@@ -755,7 +755,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
                         QCoreApplication::quit();
                     });
             )cpp")
-            .arg(fsm->getXml(), fsm->getName());
+            .arg(fsm->getInitialFSMXML(), fsm->getName());
 
     QSet<QString> inputNames = fsm->getInputs();
     QSet<QString> outputNames = fsm->getOutputs();

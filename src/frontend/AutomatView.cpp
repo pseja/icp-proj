@@ -13,6 +13,7 @@
 #include <qline.h>
 #include <qlist.h>
 #include <qnamespace.h>
+#include <qobjectdefs.h>
 #include <qpen.h>
 #include <qpoint.h>
 #include <typeinfo>
@@ -90,6 +91,7 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
         break;
     } else if (typeid(*item) == typeid(TransitionItem)) {
       TransitionItem *transition = dynamic_cast<TransitionItem *>(item);
+      emit transitionSelected(transition);
       qDebug() << "Transition clicked!";
       qDebug() << "Transition from" << transition->getFrom()->state->getName()
                << "to" << transition->getTo()->state->getName();
