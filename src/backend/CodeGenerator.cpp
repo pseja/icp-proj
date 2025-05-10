@@ -77,16 +77,16 @@ QString CodeGenerator::generateHeaders() {
 #include <QtCore/QEvent>
 #include <QtCore/QAbstractTransition>
 #include <QtCore/QRegularExpression>
+#include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
+#include <QtXml/QDomDocument>
+#include <QtXml/QDomElement>
+#include <QtCore/QFile>
+#include <QtCore/QDir>
 #include <stdio.h>
 #include <unistd.h>
 #include <csignal>
 #include <functional>
-#include <QTcpServer>
-#include <QTcpSocket>
-#include <QDomDocument>
-#include <QDomElement>
-#include <QFile>
-#include <QDir>
     )cpp";
 }
 

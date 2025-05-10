@@ -598,6 +598,8 @@ void MainWindow::runFSM() {
   ui->buttonStop->setStyleSheet("background-color: red; color: white;");
   automatView->setLocked(true);
 
+  QProcessEnvironment myenv = QProcessEnvironment::systemEnvironment();
+  myenv.insert("LD_LIBRARY_PATH", "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib");
   QString xmlPath = QDir::temp().filePath("fsm_run.xml");
   XMLParser::FSMtoXML(*fsm, xmlPath);
 
@@ -620,12 +622,41 @@ void MainWindow::runFSM() {
   //compiling the generated code using g++
   //using process because compiler is not our class
   QString exe = QDir::temp().filePath("fsm_run");
-  QProcess compiling;
-  //missing qt5 libraries need to by added for compilation
+
+  QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+  env.insert("PKG_CONFIG_PATH", "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib/pkgconfig");
+  QProcess pkgConfigProc;
+  pkgConfigProc.setProcessEnvironment(env);
+  pkgConfigProc.start("pkg-config", QStringList() << "--cflags" << "--libs" << "Qt5Core" << "Qt5Network"
+                                                    << "Qt5Widgets" << "Qt5Xml" << "Qt5Gui");
+  if (!pkgConfigProc.waitForFinished() || pkgConfigProc.exitCode() != 0) {
+    ui->logConsole->appendPlainText("[ERROR] pkg-config failed!");
+    qDebug() << "pkg-config failed:" << pkgConfigProc.readAllStandardError();
+    return;
+  }
+  QString pkgFlags = QString::fromLocal8Bit(pkgConfigProc.readAllStandardOutput()).trimmed();
+  QStringList flagList = pkgFlags.split(' ');
+
+  QStringList filteredFlags;
+  for (const QString &flag : flagList) {
+    if (flag.startsWith("-I/tmp/Qt5.9.2")) continue;
+    if (flag.startsWith("-L/tmp/Qt5.9.2")) continue;
+    filteredFlags << flag;
+    qDebug() << "Filtered flag:" << flag;
+  }
+  filteredFlags << "-I/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/include";
+  filteredFlags << "-L/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib";
+  filteredFlags << "-lQt5Core" << "-lQt5Network" << "-lQt5Widgets" << "-lQt5Xml" << "-lQt5Gui";
+
   QStringList args = {genCpp, "-o", exe, "-fPIC", "-std=c++17"};
-  QString pkgConfig = "`pkg-config --cflags --libs Qt5Core Qt5Network Qt5Widgets Qt5Xml`";
-  QString command = QString("g++ %1 %2").arg(args.join(' '), pkgConfig);
-  compiling.start("bash", QStringList() << "-c" << command);
+  args.append(filteredFlags);
+
+  QString debugCmd = "g++ ";
+  for (const QString &arg : args) debugCmd += arg + " ";
+  qDebug() << "Compile command:" << debugCmd.trimmed();
+
+  QProcess compiling;
+  compiling.start("g++", args);
   if (!compiling.waitForFinished() || compiling.exitCode() != 0) {
     ui->logConsole->appendPlainText("[ERROR] Compilation failed!");
     qDebug() << "Compilation failed SADGE:" << compiling.readAllStandardError();
@@ -638,6 +669,7 @@ void MainWindow::runFSM() {
     serverProcess->deleteLater();
   }
   serverProcess = new QProcess(this);
+  serverProcess->setProcessEnvironment(myenv);
   serverProcess->start(exe, QStringList{});
   if (!serverProcess->waitForStarted()) {
     ui->logConsole->appendPlainText("[ERROR] Failed to start server process!");
