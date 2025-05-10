@@ -453,7 +453,9 @@ void MainWindow::printlog(const QString &msg) {
 void MainWindow::requestedFSM(const QString &model) {
   ui->logConsole->appendPlainText("[FSM XML RECEIVED]");
   sudoclearFSM();
-  QString tempPath = QDir::temp().filePath("req_fsm.xml");
+  QString user = QString::fromLocal8Bit(qgetenv("USER"));
+  if (user.isEmpty()) user = "unknown";
+  QString tempPath = QDir::temp().filePath(QString("req_fsm_%1.xml").arg(user));
   QFile file(tempPath);
   if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
       QTextStream out(&file);
@@ -558,6 +560,8 @@ void MainWindow::onConsoleEnter() {
     } else if (command == "refresh") {
       refreshFSM();
       ui->console->clear();
+    } else if (command == "prettyPrint") {
+      fsm->prettyPrint();
     } else if (command == "help") {
       QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
       ui->logConsole->appendPlainText(now + ": ");
@@ -776,13 +780,15 @@ void MainWindow::runFSM() {
 
   QProcessEnvironment myenv = QProcessEnvironment::systemEnvironment();
   myenv.insert("LD_LIBRARY_PATH", "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib");
-  QString xmlPath = QDir::temp().filePath("fsm_run.xml");
+  QString user = QString::fromLocal8Bit(qgetenv("USER"));
+  if (user.isEmpty()) user = "unknown";
+  QString xmlPath = QDir::temp().filePath("fsm_run_%1.xml").arg(user);
   XMLParser::FSMtoXML(*fsm, xmlPath);
 
   //code generation part, using codegen class
   CodeGenerator codeGen;
   QString generatedCode = codeGen.generateCode(fsm);
-  QString genCpp = QDir::temp().filePath("fsm_generated.cpp");
+  QString genCpp = QDir::temp().filePath("fsm_generated_%1.cpp").arg(user);
   QFile file(genCpp);
   //writing to file
   if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -797,7 +803,7 @@ void MainWindow::runFSM() {
 
   //compiling the generated code using g++
   //using process because compiler is not our class
-  QString exe = QDir::temp().filePath("fsm_run");
+  QString exe = QDir::temp().filePath(QString("fsm_run_%1").arg(user));
 
   QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
   env.insert("PKG_CONFIG_PATH", "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib/pkgconfig");
@@ -922,7 +928,9 @@ void MainWindow::sudoclearFSM() {
 }
 
 void MainWindow::refreshFSM() {
-  QString tempPath = QDir::temp().filePath("fsm_refresh.xml");
+  QString user = QString::fromLocal8Bit(qgetenv("USER"));
+  if (user.isEmpty()) user = "unknown";
+  QString tempPath = QDir::temp().filePath("fsm_refresh_%1.xml").arg(user);
   XMLParser::FSMtoXML(*fsm, tempPath);
 
   clearFSM();
