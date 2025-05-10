@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <qlistwidget.h>
 #include <qobjectdefs.h>
+#include <qprocess.h>
 #include <qvector.h>
 #include "AutomatView.hpp"
 #include "StateItem.hpp"
@@ -45,6 +46,7 @@ private slots:
     void refreshFSM();
     void sudoclearFSM();
     void deleteVar();
+    void stopFSM();
 public slots:
   void handleStateDeleted(StateItem *state);
   void addState(StateItem *state);
@@ -66,6 +68,7 @@ private:
   QVector<TransitionItem*> transitionItemsForSelectedState;
   TransitionItem *selectedTransition = nullptr;
   GuiClient *client;
+  QProcess *serverProcess;
 
 QString helpText = R"(Writing code for state actions and transition conditions
 ========================================================

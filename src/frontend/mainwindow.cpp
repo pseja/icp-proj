@@ -54,6 +54,9 @@ MainWindow::MainWindow(QWidget *parent)
   ui->groupBox_3->move(0, 0);
   showFSMInfo();
   ui->groupBox->setVisible(false);
+  ui->buttonStop->setEnabled(false);
+  ui->buttonRun->setStyleSheet("background-color: green; color: white;");
+  automatView->installEventFilter(this);
 
   //this will be done later, requires cmake moficiation and new speacial xml file
   //ui->pushButton->setIcon(QIcon(":/icons/11209980.png"));
@@ -78,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->pushButton_2, &QPushButton::pressed, this, &MainWindow::deleteVar);
   connect(ui->buttonClear, &QPushButton::pressed, this, &MainWindow::clearFSM);
   connect(ui->buttonRefresh, &QPushButton::pressed, this, &MainWindow::refreshFSM);
+  connect(ui->buttonStop, &QPushButton::pressed, this, &MainWindow::stopFSM);
   connect(ui->console, &QLineEdit::returnPressed, this, &MainWindow::onConsoleEnter);
   connect(ui->buttonBox_3, &QDialogButtonBox::accepted, this, &MainWindow::saveVars);
   connect(ui->buttonBox_2, &QDialogButtonBox::accepted, this,&MainWindow::saveState);
@@ -485,6 +489,7 @@ void MainWindow::deleteVar() {
   textEdit2->clear();
   for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
 }
+
 /*
 void MainWindow::editTransition(QListWidgetItem *item) {
   int row = ui->listWidget->row(item);
@@ -582,6 +587,17 @@ void MainWindow::loadFSM() {
 }
 
 void MainWindow::runFSM() {
+  ui->groupBox->setEnabled(false);
+  ui->groupBox_2->setEnabled(false);
+  ui->groupBox_3->setEnabled(false);
+  ui->buttonClear->setEnabled(false);
+  ui->buttonRun->setEnabled(false);
+  ui->buttonRefresh->setEnabled(false);
+  ui->buttonStop->setEnabled(true);
+  ui->buttonRun->setStyleSheet("");
+  ui->buttonStop->setStyleSheet("background-color: red; color: white;");
+  automatView->setLocked(true);
+
   QString xmlPath = QDir::temp().filePath("fsm_run.xml");
   XMLParser::FSMtoXML(*fsm, xmlPath);
 
@@ -596,6 +612,7 @@ void MainWindow::runFSM() {
     out << generatedCode;
     file.close();
   } else {
+    ui->logConsole->appendPlainText("[ERROR] Code generation failed!");
     qDebug() << "Failed to save generated code to file" << genCpp;
     return;
   }
@@ -610,21 +627,47 @@ void MainWindow::runFSM() {
   QString command = QString("g++ %1 %2").arg(args.join(' '), pkgConfig);
   compiling.start("bash", QStringList() << "-c" << command);
   if (!compiling.waitForFinished() || compiling.exitCode() != 0) {
+    ui->logConsole->appendPlainText("[ERROR] Compilation failed!");
     qDebug() << "Compilation failed SADGE:" << compiling.readAllStandardError();
     return;
   }
 
-  QProcess *serverProcess = new QProcess(this);
+  //QProcess *serverProcess = new QProcess(this);
+  if(serverProcess) {
+    serverProcess->kill();
+    serverProcess->deleteLater();
+  }
+  serverProcess = new QProcess(this);
   serverProcess->start(exe, QStringList{});
   if (!serverProcess->waitForStarted()) {
+    ui->logConsole->appendPlainText("[ERROR] Failed to start server process!");
     qDebug() << "Failed to start server process SADGE";
     return;
   }
   qDebug() << "Server is running RAAAAHHHH:" << serverProcess->processId();
-
+  ui->logConsole->appendPlainText("[INFO] FSM server started.");
   QTimer::singleShot(750, this, [this]() {
     client->connectToServer();
   });
+}
+
+void MainWindow::stopFSM() {
+  if (serverProcess) {
+    serverProcess->kill();
+    serverProcess->deleteLater();
+    serverProcess = nullptr;
+    ui->logConsole->appendPlainText("[INFO] FSM server stopped.");
+  }
+  ui->groupBox->setEnabled(true);
+  ui->groupBox_2->setEnabled(true);
+  ui->groupBox_3->setEnabled(true);
+  ui->buttonClear->setEnabled(true);
+  ui->buttonRun->setEnabled(true);
+  ui->buttonRefresh->setEnabled(true);
+  ui->buttonStop->setEnabled(false);
+  ui->buttonRun->setStyleSheet("background-color: green; color: white;");
+  ui->buttonStop->setStyleSheet("");
+  automatView->setLocked(false);
 }
 
 void MainWindow::clearFSM() {

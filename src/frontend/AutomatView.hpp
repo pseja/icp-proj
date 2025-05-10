@@ -27,7 +27,9 @@ class AutomatView : public QGraphicsView {
 
 public:
   explicit AutomatView(FSM *fsm, QWidget *parent = nullptr);
-
+  void setLocked(bool locked) { this->locked = locked; }
+  bool getLocked() { return locked; }
+  bool eventFilter(QObject *obj, QEvent *event) override;
 signals:
   void stateSelected(StateItem *state);
   void transitionSelected(TransitionItem *transition);
@@ -50,6 +52,7 @@ private:
   QGraphicsLineItem *templine = nullptr;
   FSM *fsm;
   int stateCounter = 1;
+  bool locked = false;
 //  QGraphicsScene *scene;
 };
 
