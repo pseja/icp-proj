@@ -75,6 +75,7 @@ MainWindow::MainWindow(QWidget *parent)
   //connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
+  connect(ui->pushButton_2, &QPushButton::pressed, this, &MainWindow::deleteVar);
   connect(ui->buttonClear, &QPushButton::pressed, this, &MainWindow::clearFSM);
   connect(ui->buttonRefresh, &QPushButton::pressed, this, &MainWindow::refreshFSM);
   connect(ui->console, &QLineEdit::returnPressed, this, &MainWindow::onConsoleEnter);
@@ -451,6 +452,39 @@ void MainWindow::saveVars() {
   for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
 }
 
+void MainWindow::deleteVar() {
+  QLineEdit *varName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_8");
+  QString variable = varName->text();
+  varName->clear();
+  qDebug() << "Deleting variable: " << variable;
+  if (variable.isEmpty()) return;
+  for (Variable *var : fsm->getVariables()) {
+    if (var->getName() == variable) {
+      fsm->removeVariable(var);
+    }
+  }
+  for (QString in : fsm->getInputs()) {
+    if (in == variable) {
+      fsm->removeInput(variable);
+    }
+  }
+  for (QString out : fsm->getOutputs()) {
+    if (out == variable) {
+      fsm->removeOutput(variable);
+    }
+  }
+  QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
+  textEdit->clear();
+  for (QString in : fsm->getInputs()) { textEdit->append(in); }
+
+  QTextEdit *textEdit1 = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
+  textEdit1->clear();
+  for (QString out : fsm->getOutputs()) { textEdit1->append(out); }
+
+  QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
+  textEdit2->clear();
+  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+}
 /*
 void MainWindow::editTransition(QListWidgetItem *item) {
   int row = ui->listWidget->row(item);
