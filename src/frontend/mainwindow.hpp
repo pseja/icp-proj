@@ -65,5 +65,55 @@ private:
   QVector<TransitionItem*> transitionItemsForSelectedState;
   TransitionItem *selectedTransition = nullptr;
   GuiClient *client;
+
+QString helpText = R"(Writing code for state actions and transition conditions
+========================================================
+
+Enter C++ code to define what happens when a state is entered, or to specify conditions for transitions. 
+Here’s what you need to know:
+
+Accessing variables
+-------------------
+- Custom variables: Use them by name (e.g., counter = 0;).
+- Inputs: Use valueof("inputName") to get the value as a QString.
+- Check if input is set: defined("inputName") returns true if the input has a value.
+- Check if input was called as an event: called("inputName") returns true if triggered (and resets the flag).
+
+Note: Values are handled as QStrings. Use the provided helper function for conversions:
+- Use `Qtoi(qstring)` to convert a QString to int.
+
+Setting outputs
+---------------
+- Use output("outputName", value); to set an output (value can be a number or string).
+
+Timers and time
+---------------
+- Use elapsed() to get milliseconds since the state was entered.
+
+Writing conditions (for transitions)
+------------------------------------
+- Write any valid C++ boolean expression.
+- You can use variables, valueof(), defined(), and called() in your expressions.
+
+Limitations
+-----------
+- All variables are global; avoid name conflicts.
+- No advanced C++ features (e.g., custom includes, classes).
+- Code runs synchronously; avoid long-running operations.
+
+Example snippets
+----------------
+- Set a variable and output:
+  counter = counter + 1;
+  output("led", counter > 5 ? 1 : 0);
+- Transition condition:
+  valueof("button") == "pressed" && counter < 10
+- Convert input to int:
+  Qtoi(valueof("input1")) > 5
+
+Tip: Keep your code simple and focused on logic. Use the provided helper functions for interacting with inputs, outputs, and logging. 
+Remember to use Qtoi for conversions when working with QStrings. Also check out official QString Qt5.9 documentation. )";
+
+
 };
 #endif // MAINWINDOW_HPP
