@@ -56,7 +56,6 @@ MainWindow::MainWindow(QWidget *parent)
   ui->groupBox->setVisible(false);
   ui->buttonStop->setEnabled(false);
   ui->buttonRun->setStyleSheet("background-color: green; color: white;");
-  automatView->installEventFilter(this);
 
   //this will be done later, requires cmake moficiation and new speacial xml file
   //ui->pushButton->setIcon(QIcon(":/icons/11209980.png"));
@@ -99,7 +98,17 @@ MainWindow::MainWindow(QWidget *parent)
   //---------------------------------------------------------------
 }
 
-MainWindow::~MainWindow() { automatView->disconnect(); client->disconnect(); delete ui; }
+MainWindow::~MainWindow() {
+  automatView->disconnect();
+  client->disconnect();
+  if (serverProcess) {
+    serverProcess->terminate();
+    serverProcess->waitForFinished();
+    delete serverProcess;
+  }
+  delete ui;
+}
+
 
 void MainWindow::on_addStateButton_clicked() {
 
@@ -596,7 +605,16 @@ void MainWindow::runFSM() {
   ui->buttonStop->setEnabled(true);
   ui->buttonRun->setStyleSheet("");
   ui->buttonStop->setStyleSheet("background-color: red; color: white;");
-  automatView->setLocked(true);
+  automatView->setEnabled(false);
+  automatView->setStyleSheet("QGraphicsView {"
+                             "  background: rgb(255,255,255);"
+                             "  color: black;"
+                             "}"
+                             "QGraphicsView:disabled {"
+                             "  background: rgb(255,255,255);"
+                             "  color: black;"
+                             "}");
+  
 
   QProcessEnvironment myenv = QProcessEnvironment::systemEnvironment();
   myenv.insert("LD_LIBRARY_PATH", "/usr/local/share/Qt-5.9.2/5.9.2/gcc_64/lib");
@@ -699,7 +717,7 @@ void MainWindow::stopFSM() {
   ui->buttonStop->setEnabled(false);
   ui->buttonRun->setStyleSheet("background-color: green; color: white;");
   ui->buttonStop->setStyleSheet("");
-  automatView->setLocked(false);
+  automatView->setEnabled(true);
 }
 
 void MainWindow::clearFSM() {

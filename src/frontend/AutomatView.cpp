@@ -184,24 +184,3 @@ void AutomatView::mouseMoveEvent(QMouseEvent *event) {
 void AutomatView::mouseReleaseEvent(QMouseEvent *event) {
   QGraphicsView::mouseReleaseEvent(event);
 }
-
-bool AutomatView::eventFilter(QObject *obj, QEvent *event) {
-  if (locked) {
-    if (event->type() == QEvent::Paint || event->type() == QEvent::Timer) {
-      return QGraphicsView::eventFilter(obj, event);
-    }
-    // Zahoď všechny vstupní události
-    if (event->type() == QEvent::MouseButtonPress ||
-        event->type() == QEvent::MouseButtonRelease ||
-        event->type() == QEvent::MouseButtonDblClick ||
-        event->type() == QEvent::MouseMove ||
-        event->type() == QEvent::Wheel ||
-        event->type() == QEvent::KeyPress ||
-        event->type() == QEvent::KeyRelease ||
-        event->type() == QEvent::FocusIn ||
-        event->type() == QEvent::FocusOut) {
-        return true; // zahoď
-    }
-  }
-  return QGraphicsView::eventFilter(obj, event);
-}

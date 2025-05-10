@@ -192,9 +192,6 @@ void TransitionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
   if (isSelected()) {
     pen.setColor(Qt::red);
     pen.setWidth(5);
-  } else {
-    pen.setColor(Qt::black);
-    pen.setWidth(2);
   }
   painter->setPen(pen);
   painter->drawPath(path());
