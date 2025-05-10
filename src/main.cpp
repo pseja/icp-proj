@@ -17,6 +17,7 @@
 
 int main(int argc, char* argv[]) {
   QApplication app(argc, argv);
+  qRegisterMetaType<FsmStatus>("FsmStatus");
   MainWindow w;
   w.show();
 

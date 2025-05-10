@@ -96,6 +96,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(client, &GuiClient::printerr, this, &MainWindow::printerr);
   connect(client, &GuiClient::printlog, this, &MainWindow::printlog);
   connect(client, &GuiClient::requestedFSM, this, &MainWindow::requestedFSM);
+  connect(client, &GuiClient::fsmStatus, this, &MainWindow::fsmStatus);
   //---------------------------------------------------------------
 }
 
@@ -437,6 +438,26 @@ void MainWindow::requestedFSM(const QString &model) {
       transItem->setLabel(transition->getCondition());
       automatView->scene()->addItem(transItem);
     }
+  }
+}
+
+void MainWindow::fsmStatus(const FsmStatus &status) {
+  QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("statusEdit");
+  textEdit->clear();
+  stateChanged(status.state);
+  textEdit->append("[LAST ACTIVE STATE] " + status.state);
+  for (auto it = status.inputs.begin(); it != status.inputs.end(); ++it) {
+    textEdit->append("[LAST INPUT] " + it.key() + " = " + it.value());
+  }
+  for (auto it = status.outputs.begin(); it != status.outputs.end(); ++it) {
+    textEdit->append("[LAST OUTPUT] " + it.key() + " = " + it.value());
+  }
+  for (auto it = status.variables.begin(); it != status.variables.end(); ++it) {
+    textEdit->append("[LAST VARIABLE] " + it->name + " " + it->type + " = " + it->value);
+  }
+  for (auto it = status.timers.begin(); it != status.timers.end(); ++it) {
+    textEdit->append("[LAST TIMER] " + it->from + " -> " + it->to + " " + it->ms + " ms");
+    timerstart(it->from, it->to, it->ms);
   }
 }
 

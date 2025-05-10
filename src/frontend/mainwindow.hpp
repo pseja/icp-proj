@@ -40,6 +40,7 @@ private slots:
     void printerr(const QString &msg, const QString &code);
     void printlog(const QString &msg);
     void requestedFSM(const QString &model);
+    void fsmStatus(const FsmStatus& status);
     void onConsoleEnter();
     void showFSMInfo();
     void resizeCode();
