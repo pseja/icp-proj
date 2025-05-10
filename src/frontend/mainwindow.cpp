@@ -115,6 +115,7 @@ MainWindow::~MainWindow() {
     delete serverProcess;
     serverProcess = nullptr;
   }
+  cleanupTempFiles();
   delete ui;
 }
 
@@ -991,4 +992,21 @@ void MainWindow::connectToFSM() {
   client->connectToServer();
   client->sendReqFSM();
   client->sendStatus();
+}
+
+void MainWindow::cleanupTempFiles() {
+  QString user = QString::fromLocal8Bit(qgetenv("USER"));
+  if (user.isEmpty()) user = "unknown";
+    QStringList files = {
+    QDir::temp().filePath(QString("fsm_run_%1.xml").arg(user)),
+    QDir::temp().filePath(QString("fsm_generated_%1.cpp").arg(user)),
+    QDir::temp().filePath(QString("fsm_run_%1").arg(user)),
+    QDir::temp().filePath(QString("fsm_refresh_%1.xml").arg(user)),
+    QDir::temp().filePath(QString("req_fsm_%1.xml").arg(user))
+  };
+  for (const QString &file : files) {
+    if (QFile::exists(file)) {
+      QFile::remove(file);
+    }
+  }
 }

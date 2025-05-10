@@ -72,6 +72,7 @@ private:
   AutomatView *automatView;
   StateItem *selectedState = nullptr;
   void loadAutomat(const QVector<StateItem *> &states);
+  void cleanupTempFiles();
   QVector<TransitionItem*> transitionItemsForSelectedState;
   TransitionItem *selectedTransition = nullptr;
   GuiClient *client;
