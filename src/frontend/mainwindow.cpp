@@ -47,7 +47,6 @@ MainWindow::MainWindow(QWidget *parent)
   ui->logConsole->setStyleSheet("background-color:rgb(203, 202, 202);");
   ui->console->setStyleSheet("background-color:rgb(138, 138, 138);");
   automatView->setGeometry(710, 30, 1205, 960);
-  fsm->addVariable(new Variable("int", "dummy", 0));
   client = new GuiClient("127.0.0.1", 54323, this);
   ui->groupBox_3->setEnabled(true);
   ui->groupBox_3->setVisible(true);
