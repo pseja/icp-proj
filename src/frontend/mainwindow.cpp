@@ -130,6 +130,9 @@ void MainWindow::saveState() {
     // qDebug() << "trying to update code";
     // selectedState->setCodeSegment(ui->textEdit->toPlainText());
     selectedState->updateState(ui->lineEdit->text(), ui->textEdit->toPlainText(), ui->radioButton_3->isChecked());
+    if (ui->radioButton_3->isChecked()) {
+      fsm->setInitialState(selectedState->state);
+    }
     //saveTransition();
   }
 }
@@ -196,11 +199,26 @@ void MainWindow::updateStateInfo(StateItem *state) {
     textedit->setText(selectedState->state->getCode());
   }
 
-  bool blocked = false;
-  for (State *item : fsm->getStates()) {if(item->isInitial()) blocked = true;}
-  if (!blocked){radio->setEnabled(true); radio->setChecked(false);}
-  if (state->state->isInitial()) {radio->setEnabled(true); radio->setChecked(true);}
-  else {radio->setEnabled(false); radio->setChecked(false);}
+bool otherInitial = false;
+for (State *item : fsm->getStates()) {
+    if (item != state->state && item->isInitial()) {
+        otherInitial = true;
+        break;
+    }
+}
+
+if (state->state->isInitial()) {
+    radio->setEnabled(true);
+    radio->setChecked(true);
+} else if (!otherInitial) {
+    // žádný jiný initial stav není, můžeš povolit
+    radio->setEnabled(true);
+    radio->setChecked(false);
+} else {
+    // už existuje jiný initial stav, zakázat
+    radio->setEnabled(false);
+    radio->setChecked(false);
+}
   
 
   /*
@@ -302,7 +320,7 @@ void MainWindow::handleStateDeleted(StateItem *state) {
       TransitionItem* t = dynamic_cast<TransitionItem*>(item);
       if (t && (t->getFrom() == state || t->getTo() == state)) {
         //VERY IMPORTANT NEED FSM IMPLEMENTATION OF REMOVE TRANSITION AND REMOVE STATE!!!!!!!!!!!!!!!!
-        //fsm->removeTransition(t->transition);
+        fsm->removeTransition(t->transition);
         automatView->scene()->removeItem(t);
         delete t;
       }

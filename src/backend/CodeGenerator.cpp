@@ -435,6 +435,7 @@ QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
         QMap<QPair<QString, QString>, QPair<qint64, int>> timers;  // [(from,to),(startime,duration)]
         QMap<QTcpSocket*, QTimer*> pingTimers;                     // Tracks pingpong keepalive timers per client
         QSet<QTcpSocket*> awaitingPong;                            // Tracks clients waiting for pong
+        QMap<QString, QVariant> internalVariables;  // Remembers variable values to send events in case they change
         )cpp";
 
     QMap<QString, Variable*> variables = fsm->getVariables();
@@ -501,18 +502,6 @@ QString CodeGenerator::generateRuntimeMonitoring() {
                 "HH:mm:"
                 "ss.zzz");
             qDebug().noquote() << "[" << timeStr << "]" << message;
-        }
-
-        /**
-         * @brief Logs state transitions for monitoring.
-         * @param stateName State name being entered.
-         */
-        void logStateChange(const QString& stateName) {
-            log(DOUBLE_SEPARATOR);
-            log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + stateName + ANSI_RESET + " ENTERED");
-            log(SECTION_SEPARATOR);
-            log("Executing onEntry action for state: " + ANSI_BOLD + stateName + ANSI_RESET);
-            log(SECTION_SEPARATOR);
         }
 
         /**
@@ -769,6 +758,14 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
     for (const QString& output : outputNames) {
         code += " outputs[QStringLiteral(\"" + output.trimmed() + "\")] = QString();\n";
     }
+
+    QMap<QString, Variable*> variables = fsm->getVariables();
+    for (auto it = variables.constBegin(); it != variables.constEnd(); ++it) {
+        QString varName = it.value()->getName();
+        code += " internalVariables[QStringLiteral(\"" + varName + "\")] = QVariant(" + varName + ");\n";
+        code += " log(\"Internal variable: " + varName + " = \" + internalVariables[QStringLiteral(\"" + varName +
+                "\")].toString());\n";
+    }
     code += "\n";
 
     code += " QSet<QString> validInputNames;\n";
@@ -802,11 +799,11 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
               }
               globalPrevStateName = currentStateName;
               log(DOUBLE_SEPARATOR);
-              log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + "%1" + ANSI_RESET + " ENTERED");
+              log(STATE_HEADER + ANSI_BOLD + COLOR_STATE + currentStateName + ANSI_RESET + " ENTERED");
               log(SECTION_SEPARATOR);
               for (QTcpSocket* clientSocket : clientSockets) {
                   if (clientSocket->state() == QAbstractSocket::ConnectedState) {
-                      QString stateMsg = QString("<event type=\"stateChange\"><name>%1</name></event>").arg(currentStateName);
+                      QString stateMsg = QString("<event type=\"stateChange\"><name>%1</name></event>");
                       clientSocket->write(buildEvent(stateMsg));
                       clientSocket->flush();
                   }
@@ -817,6 +814,33 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
         if (!onEntry.isEmpty()) {
             code += " log(\"Executing onEntry action for state: \" + ANSI_BOLD + \"" + stateName + "\" + ANSI_RESET);\n";
             code += onEntry + "\n";
+            
+            QMap<QString, Variable*> variables = fsm->getVariables();
+            for (auto varIt = variables.constBegin(); varIt != variables.constEnd(); ++varIt) {
+                QString varName = varIt.value()->getName();
+                code += " QVariant newValue = QVariant(" + varName + ");\n";
+                code += " if (internalVariables[\"" + varName + "\"] != newValue) {\n";
+                code += "     debug(\"Variable changed: " + varName + " = \" + newValue.toString());\n";
+                code += "     internalVariables[\"" + varName + "\"] = newValue;\n";
+                code += "     for (QTcpSocket* clientSocket : clientSockets) {\n";
+                code += "         if (clientSocket->state() == QAbstractSocket::ConnectedState) {\n";
+                code += "             QDomDocument doc;\n";
+                code += "             QDomElement element = doc.createElement(\"event\");\n";
+                code += "             element.setAttribute(\"type\", \"variable\");\n";
+                code += "             QDomElement nameElem = doc.createElement(\"name\");\n";
+                code += "             nameElem.appendChild(doc.createTextNode(\"" + varName + "\"));\n";
+                code += "             QDomElement valueElem = doc.createElement(\"value\");\n";
+                code += "             valueElem.appendChild(doc.createTextNode(newValue.toString()));\n";
+                code += "             element.appendChild(nameElem);\n";
+                code += "             element.appendChild(valueElem);\n";
+                code += "             doc.appendChild(element);\n";
+                code += "             clientSocket->write(buildEvent(doc.toString(-1)));\n";
+                code += "             clientSocket->flush();\n";
+                code += "             debug(\"Variable change broadcasted to client: \" + doc.toString(-1));\n";
+                code += "         }\n";
+                code += "     }\n";
+                code += " }\n";
+            }
         }
         code += "   log(SECTION_SEPARATOR);\n";
         code += "   log(\" \");\n";
@@ -911,10 +935,30 @@ QString CodeGenerator::generateTcpXmlProtocolServer(FSM* fsm) {
                             QString name = root.firstChildElement("name").text();
                             QString value = root.firstChildElement("value").text();
                             if (inputs.contains(name)) {
+                                bool changed = (inputs[name] != value);
                                 inputs[name] = value;
                                 setInputCalled(name);
                                 fsm.postEvent(new InputEvent(name, value));
                                 log("Input '" + name + "' set to '" + value + "' via TCP");
+                                if (changed) {
+                                    for (QTcpSocket* clientSocket : clientSockets) {
+                                        if (clientSocket->state() == QAbstractSocket::ConnectedState) {
+                                            QDomDocument doc;
+                                            QDomElement element = doc.createElement("event");
+                                            element.setAttribute("type", "input");
+                                            QDomElement nameElem = doc.createElement("name");
+                                            nameElem.appendChild(doc.createTextNode(name));
+                                            QDomElement valueElem = doc.createElement("value");
+                                            valueElem.appendChild(doc.createTextNode(value));
+                                            element.appendChild(nameElem);
+                                            element.appendChild(valueElem);
+                                            doc.appendChild(element);
+                                            clientSocket->write(buildEvent(doc.toString(-1)));
+                                            clientSocket->flush();
+                                            debug("Input change broadcasted to client: " + doc.toString(-1));
+                                        }
+                                    }
+                                }
                             } else {
                                 debug("TCP: Unknown input '" + name + "' in set command");
                                 sendError(ERR_UNKNOWN_INPUT, "Unknown input", socket);
@@ -1177,10 +1221,30 @@ QString CodeGenerator::generateTerminalInputHandler(FSM* fsm) {
             if (!value.isEmpty()) {
                 // SET mode: store the new value and trigger event
                 debug("SET MODE for '" + name + "' with value '" + value + "'");
+                bool changed = (inputs[name] != value);
                 inputs[name] = value;
                 logInputEvent(name, value);
                 setInputCalled(name);
                 fsm.postEvent(new InputEvent(name, value));
+                if (changed) {
+                    for (QTcpSocket* clientSocket : clientSockets) {
+                        if (clientSocket->state() == QAbstractSocket::ConnectedState) {
+                            QDomDocument doc;
+                            QDomElement element = doc.createElement("event");
+                            element.setAttribute("type", "input");
+                            QDomElement nameElem = doc.createElement("name");
+                            nameElem.appendChild(doc.createTextNode(name));
+                            QDomElement valueElem = doc.createElement("value");
+                            valueElem.appendChild(doc.createTextNode(value));
+                            element.appendChild(nameElem);
+                            element.appendChild(valueElem);
+                            doc.appendChild(element);
+                            clientSocket->write(buildEvent(doc.toString(-1)));
+                            clientSocket->flush();
+                            debug("Input change broadcasted to client: " + doc.toString(-1));
+                        }
+                    }
+                }
             } else {
                 // CALL mode: treat as pure event without changing stored value
                 debug("CALL MODE for '" + name + "'");

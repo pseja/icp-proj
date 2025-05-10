@@ -1,26 +1,24 @@
 <automaton name="Default FSM">
-    <inputs/>
-    <outputs/>
+    <inputs>
+        <input name="in"/>
+    </inputs>
+    <outputs>
+        <output name="out"/>
+    </outputs>
     <variables>
         <variable value="0" type="int" name="dummy"/>
     </variables>
     <states>
-        <state name="State1">
-            <code>cvazaf</code>
+        <state name="State1" initial="true">
+            <code><![CDATA[if(true){}]]></code>
         </state>
         <state name="State2">
-            <code>dgaszf</code>
+            <code><![CDATA[if(true){}]]></code>
         </state>
     </states>
     <transitions>
-        <transition to="State2" from="State1">
-            <condition event="Transition"></condition>
-        </transition>
-        <transition to="State2" from="State1">
-            <condition event="Transition"></condition>
-        </transition>
-        <transition to="State2" from="State1">
-            <condition event="Transition"></condition>
+        <transition from="State1" to="State2">
+            <condition event="in"><![CDATA[Qtoi(valueof("in")) == 1]]></condition>
         </transition>
     </transitions>
 </automaton>
