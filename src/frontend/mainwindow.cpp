@@ -173,6 +173,7 @@ void MainWindow::showFSMInfo() {
   QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
   QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
   QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
+  QLineEdit *fsmComment = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_9");
   QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
 
   inputsLine->clear();
@@ -180,6 +181,7 @@ void MainWindow::showFSMInfo() {
   varName->clear();
   typeEdit->clear();
   valueEdit->clear();
+  fsmComment->setText(fsm->getComment());
   fsmName->setText(fsm->getName());
   fsmLabel->setAlignment(Qt::AlignCenter);
   fsmLabel->setText(fsm->getName());
@@ -586,6 +588,7 @@ void MainWindow::saveVars() {
   QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
   QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
   QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
+  QLineEdit *fsmDescription = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_9");
   QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
 
   QString input = inputsLine->text();
@@ -602,6 +605,7 @@ void MainWindow::saveVars() {
   input.isEmpty() ? input.clear() : fsm->addInput(input);
   output.isEmpty() ? output.clear() : fsm->addOutput(output);
   fsmNameText.isEmpty() ? fsmNameText.clear() : fsm->setName(fsmNameText);
+  fsm->setComment(fsmDescription->text());
   inputsLine->clear();
   outputsLine->clear();
   varName->clear();
