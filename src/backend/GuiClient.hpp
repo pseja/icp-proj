@@ -37,6 +37,7 @@ signals:
   void printmsg(const QString &msg);
   void printerr(const QString &msg, const QString &code);
   void printlog(const QString &msg);
+  void requestedFSM(const QString& model);
  private:
   QTcpSocket* socket;
   QString m_host;

@@ -39,6 +39,7 @@ private slots:
     void printmsg(const QString &msg);
     void printerr(const QString &msg, const QString &code);
     void printlog(const QString &msg);
+    void requestedFSM(const QString &model);
     void onConsoleEnter();
     void showFSMInfo();
     void resizeCode();
@@ -47,6 +48,8 @@ private slots:
     void sudoclearFSM();
     void deleteVar();
     void stopFSM();
+    void connectToFSM();
+
 public slots:
   void handleStateDeleted(StateItem *state);
   void addState(StateItem *state);

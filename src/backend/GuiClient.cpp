@@ -8,6 +8,7 @@
 #include "GuiClient.hpp"
 
 #include "logger.hpp"
+#include <qobjectdefs.h>
 
 /**
  * @brief Construct a new GuiClient object for TCP communication.
@@ -165,6 +166,7 @@ void GuiClient::onReadyRead() {
                 QString model = root.firstChildElement("model").text();
                 qDebug() << "[FSM XML RECEIVED]";
                 qDebug().noquote() << model;
+                emit requestedFSM(model);
             } else if (type == "log" || type == "disconnect") {
                 QString msg = root.firstChildElement("message").text();
                 emit printmsg(msg);
