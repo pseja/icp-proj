@@ -17,6 +17,7 @@
 #include <qlist.h>
 #include <qlistwidget.h>
 #include <qmap.h>
+#include <qmessagebox.h>
 #include <qnamespace.h>
 #include <qprocess.h>
 #include <qradiobutton.h>
@@ -1005,6 +1006,15 @@ void MainWindow::sudoclearFSM() {
 }
 
 void MainWindow::refreshFSM() {
+  bool hasInitial = false;
+  for (State *state : fsm->getStates()) {
+    if (state->isInitial()) { hasInitial = true; break; }
+  }
+  if (!hasInitial) {
+    QMessageBox::warning(this, "Warning", "FSM has no initial state. Please set an initial state before refreshing.");
+    return;
+  }
+
   QString user = QString::fromLocal8Bit(qgetenv("USER"));
   if (user.isEmpty()) user = "unknown";
   QString tempPath = QDir::temp().filePath("fsm_refresh_%1.xml").arg(user);
