@@ -519,7 +519,7 @@ void MainWindow::requestedFSM(const QString &model) {
     qDebug() << "[ERROR] Could not write FSM XML to temp file:" << tempPath;
     return;
   }
-  XMLParser::XMLtoFSM(tempPath, *fsm);
+  if(!XMLParser::XMLtoFSM(tempPath, *fsm)){return;}
   ui->logConsole->appendPlainText("[FSM XML PARSED]");
   automatView->scene()->clear();
   int cols = ceil(sqrt(fsm->getStates().size()));
@@ -808,7 +808,7 @@ void MainWindow::loadFSM() {
                                                   tr("XML Files (*.xml)"));
   if (!fileName.isEmpty()) {
     automatView->scene()->clear();
-    XMLParser::XMLtoFSM(fileName, *fsm);
+    if(!XMLParser::XMLtoFSM(fileName, *fsm)){return;}
 
     int cols = ceil(sqrt(fsm->getStates().size()));
     int spacing = 120;
@@ -1086,7 +1086,7 @@ void MainWindow::refreshFSM() {
   XMLParser::FSMtoXML(*fsm, tempPath);
 
   sudoclearFSM();
-  XMLParser::XMLtoFSM(tempPath, *fsm);
+  if(!XMLParser::XMLtoFSM(tempPath, *fsm)){return;}
 
   int cols = ceil(sqrt(fsm->getStates().size()));
   int spacing = 120;
