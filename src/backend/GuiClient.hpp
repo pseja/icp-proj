@@ -36,6 +36,7 @@ class GuiClient : public QObject {
     void sendDisconnect();
     void sendShutdown();
     void sendPong();
+    bool isConnected() const { return socket && socket->state() == QAbstractSocket::ConnectedState; }
 
    public slots:
     void onReadyRead();
