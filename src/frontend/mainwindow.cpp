@@ -760,6 +760,18 @@ void MainWindow::saveTransition() {
   selectedTransition->transition->setCondition(conditionEdit->toPlainText());
   selectedTransition->setLabel(conditionEdit->toPlainText());
   selectedTransition->transition->setDelayVariableName(delayVarEdit->text());
+  
+  QString delayVarName = delayVarEdit->text();
+  int delayValue = -1;
+  if (!delayVarName.isEmpty()) {
+      Variable* delayVar = fsm->getVariable(delayVarName);
+      if (delayVar) {
+          delayValue = delayVar->getValue().toInt();
+          qDebug() << "Delay variable value: " << delayValue;
+          // TODO: only allow setting this if the variable is defined and is an int
+      }
+  }
+  selectedTransition->transition->setDelay(delayValue);
   updateTransitionInfo(selectedTransition);
   selectedTransition = nullptr;
 }
