@@ -364,6 +364,10 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
         QDomElement timersElem = doc.createElement("timers");
         extern QMap<QPair<QString, QString>, QPair<qint64, int>> timers;
         for (auto it = timers.constBegin(); it != timers.constEnd(); ++it) {
+            int ms = it.value().second;
+            if (ms < 0) {
+                continue;
+            }
             QString from = it.key().first;
             QString to = it.key().second;
             QDomElement timerElem = doc.createElement("timer");
@@ -372,7 +376,7 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
             QDomElement toElem = doc.createElement("to");
             toElem.appendChild(doc.createTextNode(to));
             QDomElement msElem = doc.createElement("ms");
-            msElem.appendChild(doc.createTextNode(QString::number(it.value().second)));
+            msElem.appendChild(doc.createTextNode(QString::number(ms)));
             timerElem.appendChild(fromElem);
             timerElem.appendChild(toElem);
             timerElem.appendChild(msElem);
