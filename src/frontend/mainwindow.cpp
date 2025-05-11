@@ -531,6 +531,7 @@ void MainWindow::requestedFSM(const QString &model) {
   }
   qDebug() << "Requesting status from FSM";
   client->sendStatus();
+  showFSMInfo();
 }
 
 void MainWindow::fsmStatus(const FsmStatus &status) {
@@ -784,10 +785,12 @@ void MainWindow::loadFSM() {
       QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
       textEdit2->clear();
       for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+    showFSMInfo();
   }
 }
 
 void MainWindow::runFSM() {
+  showFSMInfo();
   ui->groupBox->setEnabled(false);
   ui->groupBox_2->setEnabled(false);
   ui->groupBox_3->setEnabled(false);
@@ -1033,6 +1036,7 @@ void MainWindow::connectToFSM() {
     ui->logConsole->appendPlainText("[ERROR] Could not connect to FSM server.");
     return;
   }
+  showFSMInfo();
   ui->groupBox->setEnabled(false);
   ui->groupBox_2->setEnabled(false);
   ui->groupBox_3->setEnabled(false);
