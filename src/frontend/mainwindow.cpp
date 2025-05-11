@@ -145,6 +145,7 @@ void MainWindow::saveState() {
     if (ui->radioButton_3->isChecked()) {
       fsm->setInitialState(selectedState->state);
     }
+    updateStateInfo(selectedState);
     //saveTransition();
   }
 }
@@ -725,6 +726,7 @@ void MainWindow::saveTransition() {
   selectedTransition->setLabel(conditionEdit->text());
   selectedTransition->transition->setDelay(delayEdit->text().toInt());
   selectedTransition->transition->setDelayVariableName(delayVarEdit->text());
+  updateTransitionInfo(selectedTransition);
   selectedTransition = nullptr;
 }
 
