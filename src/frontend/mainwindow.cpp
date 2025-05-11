@@ -87,6 +87,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->actionTry_me, &QAction::triggered, this, &MainWindow::tryMe);
   connect(ui->actionCode_guidelines, &QAction::triggered, this, &MainWindow::codeGuidelines);
   connect(ui->actionAuthors, &QAction::triggered, this, &MainWindow::authors);
+  connect(ui->actionExport_as_XML, &QAction::triggered, this, &MainWindow::exportXML);
+  connect(ui->actionExport_as_cpp, &QAction::triggered, this, &MainWindow::exportCPP);
   //connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
@@ -351,8 +353,8 @@ void MainWindow::handleStateDeleted(StateItem *state) {
       TransitionItem* t = dynamic_cast<TransitionItem*>(item);
       if (t && (t->getFrom() == state || t->getTo() == state)) {
         //VERY IMPORTANT NEED FSM IMPLEMENTATION OF REMOVE TRANSITION AND REMOVE STATE!!!!!!!!!!!!!!!!
-        fsm->removeTransition(t->transition);
         automatView->scene()->removeItem(t);
+        //fsm->removeTransition(t->transition);
         delete t;
       }
   }
@@ -1191,4 +1193,30 @@ void MainWindow::authors() {
   layout->addWidget(buttonBox);
 
   dialog->exec();
+}
+
+void MainWindow::exportXML() {
+  QString fileName = QFileDialog::getSaveFileName(this, tr("Export FSM as XML"), "",
+                                                    tr("XML Files (*.xml)"));
+  if (!fileName.isEmpty()) {
+    XMLParser::FSMtoXML(*fsm, fileName);
+    ui->logConsole->appendPlainText("[INFO] FSM exported as XML: " + fileName);
+  }
+}
+void MainWindow::exportCPP() {
+  QString fileName = QFileDialog::getSaveFileName(this, tr("Export FSM as C++"), "",
+                                                    tr("C++ Files (*.cpp)"));
+  if (!fileName.isEmpty()) {
+    CodeGenerator codeGen;
+    QString generatedCode = codeGen.generateCode(fsm);
+    QFile file(fileName);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+      QTextStream out(&file);
+      out << generatedCode;
+      file.close();
+      ui->logConsole->appendPlainText("[INFO] FSM exported as C++: " + fileName);
+    } else {
+      ui->logConsole->appendPlainText("[ERROR] Failed to export FSM as C++!");
+    }
+  }
 }

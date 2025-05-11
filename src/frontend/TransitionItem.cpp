@@ -195,29 +195,31 @@ void TransitionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
   painter->setPen(pen);
   painter->drawPath(path());
 
-  QPainterPath p = path();
-  qreal totalLength = p.length();
-  qreal arrowDistance = 40.0;
-  qreal percent = 1.0 - (arrowDistance / totalLength);
-  if (percent < 0.0) percent = 0.0;
+  if (fromState != toState) {
+    QPainterPath p = path();
+    qreal totalLength = p.length();
+    qreal arrowDistance = 40.0;
+    qreal percent = 1.0 - (arrowDistance / totalLength);
+    if (percent < 0.0) percent = 0.0;
 
-  QPointF arrowPos = p.pointAtPercent(percent);
-  QPointF beforeArrow = p.pointAtPercent(percent - 0.01);
+    QPointF arrowPos = p.pointAtPercent(percent);
+    QPointF beforeArrow = p.pointAtPercent(percent - 0.01);
 
-  QLineF line(beforeArrow, arrowPos);
-  double angle = std::atan2(arrowPos.y() - beforeArrow.y(), arrowPos.x() - beforeArrow.x());
+    QLineF line(beforeArrow, arrowPos);
+    double angle = std::atan2(arrowPos.y() - beforeArrow.y(), arrowPos.x() - beforeArrow.x());
 
-  double arrowSize = 18.0;
-  QPointF arrowP1 = arrowPos + QPointF(std::cos(angle + M_PI / 7) * -arrowSize,
-                                         std::sin(angle + M_PI / 7) * -arrowSize);
-  QPointF arrowP2 = arrowPos + QPointF(std::cos(angle - M_PI / 7) * -arrowSize,
-                                         std::sin(angle - M_PI / 7) * -arrowSize);
+    double arrowSize = 18.0;
+    QPointF arrowP1 = arrowPos + QPointF(std::cos(angle + M_PI / 7) * -arrowSize,
+                                          std::sin(angle + M_PI / 7) * -arrowSize);
+    QPointF arrowP2 = arrowPos + QPointF(std::cos(angle - M_PI / 7) * -arrowSize,
+                                          std::sin(angle - M_PI / 7) * -arrowSize);
 
-  QPolygonF arrowHead;
-  arrowHead << arrowPos << arrowP1 << arrowP2;
+    QPolygonF arrowHead;
+    arrowHead << arrowPos << arrowP1 << arrowP2;
 
-  painter->setBrush(Qt::darkMagenta);
-  painter->drawPolygon(arrowHead);
+    painter->setBrush(Qt::darkMagenta);
+    painter->drawPolygon(arrowHead);
+  }
 }
 
 /*

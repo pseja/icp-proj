@@ -720,6 +720,8 @@
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionProperties"/>
+    <addaction name="actionExport_as_XML"/>
+    <addaction name="actionExport_as_cpp"/>
    </widget>
    <widget class="QMenu" name="menuConnect">
     <property name="title">
@@ -815,6 +817,16 @@
   <action name="actionTry_me">
    <property name="text">
     <string>Try me!</string>
+   </property>
+  </action>
+  <action name="actionExport_as_XML">
+   <property name="text">
+    <string>Export as .xml</string>
+   </property>
+  </action>
+  <action name="actionExport_as_cpp">
+   <property name="text">
+    <string>Export as .cpp</string>
    </property>
   </action>
  </widget>

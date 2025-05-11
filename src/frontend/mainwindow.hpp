@@ -56,6 +56,8 @@ private slots:
     void deleteVar();
     void stopFSM();
     void connectToFSM();
+    void exportXML();
+    void exportCPP();
 
 public slots:
   void handleStateDeleted(StateItem *state);
