@@ -187,7 +187,7 @@ void MainWindow::showFSMInfo() {
 
   QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
   textEdit2->clear();
-  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName() + " " + var->getType() + " = " + var->getValue().toString()); }
   
   QLineEdit *inputsLine = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_3");
   QLineEdit *outputsLine = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_4");
@@ -662,6 +662,7 @@ void MainWindow::saveVars() {
 
   if (!(variable.isEmpty() || type.isEmpty() || value.isEmpty())) {
     fsm->addVariable(new Variable(type, variable, value));
+    //QMessageBox::information(this, "Error", "Variable requires name, type and value.");
   }
 
   input.isEmpty() ? input.clear() : fsm->addInput(input);
@@ -685,10 +686,20 @@ void MainWindow::saveVars() {
 
   QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
   textEdit2->clear();
-  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName() + " " + var->getType() + " = " + var->getValue().toString()); }
 }
 
 void MainWindow::deleteVar() {
+  QMessageBox::StandardButton reply;
+  reply = QMessageBox::question(
+      this, "Delete Variable",
+      "ATTENTION: After deleting this variable it will no longer be available "
+      "in FSM transitions. DEFINITION OR CORRECTION REQUIRED. Do you want to "
+      "proceed?",
+      QMessageBox::Yes | QMessageBox::No);
+  if (reply == QMessageBox::No) {
+    return;
+  }
   QLineEdit *varName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_8");
   QString variable = varName->text();
   varName->clear();
@@ -719,7 +730,7 @@ void MainWindow::deleteVar() {
 
   QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
   textEdit2->clear();
-  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+  for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName() + " " + var->getType() + " = " + var->getValue().toString()); }
 }
 
 /*
@@ -836,7 +847,7 @@ void MainWindow::loadFSM() {
 
       QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
       textEdit2->clear();
-      for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+      for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName() + " " + var->getType() + " = " + var->getValue().toString()); }
     showFSMInfo();
   }
 }
@@ -1097,7 +1108,7 @@ void MainWindow::refreshFSM() {
 
     QTextEdit *textEdit2 = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
     textEdit2->clear();
-    for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName()); }
+    for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName() + " " + var->getType() + " = " + var->getValue().toString()); }
 }
 
 void MainWindow::connectToFSM() {
