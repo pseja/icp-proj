@@ -14,15 +14,20 @@
 #include <qgraphicssceneevent.h>
 #include <qobjectdefs.h>
 #include <qvariant.h>
-
 #include <QAction>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsSceneContextMenuEvent>
 #include <QMenu>
 #include <QObject>
-
 #include "backend/state.hpp"
-// #include "src/backend/state.hpp"
+#include <QGraphicsScene>
+#include <QDebug>
+#include <qglobal.h>
+#include <qgraphicsitem.h>
+#include <qgraphicssceneevent.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <QObject>
 
 /**
  * @class StateItem
