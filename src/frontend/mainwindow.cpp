@@ -732,7 +732,7 @@ void MainWindow::saveTransition() {
 }
 
 void MainWindow::loadFSM() {
-  sudoclearFSM();
+  clearFSM();
   QString fileName = QFileDialog::getOpenFileName(this, tr("Open FSM"), "",
                                                   tr("XML Files (*.xml)"));
   if (!fileName.isEmpty()) {
