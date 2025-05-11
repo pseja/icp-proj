@@ -1119,6 +1119,6 @@ void MainWindow::tryMe() {
   label->setFixedSize(600, 400);
   layout->addWidget(label);
   dialog->setWindowTitle("Kotěšení");
-  dialog->resize(600, 400); // volitelné
+  dialog->resize(600, 400);
   dialog->exec();
 }
