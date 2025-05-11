@@ -453,16 +453,32 @@ void MainWindow::printlog(const QString &msg) {
 }
 
 void MainWindow::requestedFSM(const QString &model) {
+  qDebug() << "got FSM";
   ui->logConsole->appendPlainText("[FSM XML RECEIVED]");
   sudoclearFSM();
   QString user = QString::fromLocal8Bit(qgetenv("USER"));
   if (user.isEmpty()) user = "unknown";
   QString tempPath = QDir::temp().filePath(QString("req_fsm_%1.xml").arg(user));
+
+  // extract <automaton>...</automaton> from the XML
+  QRegularExpression re(R"(<automaton[\s\S]*?</automaton>)");
+  QRegularExpressionMatch match = re.match(model);
+  if (!match.hasMatch()) {
+    qDebug() << "[ERROR] Could not find <automaton> element in model XML!";
+    ui->logConsole->appendPlainText("[ERROR] Could not find <automaton> element in model XML!");
+    return;
+  }
+  QString automatonXml = match.captured(0);
+
   QFile file(tempPath);
   if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-      QTextStream out(&file);
-      out << model;
-      file.close();
+    QTextStream out(&file);
+    out << automatonXml;
+    file.close();
+    qDebug() << "[DEBUG] FSM XML written to temp file:" << tempPath;
+  } else {
+    qDebug() << "[ERROR] Could not write FSM XML to temp file:" << tempPath;
+    return;
   }
   XMLParser::XMLtoFSM(tempPath, *fsm);
   ui->logConsole->appendPlainText("[FSM XML PARSED]");
@@ -477,6 +493,7 @@ void MainWindow::requestedFSM(const QString &model) {
     stateItem->setPos(100 + col * spacing, 100 + row * spacing);
     automatView->scene()->addItem(stateItem);
     state_map[state] = stateItem;
+    
 
     connect(stateItem, &StateItem::stateDeleted, this, &MainWindow::handleStateDeleted);
     if (++col >= cols) { col = 0; ++row; }
@@ -505,6 +522,8 @@ void MainWindow::requestedFSM(const QString &model) {
       automatView->scene()->addItem(transItem);
     }
   }
+  qDebug() << "Requesting status from FSM";
+  client->sendStatus();
 }
 
 void MainWindow::fsmStatus(const FsmStatus &status) {
@@ -531,7 +550,12 @@ void MainWindow::fsmStatus(const FsmStatus &status) {
   for (auto it = status.variables.begin(); it != status.variables.end(); ++it) {
     ui->logConsole->appendPlainText("[LAST VARIABLE] " + it->name + " " + it->type + " = " + it->value);
     variables->append(it->name + " = " + it->value);
-    fsm->getVariable(it->name)->setValue(it->value);
+    Variable* var = fsm->getVariable(it->name);
+    if (var) {
+      var->setValue(it->value);
+    } else {
+      fsm->addVariable(new Variable(it->type, it->name, it->value));
+    }
   }
   for (auto it = status.timers.begin(); it != status.timers.end(); ++it) {
     ui->logConsole->appendPlainText("[LAST TIMER] " + it->from + " -> " + it->to + " " + it->ms + " ms");
@@ -993,8 +1017,38 @@ void MainWindow::refreshFSM() {
 
 void MainWindow::connectToFSM() {
   client->connectToServer();
+  if (!client->isConnected()) {
+    ui->logConsole->appendPlainText("[ERROR] Could not connect to FSM server.");
+    return;
+  }
+  ui->groupBox->setEnabled(false);
+  ui->groupBox_2->setEnabled(false);
+  ui->groupBox_3->setEnabled(false);
+  ui->buttonClear->setEnabled(false);
+  ui->buttonRun->setEnabled(false);
+  ui->buttonRefresh->setEnabled(false);
+  ui->buttonStop->setEnabled(true);
+  ui->buttonRun->setStyleSheet("");
+  ui->buttonStop->setStyleSheet("background-color: red; color: white;");
+  automatView->setEnabled(false);
+  automatView->setStyleSheet("QGraphicsView {"
+                             "  background: rgb(255,255,255);"
+                             "  color: black;"
+                             "}"
+                             "QGraphicsView:disabled {"
+                             "  background: rgb(255,255,255);"
+                             "  color: black;"
+                             "}");
+  // Prepare input/output maps
+  inputs.clear();
+  outputs.clear();
+  for (QString name : fsm->getInputs()) {
+    inputs.insert(name, "");
+  }
+  for (QString name : fsm->getOutputs()) {
+    outputs.insert(name, "");
+  }
   client->sendReqFSM();
-  client->sendStatus();
 }
 
 void MainWindow::cleanupTempFiles() {
