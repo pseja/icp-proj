@@ -381,6 +381,7 @@ void MainWindow::addState(StateItem *StateItem) {
   if (!hasInitial) {
     StateItem->state->setInitial(true);
     StateItem->setPen(QPen(QColor(160, 32, 240), 5));
+    fsm->setInitialState(StateItem->state);
   }else {
     StateItem->state->setInitial(false);
   }
