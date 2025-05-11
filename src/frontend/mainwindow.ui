@@ -737,9 +737,19 @@
     <addaction name="actionColor"/>
     <addaction name="actionShape"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionCode_guidelines"/>
+    <addaction name="actionMore_information"/>
+    <addaction name="actionAuthors"/>
+    <addaction name="actionTry_me"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConnect"/>
    <addaction name="menuDesign"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -785,6 +795,26 @@
   <action name="actionShape">
    <property name="text">
     <string>Shape</string>
+   </property>
+  </action>
+  <action name="actionCode_guidelines">
+   <property name="text">
+    <string>Code guidelines</string>
+   </property>
+  </action>
+  <action name="actionMore_information">
+   <property name="text">
+    <string>More information</string>
+   </property>
+  </action>
+  <action name="actionAuthors">
+   <property name="text">
+    <string>Authors</string>
+   </property>
+  </action>
+  <action name="actionTry_me">
+   <property name="text">
+    <string>Try me!</string>
    </property>
   </action>
  </widget>

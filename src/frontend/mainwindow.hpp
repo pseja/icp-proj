@@ -12,6 +12,7 @@
 #include "backend/GuiClient.hpp"
 #include "backend/fsm.hpp"
 #include <QMessageBox>
+#include <QVBoxLayout>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -64,6 +65,7 @@ public slots:
   void saveTransition();
   void runFSM();
   void saveVars();
+  void tryMe();
   //void onReadyRead(const QString &data);
 
 private:

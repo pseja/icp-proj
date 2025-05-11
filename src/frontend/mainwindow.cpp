@@ -84,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
   //-------------------------UI SIGNALS--------------------------
   connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveFSM);
   connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::loadFSM);
+  connect(ui->actionTry_me, &QAction::triggered, this, &MainWindow::tryMe);
   //connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
@@ -1105,4 +1106,19 @@ void MainWindow::cleanupTempFiles() {
       QFile::remove(file);
     }
   }
+}
+
+void MainWindow::tryMe() {
+  //qDebug() << "Current working dir:" << QDir::currentPath();
+  QPixmap pixmap(QCoreApplication::applicationDirPath() + "/../src/icons/koteseni.jpeg");
+  QDialog *dialog = new QDialog(this);
+  QVBoxLayout *layout = new QVBoxLayout(dialog);
+  QLabel *label = new QLabel(dialog);
+  label->setPixmap(pixmap);
+  label->setScaledContents(true);
+  label->setFixedSize(600, 400);
+  layout->addWidget(label);
+  dialog->setWindowTitle("Kotěšení");
+  dialog->resize(600, 400); // volitelné
+  dialog->exec();
 }
