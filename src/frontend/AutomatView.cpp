@@ -1,3 +1,12 @@
+/**
+ * @file AutomatView.cpp
+ * @brief Implements the AutomatView class and its methods, which provide
+ *  a graphical view for the FSM editing.
+ *
+ * @author Vaclav Sovak (xsovakv00)
+ * @date 11-05-2025
+ */
+
 #include "AutomatView.hpp"
 #include "StateItem.hpp"
 #include <algorithm>

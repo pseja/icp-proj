@@ -1,5 +1,13 @@
+/**
+ * @file StateItem.cpp
+ * @brief Implements the StateItem class and its methods, which represent
+ * a state in the FSM editor.
+ *
+ * @author Vaclav Sovak (xsovakv00)
+ * @date 11-05-2025
+ */
+
 #include "StateItem.hpp"
-//#include "src/backend/state.hpp"
 #include <QGraphicsScene>
 #include <QDebug>
 #include <qglobal.h>

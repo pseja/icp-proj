@@ -1,3 +1,12 @@
+/**
+ * @file TransitionItem.cpp
+ * @brief Implements the TransitionItem class and its methods, which represent a transition 
+ * in the FSM graphical editor.
+ *
+ * @author Vaclav Sovak (xsovakv00)
+ * @date 11-05-2025
+ */
+
 #include "TransitionItem.hpp"
 #include "StateItem.hpp"
 #include "backend/transition.hpp"

@@ -1,3 +1,12 @@
+/**
+ * @file mainwindow.cpp
+ * @brief Implements the MainWindow class and its methods, which is the primary
+ *  GUI window for the Final state machine editor.
+ *
+ * @author Vaclav Sovak (xsovakv00)
+ * @date 11-05-2025
+ */
+
 #include "mainwindow.hpp"
 #include "AutomatView.hpp"
 #include "backend/CodeGenerator.hpp"
