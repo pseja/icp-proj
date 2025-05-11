@@ -536,6 +536,7 @@ void MainWindow::requestedFSM(const QString &model) {
 }
 
 void MainWindow::fsmStatus(const FsmStatus &status) {
+  ui->groupBox_3->setEnabled(false);
   QTextEdit *output = ui->groupBox_3->findChild<QTextEdit *>("outputsEdit");
   QTextEdit *input = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
   QTextEdit *variables = ui->groupBox_3->findChild<QTextEdit *>("variablesEdit");
