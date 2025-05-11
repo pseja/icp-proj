@@ -1085,9 +1085,7 @@ void MainWindow::refreshFSM() {
   QString tempPath = QDir::temp().filePath("fsm_refresh_%1.xml").arg(user);
   XMLParser::FSMtoXML(*fsm, tempPath);
 
-  if (!clearFSM()) {
-    return;
-  }
+  sudoclearFSM();
   XMLParser::XMLtoFSM(tempPath, *fsm);
 
   int cols = ceil(sqrt(fsm->getStates().size()));
