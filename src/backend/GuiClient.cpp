@@ -133,7 +133,7 @@ void GuiClient::onReadyRead() {
         if (prettyDoc.setContent(line)) {
             prettyXml = prettyDoc.toString(2);
         }
-        Logger::messageHandler(QtDebugMsg, {}, QString("Recieved command:\n%1").arg(prettyXml));
+        Logger::messageHandler(QtDebugMsg, {}, QString("Recieved event:\n%1").arg(prettyXml));
         QDomDocument doc;
         if (!doc.setContent(line)) {
             qWarning() << "Received malformed XML:" << line;
@@ -173,10 +173,13 @@ void GuiClient::onReadyRead() {
                 emit timerend(from, to);
                 qDebug() << "[TIMER EXPIRED] from" << from << "to" << to;
             } else if (type == "fsm") {
-                QString model = root.firstChildElement("model").text();
+                QDomElement modelElem = root.firstChildElement("model");
+                QString modelXml;
+                QTextStream stream(&modelXml);
+                modelElem.save(stream, 0);
                 qDebug() << "[FSM XML RECEIVED]";
-                qDebug().noquote() << model;
-                emit requestedFSM(model);
+                qDebug().noquote() << modelXml;
+                emit requestedFSM(modelXml);
             } else if (type == "log" || type == "disconnect") {
                 QString msg = root.firstChildElement("message").text();
                 emit printmsg(msg);
