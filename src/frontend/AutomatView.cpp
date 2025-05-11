@@ -8,43 +8,26 @@
  */
 
 #include "AutomatView.hpp"
-#include "StateItem.hpp"
-#include <algorithm>
-#include <asm-generic/errno.h>
-#include <linux/limits.h>
-#include <qdebug.h>
-#include <qevent.h>
-#include <qglobal.h>
-#include <qgraphicsitem.h>
-#include <qgraphicsscene.h>
-#include <qgraphicssceneevent.h>
-#include <qgraphicsview.h>
-#include <qline.h>
-#include <qlist.h>
-#include <qnamespace.h>
-#include <qobjectdefs.h>
-#include <qpen.h>
-#include <qpoint.h>
-#include <typeinfo>
 #include "mainwindow.hpp"
-#include "TransitionItem.hpp"
 
-// implementace automat platna
+
 AutomatView::AutomatView(FSM *fsm, QWidget *parent) : QGraphicsView(parent) {
-  setMinimumSize(400, 300); // Nastav minimální velikost
+  //minumum size for automat view and init of scene
+  setMinimumSize(400, 300); 
   setScene(new QGraphicsScene(this));
   setRenderHint(QPainter::Antialiasing);
-  // setDragMode(QGraphicsView::RubberBandDrag);
+
+  //setting options for future overrides
   setDragMode(QGraphicsView::NoDrag);
   scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
   scene()->setSceneRect(rect());
   scene()->installEventFilter(this);
-  //scene()->setSelectionMode(QGraphicsScene::SingleSelection);
-
+  
+  //connecting signal to handle whatever is selected
   connect(scene(), &QGraphicsScene::selectionChanged, this, &AutomatView::onSelection);
-  //setAcceptHoverEvents(true);
 }
 
+//simple event for dis-selecting items and showing info about FSM
 void AutomatView::onSelection() {
   QList<QGraphicsItem *> selectedItems = scene()->selectedItems();
   if (selectedItems.isEmpty()) {
@@ -52,13 +35,16 @@ void AutomatView::onSelection() {
   }
 }
 
+//overriding mouse press event to handle clicks on states and transitions
 void AutomatView::mousePressEvent(QMouseEvent *event) {
   QGraphicsView::mousePressEvent(event);
 
+  //deciding if the click should be registered as an end of transition
   if (transitionStart && templine) {
     QPointF scenePos = mapToScene(event->pos());
     QList<QGraphicsItem *> clicked = scene()->items(scenePos);
 
+    //going through all clicked items
     for (QGraphicsItem *item : clicked) {
       StateItem *endstate = dynamic_cast<StateItem *>(item);
       if (endstate) {
@@ -70,26 +56,25 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
           }
         }
         qDebug() << "creating transition";
+        //create transition
         TransitionItem *transition =
             new TransitionItem(transitionStart, endstate, nullptr, count);
 
         qDebug() << "transition created";
-        //fsm->addTransition(transition->transition);
-        scene()->addItem(transition);
-        emit addTransition(transition);
+        scene()->addItem(transition); // add transition to scene
+        emit addTransition(transition); // emit signal to add transition to FSM
         break;
       }
     }
+    //remove temporary line
     scene()->removeItem(templine);
     delete templine;
     templine = nullptr;
     transitionStart = nullptr;
   }
 
-  
-  //QPointF scenePos = mapToScene(event->pos());
   QList<QGraphicsItem *> clicked = scene()->selectedItems();
-
+  //selection of state or transition
   for (QGraphicsItem *item : clicked) {
     if (typeid(*item) == typeid(StateItem)) {
         //scene()->clearSelection();
@@ -115,16 +100,9 @@ void AutomatView::mousePressEvent(QMouseEvent *event) {
 
 void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
 
-  //auto ellipse = scene()->addEllipse(-20, -20, 40, 40, QPen(Qt::red), QBrush(Qt::yellow));
-  //ellipse->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-
-  
   QPointF scenePos = mapToScene(event->pos());
-  qDebug() << "Kliknuto na souřadnice:" << scenePos;
-  qDebug() << "got possion\n";
-  // Vytvoříme dočasný state jen pro kontrolu kolizí
 
-  
+  //begginging of transition line drawing
   QList<QGraphicsItem *> clicked = scene()->selectedItems();
   for (QGraphicsItem *item : clicked) {
     if (typeid(*item) == typeid(StateItem)) {
@@ -138,7 +116,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
   }
   
 
-  //kontroluju kolizi s jinym stateimtemem
+  //control of overlapping states for creating purposes
   for (QGraphicsItem *item : scene()->items()) {
     if (typeid(*item) == typeid(StateItem)) {
         if (item->boundingRect().translated(item->pos()).intersects(
@@ -154,14 +132,14 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
   qDebug() << "added state to fsm";
   //fsm->addState(tempState->state, "State");
   
-  // Zjistíme, jestli by se překrýval s jinými objekty
+  //is is overlapping with any other state
   for (QGraphicsItem *item : scene()->items()) {
     if (typeid(*item) == typeid(StateItem) && item->collidesWithItem(&tempState)) {
       return;
     }
   }
 
-  qDebug() << "if it doesnt collide\n";
+  //creating new state with unique name
   QString stateName = QString("State%1").arg(stateCounter++);
   StateItem *state = new StateItem(stateName);
   state->setBrush(Qt::cyan);
@@ -172,7 +150,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
   emit addState(state);
 
 
-  //couldnt find a better place to put it in
+  //couldnt find a better place to put it in, registering signal for deletion
   MainWindow *mainWin = qobject_cast<MainWindow *>(window());
   if (mainWin) {
     connect(state, &StateItem::stateDeleted, mainWin, &MainWindow::handleStateDeleted);
@@ -180,6 +158,7 @@ void AutomatView::mouseDoubleClickEvent(QMouseEvent *event) {
   //state->setSelected(true);
 }
 
+//overriding mouse move event to handle line drawing
 void AutomatView::mouseMoveEvent(QMouseEvent *event) {
   if (templine) {
     QPointF scenePos = mapToScene(event->pos());

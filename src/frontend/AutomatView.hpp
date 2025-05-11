@@ -22,7 +22,6 @@
 #include <qgraphicsview.h>
 #include <qobjectdefs.h>
 #include <qwidget.h>
-
 #include <QDebug>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
@@ -30,6 +29,25 @@
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <cstddef>
+#include "StateItem.hpp"
+#include <algorithm>
+#include <asm-generic/errno.h>
+#include <linux/limits.h>
+#include <qdebug.h>
+#include <qevent.h>
+#include <qglobal.h>
+#include <qgraphicsitem.h>
+#include <qgraphicsscene.h>
+#include <qgraphicssceneevent.h>
+#include <qgraphicsview.h>
+#include <qline.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qobjectdefs.h>
+#include <qpen.h>
+#include <qpoint.h>
+#include <typeinfo>
+#include "TransitionItem.hpp"
 
 /**
  * @class AutomatView
