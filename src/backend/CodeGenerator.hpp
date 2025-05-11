@@ -1,6 +1,7 @@
 /**
  * @file CodeGenerator.hpp
  * @brief Header file for the CodeGenerator class for generating C++ code from FSM memory instances.
+ *
  * @author xcsirim00
  * @date 8. May 2025
  */
