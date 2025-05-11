@@ -761,11 +761,18 @@ void MainWindow::saveTransition() {
   if(lineEdit->text().isEmpty() && conditionEdit->toPlainText().isEmpty() &&
      delayVarEdit->text().isEmpty()) {return;}
   */
+
   QString event = lineEdit->text();
   if (!event.isEmpty() && !fsm->getInputs().contains(event)) {
       QMessageBox::warning(this, "Error", "Event name must be an input.");
       return;
   }
+  QString delay = delayVarEdit->text();
+  if (!delay.isEmpty() && !fsm->getVariables().contains(delay)) {
+      QMessageBox::warning(this, "Error", "Variable must be declared.");
+      return;
+  }
+
 
   selectedTransition->transition->setEvent(lineEdit->text());
   selectedTransition->transition->setCondition(conditionEdit->toPlainText());
