@@ -1044,7 +1044,7 @@ void MainWindow::runFSM() {
   }
   serverProcess = new QProcess(this);
   serverProcess->setProcessEnvironment(myenv);
-  serverProcess->start(exe, QStringList{});
+  serverProcess->start(exe, QStringList{"--port", QString::number(client->getPort()), "--host", client->getHost()});
   if (!serverProcess->waitForStarted()) {
     ui->logConsole->appendPlainText("[ERROR] Failed to start server process!");
     qDebug() << "Failed to start server process SADGE";
