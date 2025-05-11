@@ -774,7 +774,6 @@
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
-    <addaction name="actionProperties"/>
     <addaction name="actionExport_as_XML"/>
     <addaction name="actionExport_as_cpp"/>
    </widget>
@@ -785,27 +784,17 @@
     <addaction name="actionAdd_connection"/>
     <addaction name="actionCheck_connection"/>
     <addaction name="actionConnect"/>
-    <addaction name="actionProperties_2"/>
-   </widget>
-   <widget class="QMenu" name="menuDesign">
-    <property name="title">
-     <string>Design</string>
-    </property>
-    <addaction name="actionColor"/>
-    <addaction name="actionShape"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
     <addaction name="actionCode_guidelines"/>
-    <addaction name="actionMore_information"/>
     <addaction name="actionAuthors"/>
     <addaction name="actionTry_me"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConnect"/>
-   <addaction name="menuDesign"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

@@ -36,6 +36,10 @@ class GuiClient : public QObject {
     void sendDisconnect();
     void sendShutdown();
     void sendPong();
+    void setHost(const QString& host) { m_host = host; }
+    void setPort(quint16 port) { m_port = port; }
+    QString getHost() const { return m_host; }
+    quint16 getPort() const { return m_port; }
     bool isConnected() const { return socket && socket->state() == QAbstractSocket::ConnectedState; }
 
    public slots:

@@ -207,6 +207,15 @@ class MainWindow : public QMainWindow {
     void connectToFSM();
 
     /**
+     * @brief Adds a new connection to the FSM server.
+     */
+    void addConnection();
+
+    /**
+     * @brief Checks the connection to the FSM server.
+     */
+    void checkConnection();
+    /**
      * @brief Exports the current FSM to XML format.
      */
     void exportXML();

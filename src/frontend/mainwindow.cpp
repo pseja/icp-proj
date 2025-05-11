@@ -90,6 +90,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->actionAuthors, &QAction::triggered, this, &MainWindow::authors);
   connect(ui->actionExport_as_XML, &QAction::triggered, this, &MainWindow::exportXML);
   connect(ui->actionExport_as_cpp, &QAction::triggered, this, &MainWindow::exportCPP);
+  connect(ui->actionAdd_connection, &QAction::triggered, this, &MainWindow::addConnection);
+  connect(ui->actionCheck_connection, &QAction::triggered, this, &MainWindow::checkConnection);
   //connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
@@ -1137,6 +1139,14 @@ void MainWindow::refreshFSM() {
     for (Variable *var : fsm->getVariables()) { textEdit2->append(var->getName() + " " + var->getType() + " = " + var->getValue().toString()); }
 }
 
+void MainWindow::checkConnection() {
+  if (client->isConnected()) {
+    QMessageBox::information(this, "Connection Status", "Connected to FSM server.");
+  } else {
+    QMessageBox::warning(this, "Connection Status", "Not connected to FSM server.");
+  }
+}
+
 void MainWindow::connectToFSM() {
   if (!client->isConnected()) {
     ui->logConsole->appendPlainText("[ERROR] Could not connect to FSM server.");
@@ -1187,6 +1197,42 @@ void MainWindow::cleanupTempFiles() {
     if (QFile::exists(file)) {
       QFile::remove(file);
     }
+  }
+}
+
+void MainWindow::addConnection() {
+  QDialog dialog(this);
+  dialog.setWindowTitle("Add Connection configuration");
+  dialog.resize(300, 120);
+
+  QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+  QLineEdit *hostEdit = new QLineEdit(&dialog);
+  hostEdit->setPlaceholderText("Host");
+  hostEdit->setText(client->getHost());
+
+  QLineEdit *portEdit = new QLineEdit(&dialog);
+  portEdit->setPlaceholderText("Port");
+  portEdit->setText(QString::number(client->getPort()));
+  portEdit->setValidator(new QIntValidator(1, 65535, portEdit));
+
+  layout->addWidget(new QLabel("Host:", &dialog));
+  layout->addWidget(hostEdit);
+  layout->addWidget(new QLabel("Port:", &dialog));
+  layout->addWidget(portEdit);
+
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+  layout->addWidget(buttonBox);
+
+  connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+  connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+  if (dialog.exec() == QDialog::Accepted) {
+    QString host = hostEdit->text();
+    int port = portEdit->text().toInt();
+    client->setHost(host);
+    client->setPort(port);
+    ui->logConsole->appendPlainText("[INFO] New Host set: " + host + ", port: " + QString::number(port));
   }
 }
 
