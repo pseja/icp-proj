@@ -514,7 +514,7 @@
      <property name="geometry">
       <rect>
        <x>120</x>
-       <y>200</y>
+       <y>140</y>
        <width>221</width>
        <height>22</height>
       </rect>
@@ -543,21 +543,11 @@
       <string>Event:</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="conditionLineEdit">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>80</y>
-       <width>261</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_5">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>180</y>
        <width>71</width>
        <height>16</height>
       </rect>
@@ -570,7 +560,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>140</y>
+       <y>80</y>
        <width>57</width>
        <height>14</height>
       </rect>
@@ -583,7 +573,7 @@
      <property name="geometry">
       <rect>
        <x>80</x>
-       <y>140</y>
+       <y>80</y>
        <width>261</width>
        <height>22</height>
       </rect>
@@ -593,7 +583,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>200</y>
+       <y>140</y>
        <width>101</width>
        <height>16</height>
       </rect>
@@ -667,6 +657,16 @@
      </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="conditionEdit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>200</y>
+       <width>331</width>
+       <height>91</height>
+      </rect>
      </property>
     </widget>
    </widget>

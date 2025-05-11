@@ -294,7 +294,7 @@ void MainWindow::updateTransitionInfo(TransitionItem *transition) {
   ui->groupBox_2->move(0, 0);
 
   QLineEdit *eventLine = ui->groupBox_2->findChild<QLineEdit *>("eventLineEdit");
-  QLineEdit *conditionLine = ui->groupBox_2->findChild<QLineEdit *>("conditionLineEdit");
+  QTextEdit *conditionLine = ui->groupBox_2->findChild<QTextEdit *>("conditionEdit");
   QLineEdit *delayLine = ui->groupBox_2->findChild<QLineEdit *>("delayLineEdit");
   QLineEdit *delayVarLine = ui->groupBox_2->findChild<QLineEdit *>("delayVarLineEdit");
   QLabel *fromLabel = ui->groupBox_2->findChild<QLabel *>("labelFrom");
@@ -729,15 +729,15 @@ void MainWindow::saveTransition() {
   if (!selectedTransition) return;
 
   QLineEdit *lineEdit = ui->groupBox_2->findChild<QLineEdit *>("eventLineEdit");
-  QLineEdit *conditionEdit = ui->groupBox_2->findChild<QLineEdit *>("conditionLineEdit");
+  QTextEdit *conditionEdit = ui->groupBox_2->findChild<QTextEdit *>("conditionEdit");
   QLineEdit *delayEdit = ui->groupBox_2->findChild<QLineEdit *>("delayLineEdit");
   QLineEdit *delayVarEdit = ui->groupBox_2->findChild<QLineEdit *>("delayVarLineEdit");
-  if(lineEdit->text().isEmpty() && conditionEdit->text().isEmpty() &&
+  if(lineEdit->text().isEmpty() && conditionEdit->toPlainText().isEmpty() &&
      delayEdit->text().isEmpty() && delayVarEdit->text().isEmpty()) {return;}
 
   selectedTransition->transition->setEvent(lineEdit->text());
-  selectedTransition->transition->setCondition(conditionEdit->text());
-  selectedTransition->setLabel(conditionEdit->text());
+  selectedTransition->transition->setCondition(conditionEdit->toPlainText());
+  selectedTransition->setLabel(conditionEdit->toPlainText());
   selectedTransition->transition->setDelay(delayEdit->text().toInt());
   selectedTransition->transition->setDelayVariableName(delayVarEdit->text());
   updateTransitionInfo(selectedTransition);
