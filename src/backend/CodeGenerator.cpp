@@ -19,19 +19,8 @@
 #include "transition.hpp"
 #include "variable.hpp"
 
-/**
- * @brief Constructor for CodeGenerator.
- *
- * @param parent Optional parent QObject.
- */
 CodeGenerator::CodeGenerator(QObject* parent) : QObject(parent) {}
 
-/**
- * @brief Generate the full C++ code for a given FSM.
- *
- * @param fsm Pointer to the FSM object to generate code from.
- * @return The generated C++ code as a QString.
- */
 QString CodeGenerator::generateCode(FSM* fsm) {
     QString code;
 
@@ -58,11 +47,6 @@ QString CodeGenerator::generateCode(FSM* fsm) {
     return code;
 }
 
-/**
- * @brief Generate standard C++ header includes for the generated file.
- *
- * @return C++ code section with all required #include directives as a QString.
- */
 QString CodeGenerator::generateHeaders() {
     return R"cpp(
 #include <QtCore/QDebug>
@@ -90,15 +74,6 @@ QString CodeGenerator::generateHeaders() {
     )cpp";
 }
 
-/**
- * @brief Generate helper and utility functions for the generated FSM code.
- *
- * Includes helpers for input/output, value access, conversion, event flagging,
- * timer management, and status reporting.
- *
- * @param fsm Pointer to the FSM object for which helpers are generated.
- * @return C++ code section with helper functions as a QString.
- */
 QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
     QString code;
 
@@ -417,12 +392,6 @@ QString CodeGenerator::generateHelperFunctions(FSM* fsm) {
     return code;
 }
 
-/**
- * @brief Generate global declarations for standard and custom variables required for the generated FSM code.
- *
- * @param fsm Pointer to the FSM object containing variable definitions.
- * @return C++ code section with variable declarations as a QString.
- */
 QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
     QString code =
         R"cpp(
@@ -454,14 +423,6 @@ QString CodeGenerator::generateVariableDeclarations(FSM* fsm) {
     return code;
 }
 
-/**
- * @brief Generate runtime monitoring functions for the FSM.
- *
- * Also provides logging, debug, and help display utilities for state transitions,
- * events, and debugging.
- *
- * @return C++ code section with runtime monitoring functions as a QString.
- */
 QString CodeGenerator::generateRuntimeMonitoring() {
     return R"cpp(
         /******************************************************************************
@@ -572,14 +533,6 @@ QString CodeGenerator::generateRuntimeMonitoring() {
     )cpp";
 }
 
-/**
- * @brief Generate C++ code for a single FSM transition.
- *
- * @param transition Pointer to the transition object.
- * @param sourceState Pointer to the source state.
- * @param targetState Pointer to the target state.
- * @return C++ code for the transition as a QString.
- */
 QString CodeGenerator::generateTransitionCode(Transition* transition, const State* sourceState,
                                               const State* targetState) {
     QString code;
@@ -652,15 +605,6 @@ QString CodeGenerator::generateTransitionCode(Transition* transition, const Stat
     return code;
 }
 
-/**
- * @brief Generate the main function and core classes for the FSM application.
- *
- * Additionally state setup, transitions, and event an loop.
- *
- * @param fsm Pointer to the FSM object containing states and transitions.
- * @return C++ code section with the main function and related classes as a
- * QString.
- */
 QString CodeGenerator::generateMainFunction(FSM* fsm) {
     QString code;
 
@@ -897,12 +841,6 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
     return code;
 }
 
-/**
- * @brief Generate the TCP XML protocol server logic for the FSM.
- *
- * @param fsm Pointer to the FSM object.
- * @return C++ code section with TCP server logic as a QString.
- */
 QString CodeGenerator::generateTcpXmlProtocolServer(FSM* fsm) {
     QString code =
         R"cpp(
@@ -1104,12 +1042,6 @@ QString CodeGenerator::generateTcpXmlProtocolServer(FSM* fsm) {
     return code;
 }
 
-/**
- * @brief Generate the terminal input handler logic for the FSM.
- *
- * @param fsm Pointer to the FSM object.
- * @return C++ code section with terminal input handler as a QString.
- */
 QString CodeGenerator::generateTerminalInputHandler(FSM* fsm) {
     QString code = R"cpp(
     FILE* terminalInput = fdopen(dup(STDIN_FILENO), "r");
@@ -1280,13 +1212,6 @@ QString CodeGenerator::generateTerminalInputHandler(FSM* fsm) {
     return code;
 }
 
-/**
- * @brief Generate the InputEvent class for FSM input events.
- *
- * Defines a custom QEvent subclass for input changes.
- *
- * @return C++ code section with the InputEvent class as a QString.
- */
 QString CodeGenerator::generateInputEventClass() {
     return R"cpp(
         /**
@@ -1307,14 +1232,6 @@ QString CodeGenerator::generateInputEventClass() {
     )cpp";
 }
 
-/**
- * @brief Generate the GeneratedTransition class for FSM transitions.
- *
- * Defines a custom QAbstractTransition subclass for runtime transitions in the
- * generated FSM code.
- *
- * @return C++ code section with the GeneratedTransition class as a QString.
- */
 QString CodeGenerator::generateGeneratedTransitionClass() {
     return R"cpp(
         /**

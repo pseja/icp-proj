@@ -23,26 +23,111 @@ class CodeGenerator : public QObject {
     Q_OBJECT
 
    public:
+    /**
+     * @brief Constructor for CodeGenerator.
+     *
+     * @param parent Optional parent QObject.
+     */
     explicit CodeGenerator(QObject *parent = nullptr);
 
     /**
-     * @brief Generates C++ code from a state machine
-     * @param fsm The state machine to generate code from
-     * @return Generated C++ code
+     * @brief Generate the full C++ code for a given FSM.
+     *
+     * @param fsm Pointer to the FSM object to generate code from.
+     * @return The generated C++ code as a QString.
      */
     QString generateCode(FSM *fsm);
 
    private:
+    /**
+     * @brief Generate standard C++ header includes for the generated file.
+     *
+     * @return C++ code section with all required #include directives as a QString.
+     */
     QString generateHeaders();
-    QString generateVariableDeclarations(FSM *fsm);
-    QString generateRuntimeMonitoring();
+
+    /**
+     * @brief Generate helper and utility functions for the generated FSM code.
+     *
+     * Includes helpers for input/output, value access, conversion, event flagging,
+     * timer management, and status reporting.
+     *
+     * @param fsm Pointer to the FSM object for which helpers are generated.
+     * @return C++ code section with helper functions as a QString.
+     */
     QString generateHelperFunctions(FSM *fsm);
-    QString generateMainFunction(FSM *fsm);
-    QString generateQStateMachineMain(FSM *fsm);
-    QString generateTcpXmlProtocolServer(FSM *fsm);
-    QString generateStateSetup(FSM *fsm);
-    QString generateTerminalInputHandler(FSM *fsm);
-    QString generateInputEventClass();
-    QString generateGeneratedTransitionClass();
+
+    /**
+     * @brief Generate global declarations for standard and custom variables required for the generated FSM code.
+     *
+     * @param fsm Pointer to the FSM object containing variable definitions.
+     * @return C++ code section with variable declarations as a QString.
+     */
+    QString generateVariableDeclarations(FSM *fsm);
+
+    /**
+     * @brief Generate runtime monitoring functions for the FSM.
+     *
+     * Also provides logging, debug, and help display utilities for state transitions,
+     * events, and debugging.
+     *
+     * @return C++ code section with runtime monitoring functions as a QString.
+     */
+    QString generateRuntimeMonitoring();
+
+    /**
+     * @brief Generate C++ code for a single FSM transition.
+     *
+     * @param transition Pointer to the transition object.
+     * @param sourceState Pointer to the source state.
+     * @param targetState Pointer to the target state.
+     * @return C++ code for the transition as a QString.
+     */
     QString generateTransitionCode(Transition *transition, const State *sourceState, const State *targetState);
+
+    /**
+     * @brief Generate the main function and core classes for the FSM application.
+     *
+     * Additionally state setup, transitions, and event an loop.
+     *
+     * @param fsm Pointer to the FSM object containing states and transitions.
+     * @return C++ code section with the main function and related classes as a
+     * QString.
+     */
+    QString generateMainFunction(FSM *fsm);
+
+    /**
+     * @brief Generate the TCP XML protocol server logic for the FSM.
+     *
+     * @param fsm Pointer to the FSM object.
+     * @return C++ code section with TCP server logic as a QString.
+     */
+    QString generateTcpXmlProtocolServer(FSM *fsm);
+
+    /**
+     * @brief Generate the terminal input handler logic for the FSM.
+     *
+     * @param fsm Pointer to the FSM object.
+     * @return C++ code section with terminal input handler as a QString.
+     */
+    QString generateTerminalInputHandler(FSM *fsm);
+
+    /**
+     * @brief Generate the InputEvent class for FSM input events.
+     *
+     * Defines a custom QEvent subclass for input changes.
+     *
+     * @return C++ code section with the InputEvent class as a QString.
+     */
+    QString generateInputEventClass();
+
+    /**
+     * @brief Generate the GeneratedTransition class for FSM transitions.
+     *
+     * Defines a custom QAbstractTransition subclass for runtime transitions in the
+     * generated FSM code.
+     *
+     * @return C++ code section with the GeneratedTransition class as a QString.
+     */
+    QString generateGeneratedTransitionClass();
 };

@@ -30,24 +30,92 @@ Q_DECLARE_METATYPE(FsmStatus)
 class GuiClient : public QObject {
     Q_OBJECT
    public:
+    /**
+     * @brief Construct a new GuiClient object for TCP communication.
+     *
+     * @param host Hostname or IP address of the FSM server.
+     * @param port TCP port of the FSM server.
+     * @param parent Optional parent QObject.
+     */
     explicit GuiClient(const QString &host = "127.0.0.1", quint16 port = 54323, QObject *parent = nullptr);
+
+    /**
+     * @brief Connect to the FSM server.
+     *
+     * Attempts to establish a TCP connection to the configured host and port.
+     * Logs the result of the connection attempt.
+     */
     void connectToServer();
+
+    /**
+     * @brief Send a raw XML command to the FSM server.
+     *
+     * @param xml The XML command to send.
+     */
+
     void sendCommand(const QString &xml);
+
+    /**
+     * @brief Send a 'set' command to the FSM server.
+     *
+     * @param name Name of the input.
+     * @param value Value to set.
+     */
     void sendSet(const QString &name, const QString &value);
+
+    /**
+     * @brief Send a 'call' command to the FSM server.
+     *
+     * @param name Name of the input to call.
+     */
     void sendCall(const QString &name);
+
+    /**
+     * @brief Request the current status from the FSM server.
+     */
     void sendStatus();
+
+    /**
+     * @brief Request help information from the FSM server.
+     */
     void sendHelp();
+
+    /**
+     * @brief Request the FSM model XML from the server.
+     */
     void sendReqFSM();
+
+    /**
+     * @brief Send a disconnect command to the FSM server.
+     */
     void sendDisconnect();
+
+    /**
+     * @brief Send a shutdown command to the FSM server.
+     */
     void sendShutdown();
+
+    /**
+     * @brief Send a pong response to the FSM server.
+     */
     void sendPong();
+
     void setHost(const QString &host) { m_host = host; }
+
     void setPort(quint16 port) { m_port = port; }
+
     QString getHost() const { return m_host; }
+
     quint16 getPort() const { return m_port; }
+
     bool isConnected() const { return socket && socket->state() == QAbstractSocket::ConnectedState; }
 
    public slots:
+    /**
+     * @brief Handle incoming data from the FSM server.
+     *
+     * Processes all received XML events and commands.
+     */
     void onReadyRead();
 
    signals:

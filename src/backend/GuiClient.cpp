@@ -12,24 +12,11 @@
 
 #include "logger.hpp"
 
-/**
- * @brief Construct a new GuiClient object for TCP communication.
- *
- * @param host Hostname or IP address of the FSM server.
- * @param port TCP port of the FSM server.
- * @param parent Optional parent QObject.
- */
 GuiClient::GuiClient(const QString& host, quint16 port, QObject* parent) : QObject(parent), m_host(host), m_port(port) {
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &GuiClient::onReadyRead);
 }
 
-/**
- * @brief Connect to the FSM server.
- *
- * Attempts to establish a TCP connection to the configured host and port.
- * Logs the result of the connection attempt.
- */
 void GuiClient::connectToServer() {
     socket->connectToHost(m_host, m_port);
     if (socket->waitForConnected(3000)) {
@@ -39,11 +26,6 @@ void GuiClient::connectToServer() {
     }
 }
 
-/**
- * @brief Send a raw XML command to the FSM server.
- *
- * @param xml The XML command to send.
- */
 void GuiClient::sendCommand(const QString& xml) {
     QByteArray msg = (xml + "\n").toUtf8();
     socket->write(msg);
@@ -51,81 +33,47 @@ void GuiClient::sendCommand(const QString& xml) {
     Logger::messageHandler(QtDebugMsg, {}, QString("Sent command: %1").arg(xml));
 }
 
-/**
- * @brief Send a 'set' command to the FSM server.
- *
- * @param name Name of the input.
- * @param value Value to set.
- */
 void GuiClient::sendSet(const QString& name, const QString& value) {
     QString xml = QString("<command type=\"set\"><name>%1</name><value>%2</value></command>")
                       .arg(name.toHtmlEscaped(), value.toHtmlEscaped());
     sendCommand(xml);
 }
 
-/**
- * @brief Send a 'call' command to the FSM server.
- *
- * @param name Name of the input to call.
- */
 void GuiClient::sendCall(const QString& name) {
     QString xml = QString("<command type=\"call\"><name>%1</name></command>").arg(name.toHtmlEscaped());
     sendCommand(xml);
 }
 
-/**
- * @brief Request the current status from the FSM server.
- */
 void GuiClient::sendStatus() {
     QString xml = "<command type=\"status\"></command>";
     sendCommand(xml);
 }
 
-/**
- * @brief Request help information from the FSM server.
- */
 void GuiClient::sendHelp() {
     QString xml = "<command type=\"help\"></command>";
     sendCommand(xml);
 }
 
-/**
- * @brief Request the FSM model XML from the server.
- */
 void GuiClient::sendReqFSM() {
     QString xml = "<command type=\"reqFSM\"></command>";
     sendCommand(xml);
 }
 
-/**
- * @brief Send a disconnect command to the FSM server.
- */
 void GuiClient::sendDisconnect() {
     QString xml = "<command type=\"disconnect\"></command>";
     sendCommand(xml);
 }
 
-/**
- * @brief Send a shutdown command to the FSM server.
- */
 void GuiClient::sendShutdown() {
     QString xml = "<command type=\"shutdown\"></command>";
     sendCommand(xml);
 }
 
-/**
- * @brief Send a pong response to the FSM server.
- */
 void GuiClient::sendPong() {
     QString pongXml = "<command type=\"pong\"/>";
     sendCommand(pongXml);
 }
 
-/**
- * @brief Handle incoming data from the FSM server.
- *
- * Processes all received XML events and commands.
- */
 void GuiClient::onReadyRead() {
     while (socket->canReadLine()) {
         QString line = QString::fromUtf8(socket->readLine()).trimmed();
