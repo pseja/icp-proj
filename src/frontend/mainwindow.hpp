@@ -174,7 +174,7 @@ class MainWindow : public QMainWindow {
     /**
      * @brief Clears the current FSM.
      */
-    void clearFSM();
+    bool clearFSM();
 
     /**
      * @brief Refreshes the FSM view.

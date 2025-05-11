@@ -800,7 +800,10 @@ void MainWindow::saveTransition() {
 }
 
 void MainWindow::loadFSM() {
-  clearFSM();
+  if (!automatView->scene()->items().isEmpty()) {
+    if (!clearFSM()) {return;}
+  }
+
   QString fileName = QFileDialog::getOpenFileName(this, tr("Open FSM"), "",
                                                   tr("XML Files (*.xml)"));
   if (!fileName.isEmpty()) {
@@ -1025,11 +1028,15 @@ void MainWindow::stopFSM() {
   automatView->setEnabled(true);
 }
 
-void MainWindow::clearFSM() {
+bool MainWindow::clearFSM() {
   auto answer = QMessageBox::question(this, "Clear FSM", "Are you sure you want to clear the FSM?", QMessageBox::Yes | QMessageBox::No);
   if (answer == QMessageBox::Yes) {
     sudoclearFSM();
+    return true;
+  } else {
+    return false;
   }
+  return false;
 }
 
 void MainWindow::sudoclearFSM() {
@@ -1078,7 +1085,9 @@ void MainWindow::refreshFSM() {
   QString tempPath = QDir::temp().filePath("fsm_refresh_%1.xml").arg(user);
   XMLParser::FSMtoXML(*fsm, tempPath);
 
-  clearFSM();
+  if (!clearFSM()) {
+    return;
+  }
   XMLParser::XMLtoFSM(tempPath, *fsm);
 
   int cols = ceil(sqrt(fsm->getStates().size()));
@@ -1135,7 +1144,6 @@ void MainWindow::refreshFSM() {
 }
 
 void MainWindow::checkConnection() {
-  client->connectToServer();
   if (client->isConnected()) {
     QMessageBox::information(this, "Connection Status", "Connected to FSM server.");
   } else {
@@ -1144,6 +1152,7 @@ void MainWindow::checkConnection() {
 }
 
 void MainWindow::connectToFSM() {
+  client->connectToServer();
   if (!client->isConnected()) {
     ui->logConsole->appendPlainText("[ERROR] Could not connect to FSM server.");
     return;
