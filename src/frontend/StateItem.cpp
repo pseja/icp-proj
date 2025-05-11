@@ -1,48 +1,76 @@
+/**
+ * @file StateItem.cpp
+ * @brief Implements the StateItem class and its methods, which represent
+ * a state in the FSM editor.
+ *
+ * @author Vaclav Sovak (xsovakv00)
+ * @date 11-05-2025
+ */
+
 #include "StateItem.hpp"
-#include <QGraphicsScene>
-#include <QDebug>
-#include <qglobal.h>
-#include <qgraphicsitem.h>
-#include <qnamespace.h>
-#include <qobject.h>
-#include <QObject>
+
 
 StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *parent)
     : QObject(), QGraphicsEllipseItem(-40, -40, 80, 80, parent) {
-  setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-  setBrush(Qt::cyan);
+  //object has to be movable and selectable
+  setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemSendsGeometryChanges);
+  setBrush(Qt::cyan); //we chose cyan color for the state
 
-  textItem = new QGraphicsTextItem(this);
+  //create a new state object, which is part of the graphical item
+  state = new State(name);
+  state->setCode(code); //setting code segment
+  textItem = new QGraphicsTextItem(this); //some label
   textItem->setDefaultTextColor(Qt::black);
-  stateName = "State";
-  textItem->setPlainText(stateName);
-  
 
-  QRectF bounds = boundingRect();
-  textItem->setPos(bounds.center() - textItem->boundingRect().center());
+  //setting the name of the state
+  textItem->setPlainText(state->getName());
+  QRectF ell = boundingRect();
+  QRectF text = textItem->boundingRect();
+  qreal x = ell.center().x() - text.width() / 2; //centering the text
+  qreal y = ell.center().y() - text.height() / 2;
+  textItem->setPos(x, y);
+
 }
 
+//overriding menu method to display the context menu
+//when right click is pressed
 void StateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     QMenu menu;
-    QAction *renameAction = menu.addAction("Přejmenovat");
-    QAction *deleteAction = menu.addAction("Smazat");
+    QAction *deleteAction = menu.addAction("Delete State");
 
     QAction *selectedAction = menu.exec(event->screenPos());
 
-    if (selectedAction == renameAction) {
-        qDebug() << "Přejmenovat stav!";
-    } else if (selectedAction == deleteAction) {
-      qDebug() << "Mazání stavu!";
-      emit stateDeleted(this);
-        scene()->removeItem(this);
-        delete this;
+    if (selectedAction == deleteAction) {
+      qDebug() << "State delete!";
+      emit stateDeleted(this); //sending signal to delete the state
     }
 }
 
-void StateItem::setName(const QString &newName) { stateName = newName; textItem->setPlainText(newName);}
-void StateItem::setCodeSegment(const QString &newCode) {
-  codeSegment = newCode;
+//updating the state with provided information a creating glow for initial state
+void StateItem::updateState(const QString &newName, const QString &newCode, bool initial) {
+  state->setName(newName);
+  textItem->setPlainText(newName);
+  state->setCode(newCode);
+  state->setInitial(initial);
+
+  if (initial) {
+    setPen(QPen(QColor(160, 32, 240), 5)); // purple color for initial state
+  } else {
+    setPen(QPen(Qt::black, 2));
+  }
+
+  //updating name of the state, centering it
+  textItem->setPlainText(state->getName());
+  QRectF ell = boundingRect();
+  QRectF text = textItem->boundingRect();
+  qreal x = ell.center().x() - text.width() / 2;
+  qreal y = ell.center().y() - text.height() / 2;
+  textItem->setPos(x, y);
 }
 
-QString StateItem::getName() { return stateName; }
-QString StateItem::getCodeSegment() {return codeSegment;}
+//overriding mouse move event to send signal when the state is moved
+void StateItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+  QGraphicsEllipseItem::mouseMoveEvent(event);
+  emit positionChanged(); //emiting signal when the state is moved, to recalculate text
+  //qDebug() << "debugging -> draging onto: " << event->pos();
+}

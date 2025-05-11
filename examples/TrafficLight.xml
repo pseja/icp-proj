@@ -1,0 +1,64 @@
+<automaton name="TrafficLight">
+    <comment>Traffic light simulator.</comment>
+    <inputs>
+        <input name="pedestrian_button" />
+    </inputs>
+    <outputs>
+        <output name="pedestrian_light" />
+        <output name="main_road_light" />
+        <output name="side_road_light" />
+    </outputs>
+    <variables>
+        <variable name="green_duration" type="int" value="3000" />
+        <variable name="pedestrian_duration" type="int" value="1500" />
+        <variable name="red_duration" type="int" value="2000" />
+        <variable name="yellow_duration" type="int" value="500" />
+    </variables>
+    <states>
+        <state name="MAIN_GREEN" initial="true">
+            <code><![CDATA[output("main_road_light", "green");
+output("side_road_light", "red");
+output("pedestrian_light", "dont_walk");]]></code>
+        </state>
+        <state name="MAIN_YELLOW">
+            <code><![CDATA[output("main_road_light", "yellow");
+output("side_road_light", "red");
+output("pedestrian_light", "dont_walk");]]></code>
+        </state>
+        <state name="PEDESTRIAN_WALK">
+            <code><![CDATA[output("main_road_light", "red");
+output("side_road_light", "red");
+output("pedestrian_light", "walk");]]></code>
+        </state>
+        <state name="SIDE_GREEN">
+            <code><![CDATA[output("main_road_light", "red");
+output("side_road_light", "green");
+output("pedestrian_light", "dont_walk");]]></code>
+        </state>
+        <state name="SIDE_YELLOW">
+            <code><![CDATA[output("main_road_light", "red");
+output("side_road_light", "yellow");
+output("pedestrian_light", "dont_walk");]]></code>
+        </state>
+    </states>
+    <transitions>
+        <transition from="MAIN_GREEN" to="MAIN_YELLOW">
+            <delay>green_duration</delay>
+        </transition>
+        <transition from="MAIN_GREEN" to="MAIN_YELLOW">
+            <condition event="pedestrian_button"><![CDATA[Qtoi(valueof("pedestrian_button")) == 1]]></condition>
+        </transition>
+        <transition from="MAIN_YELLOW" to="SIDE_GREEN">
+            <delay>yellow_duration</delay>
+        </transition>
+        <transition from="PEDESTRIAN_WALK" to="MAIN_GREEN">
+            <delay>pedestrian_duration</delay>
+        </transition>
+        <transition from="SIDE_GREEN" to="SIDE_YELLOW">
+            <delay>red_duration</delay>
+        </transition>
+        <transition from="SIDE_YELLOW" to="PEDESTRIAN_WALK">
+            <delay>yellow_duration</delay>
+        </transition>
+    </transitions>
+</automaton>

@@ -1,0 +1,33 @@
+<automaton name="CounterWithReset">
+    <comment>Counts up on 'inc' input, resets to zero on 'reset'.</comment>
+    <inputs>
+        <input name="inc" />
+        <input name="reset" />
+    </inputs>
+    <outputs>
+        <output name="count" />
+    </outputs>
+    <variables>
+        <variable name="counter" type="int" value="0" />
+        <variable name="timeout" type="int" value="10" />
+    </variables>
+    <states>
+        <state name="COUNTING" initial="true">
+            <code><![CDATA[output("count", counter);]]></code>
+        </state>
+        <state name="RESET">
+            <code><![CDATA[counter = 0; output("count", counter);]]></code>
+        </state>
+    </states>
+    <transitions>
+        <transition from="COUNTING" to="COUNTING">
+            <condition event="inc"><![CDATA[counter = counter + 1]]></condition>
+        </transition>
+        <transition from="COUNTING" to="RESET">
+            <condition event="reset" />
+        </transition>
+        <transition from="RESET" to="COUNTING">
+            <delay>timeout</delay>
+        </transition>
+    </transitions>
+</automaton>

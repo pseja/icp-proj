@@ -39,9 +39,9 @@ class FSM : public QStateMachine {
 
    public:
     /**
-     * @brief Constructs an FSM object with an optional parent.
+     * @brief Constructs an FSM object.
      *
-     * @param parent The parent QObject, if any.
+     * @param parent The parent object (optional).
      */
     FSM(QObject *parent = nullptr);
 
@@ -68,12 +68,34 @@ class FSM : public QStateMachine {
     void addState(State *new_state);
 
     /**
+     * @brief Removes a state from the FSM.
+     *
+     * Also removes all transitions going from this state.
+     *
+     * @param state_name The name of the state to remove.
+     *
+     * @return True if the state was successfully removed, false otherwise.
+     */
+    bool removeState(QString state_name);
+
+    /**
      * @brief Adds a state to the FSM with a specific name.
      *
      * @param new_state A pointer to the State object to add.
      * @param new_name The name of the state.
      */
     void addState(State *new_state, QString new_name);
+
+    /**
+     * @brief Removes a state from the FSM.
+     *
+     * Also removes all transitions going from this state.
+     *
+     * @param state A pointer to the State object to remove.
+     *
+     * @return True if the state was successfully removed, false otherwise.
+     */
+    bool removeState(State *state);
 
     /**
      * @brief Adds an input to the FSM.
@@ -83,6 +105,15 @@ class FSM : public QStateMachine {
     void addInput(QString new_input);
 
     /**
+     * @brief Removes an input from the FSM.
+     *
+     * @param input_name The name of the input to remove.
+     *
+     * @return True if the input was successfully removed, false otherwise.
+     */
+    bool removeInput(QString input_name);
+
+    /**
      * @brief Adds an output to the FSM.
      *
      * @param new_output The name of the output to add.
@@ -90,11 +121,29 @@ class FSM : public QStateMachine {
     void addOutput(QString new_output);
 
     /**
+     * @brief Removes an output from the FSM.
+     *
+     * @param output_name The name of the output to remove.
+     *
+     * @return True if the output was successfully removed, false otherwise.
+     */
+    bool removeOutput(QString output_name);
+
+    /**
      * @brief Adds a variable to the FSM.
      *
      * @param new_variable A pointer to the Variable object to add.
      */
     void addVariable(Variable *new_variable);
+
+    /**
+     * @brief Removes a variable from the FSM.
+     *
+     * @param variable A pointer to the Variable object to remove.
+     *
+     * @return True if the variable was successfully removed, false otherwise.
+     */
+    bool removeVariable(Variable *variable);
 
     /**
      * @brief Adds a variable to the FSM with specific attributes.
@@ -106,11 +155,29 @@ class FSM : public QStateMachine {
     void addVariable(QString new_variable_name, QString new_variable_type, QString new_variable_value);
 
     /**
+     * @brief Removes a variable from the FSM.
+     *
+     * @param variable_name The name of the variable to remove.
+     *
+     * @return True if the variable was successfully removed, false otherwise.
+     */
+    bool removeVariable(QString variable_name);
+
+    /**
      * @brief Adds a transition to the FSM.
      *
      * @param new_transition A pointer to the Transition object to add.
      */
     void addTransition(Transition *new_transition);
+
+    /**
+     * @brief Removes a transition from the FSM.
+     *
+     * @param transition A pointer to the Transition object to remove.
+     *
+     * @return True if the transition was successfully removed, false otherwise.
+     */
+    bool removeTransition(Transition *transition);
 
     /**
      * @brief Adds a transition to the FSM with specific attributes.
@@ -124,6 +191,62 @@ class FSM : public QStateMachine {
      */
     void addTransition(State *from, State *to, QString event, QString condition, int delay = -1,
                        QString delay_variable_name = "");
+
+    /**
+     * @brief Removes all transitions between two states.
+     *
+     * @param from_state The name of the source state.
+     * @param to_state The name of the target state.
+     *
+     * @return The number of transitions removed.
+     */
+    int removeTransitionsBetween(QString from_state, QString to_state);
+
+    /**
+     * @brief Removes all transitions between two states.
+     *
+     * @param from The source state.
+     * @param to The target state.
+     *
+     * @return The number of transitions removed.
+     */
+    int removeTransitionsBetween(State *from, State *to);
+
+    /**
+     * @brief Removes all transitions going from a specific state.
+     *
+     * @param state_name The name of the state.
+     *
+     * @return The number of transitions removed.
+     */
+    int removeTransitionsFrom(QString state_name);
+
+    /**
+     * @brief Removes all transitions going from a specific state.
+     *
+     * @param state The State object.
+     *
+     * @return The number of transitions removed.
+     */
+    int removeTransitionsFrom(State *state);
+
+    /**
+     * @brief Removes all transitions going to a specific state.
+     *
+     * @param state_name The name of the state.
+     *
+     * @return The number of transitions removed.
+     */
+    int removeTransitionsTo(QString state_name);
+
+    /**
+     * @brief Removes all transitions going to a specific state.
+     *
+     * @param state The State object.
+     *
+     * @return The number of transitions removed.
+     */
+    int removeTransitionsTo(State *state);
 
     /**
      * @brief Gets the name of the FSM.
@@ -283,4 +406,9 @@ class FSM : public QStateMachine {
      * @param new_initial_fsm_xml The new initial XML representation.
      */
     void setInitialFSMXML(QString initial_fsm_xml);
+
+    /**
+     * @brief Pretty prints the FSM structure to the console.
+     */
+    void prettyPrint();
 };

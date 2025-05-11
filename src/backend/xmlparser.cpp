@@ -386,11 +386,14 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path) {
     root.appendChild(variables_node);
 
     QMap<QString, State *> states = state_machine.getStates();
-    QDomElement states_node;
-    if (!states.isEmpty()) {
-        qInfo() << "Creating states node";
-        states_node = document.createElement("states");
+
+    if (states.isEmpty()) {
+        qCritical() << "No states found in FSM";
+        return false;
     }
+
+    qInfo() << "Creating states node";
+    QDomElement states_node = document.createElement("states");
 
     for (const auto &state : states) {
         qInfo() << "Creating state node";
@@ -415,6 +418,11 @@ bool XMLParser::FSMtoXML(FSM &state_machine, const QString &file_path) {
         states_node.appendChild(state_node);
     }
     root.appendChild(states_node);
+
+    if (state_machine.getInitialState() == nullptr) {
+        qCritical() << "No initial state found in FSM";
+        return false;
+    }
 
     QMultiMap<QString, Transition *> transitions = state_machine.getTransitions();
     QDomElement transitions_node;
