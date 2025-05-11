@@ -89,6 +89,9 @@ class TransitionItem : public QObject, public QGraphicsPathItem {
      */
     void setLabel(const QString &text) { label->setPlainText(text); }
 
+
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+
     /**
      * @brief Starts the transition blinking effect alternating between green and black.
      */
@@ -108,6 +111,9 @@ class TransitionItem : public QObject, public QGraphicsPathItem {
         if (blink) blink->stop();
         setPen(QPen(Qt::black, 2));
     }
+    
+  signals:
+    void transitionDeleted(TransitionItem *transition);
 
    private:
     /**

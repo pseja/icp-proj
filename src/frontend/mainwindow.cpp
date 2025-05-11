@@ -360,6 +360,12 @@ void MainWindow::handleStateDeleted(StateItem *state) {
   delete state;
 }
 
+void MainWindow::handleTransitionDeleted(TransitionItem *transition) {
+  fsm->removeTransition(transition->transition);
+  automatView->scene()->removeItem(transition);
+  delete transition;
+}
+
 void MainWindow::loadAutomat(const QVector<StateItem *> &states) {
   automatView->clearMask();
   for (StateItem *state : states) {
@@ -383,6 +389,7 @@ void MainWindow::addState(StateItem *StateItem) {
 }
 
 void MainWindow::addTransition(TransitionItem *transition) {
+  connect(transition, &TransitionItem::transitionDeleted, this, &MainWindow::handleTransitionDeleted);
   fsm->addTransition(transition->transition);
 }
 

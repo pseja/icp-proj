@@ -225,6 +225,13 @@ class MainWindow : public QMainWindow {
     void handleStateDeleted(StateItem *state);
 
     /**
+     * @brief Handles transition deletion events.
+     *
+     * @param transition The TransitionItem being deleted.
+     */
+    void handleTransitionDeleted(TransitionItem *transition);
+
+    /**
      * @brief Adds a new state to the FSM.
      *
      * @param state The StateItem to add.

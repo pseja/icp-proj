@@ -222,6 +222,17 @@ void TransitionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
   }
 }
 
+void TransitionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    QMenu menu;
+    QAction *deleteAction = menu.addAction("Delete Transition");
+
+    QAction *selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == deleteAction) {
+        emit transitionDeleted(this);
+    }
+}
+
 /*
 void TransitionItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
     setZValue(10);

@@ -33,14 +33,11 @@ StateItem::StateItem(const QString &name, const QString &code, QGraphicsItem *pa
 
 void StateItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     QMenu menu;
-    QAction *renameAction = menu.addAction("Přejmenovat");
-    QAction *deleteAction = menu.addAction("Smazat");
+    QAction *deleteAction = menu.addAction("Delete State");
 
     QAction *selectedAction = menu.exec(event->screenPos());
 
-    if (selectedAction == renameAction) {
-        qDebug() << "Přejmenovat stav!";
-    } else if (selectedAction == deleteAction) {
+    if (selectedAction == deleteAction) {
       qDebug() << "Mazání stavu!";
       emit stateDeleted(this);
         //scene()->removeItem(this);
