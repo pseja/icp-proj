@@ -723,7 +723,9 @@ void MainWindow::saveVars() {
 
   //variable cannot be empty
   if (!(variable.isEmpty() || type.isEmpty() || value.isEmpty())) {
-    fsm->addVariable(new Variable(type, variable, value));
+    Variable *var = new Variable(type, variable, value);
+    var->setProperty("initialValue", var->getValue());
+    fsm->addVariable(var);
     //QMessageBox::information(this, "Error", "Variable requires name, type and value.");
   }
 
@@ -1075,6 +1077,10 @@ void MainWindow::stopFSM() {
       client->sendShutdown();
     }
   }
+  for (Variable *var : fsm->getVariables()) {
+    var->setValue(var->property("initialValue").toString());
+  }
+  
   //stop blinking all transitions when fsm is stopped
   for (QGraphicsItem *item : automatView->scene()->items()) {
     if (typeid(*item) == typeid(TransitionItem)) {
