@@ -62,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   //init of label for fsm, idc its not pretty but automatview always redraws this
   ui->labelFSM = new QLabel(this);
-  ui->labelFSM->setText("Default FSM");
+  ui->labelFSM->setText("DefaultFSM");
   ui->labelFSM->setGeometry(1030, 50, 621, 51);
   ui->labelFSM->setStyleSheet("background: transparent; font-size: 36px;");
   ui->labelFSM->setAlignment(Qt::AlignCenter);
@@ -1065,7 +1065,7 @@ void MainWindow::sudoclearFSM() {
   ui->textEdit->clear();
   qDebug() << "Clearing FSM done";
   delete fsm;
-  fsm = new FSM("Default FSM");
+  fsm = new FSM("DefaultFSM");
   qDebug() << "Clearing FSM done";
   showFSMInfo();
 }
