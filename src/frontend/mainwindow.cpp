@@ -913,6 +913,11 @@ void MainWindow::stopFSM() {
     delete serverProcess;
     serverProcess = nullptr;
     ui->logConsole->appendPlainText("[INFO] FSM server stopped.");
+  } else {
+    if (client && client->isConnected()) {
+      qDebug() << "[DEBUG] Sending shutdown command to remote FSM server.";
+      client->sendShutdown();
+    }
   }
   ui->groupBox->setEnabled(true);
   ui->groupBox_2->setEnabled(true);
