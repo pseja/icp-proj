@@ -118,6 +118,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(client, &GuiClient::printlog, this, &MainWindow::printlog);
   connect(client, &GuiClient::requestedFSM, this, &MainWindow::requestedFSM);
   connect(client, &GuiClient::fsmStatus, this, &MainWindow::fsmStatus);
+  connect(client, &GuiClient::sendshutdown, this, &MainWindow::handleshutdown);
   //---------------------------------------------------------------
 }
 
@@ -604,6 +605,11 @@ void MainWindow::fsmStatus(const FsmStatus &status) {
     ui->logConsole->appendPlainText("[LAST TIMER] " + it->from + " -> " + it->to + " " + it->ms + " ms");
     timerstart(it->from, it->to, it->ms);
   }
+}
+
+void MainWindow::handleshutdown(const QString &msg) {
+  ui->logConsole->appendPlainText("[SHUTDOWN] FSM server is shutting down.");
+  stopFSM();
 }
 
 //mini parser for console commands

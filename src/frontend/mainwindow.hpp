@@ -157,6 +157,13 @@ class MainWindow : public QMainWindow {
     void fsmStatus(const FsmStatus &status);
 
     /**
+     * @brief Handles shutdown events from the server.
+     *
+     * @param msg Shutdown message.
+     */
+    void handleshutdown(const QString &msg);
+
+    /**
      * @brief Handles the user pressing Enter in the console input.
      */
     void onConsoleEnter();

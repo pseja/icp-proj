@@ -237,6 +237,7 @@ void GuiClient::onReadyRead() {
             } else if (type == "shutdown") {
                 QString shutdownMsg = root.firstChildElement("message").text();
                 qDebug() << "[SHUTDOWN] Server FSM shutting down:" << shutdownMsg;
+                emit sendshutdown(shutdownMsg);
             } else {
                 qDebug() << "[EVENT] type=" << type << line;
             }

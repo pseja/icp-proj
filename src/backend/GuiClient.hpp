@@ -56,7 +56,8 @@ signals:
   void printerr(const QString &msg, const QString &code);
   void printlog(const QString &msg);
   void requestedFSM(const QString &model);
-  void fsmStatus(const FsmStatus& status);
+  void fsmStatus(const FsmStatus &status);
+  void sendshutdown(const QString &msg);
  private:
   QTcpSocket* socket;
   QString m_host;
