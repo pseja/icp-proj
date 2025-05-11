@@ -59,6 +59,15 @@ MainWindow::MainWindow(QWidget *parent)
   ui->buttonStop->setEnabled(false);
   ui->buttonRun->setStyleSheet("background-color: green; color: white;");
 
+  //init of label for fsm, idc its not pretty but automatview always redraws this
+  ui->labelFSM = new QLabel(this);
+  ui->labelFSM->setText("Default FSM");
+  ui->labelFSM->setGeometry(1030, 50, 621, 51);
+  ui->labelFSM->setStyleSheet("background: transparent; font-size: 36px;");
+  ui->labelFSM->setAlignment(Qt::AlignCenter);
+  ui->labelFSM->raise();
+  ui->labelFSM->show();
+
   // Try to connect to an FSM server on startup
   autoConnectAttempted = true;
   connectToFSM();
@@ -157,6 +166,10 @@ void MainWindow::showFSMInfo() {
   ui->groupBox_2->setVisible(false);
   ui->groupBox_3->setEnabled(true);
   ui->groupBox_3->setVisible(true);
+  //ui->labelFSM->setAttribute(Qt::WA_TransparentForMouseEvents);
+  //ui->labelFSM->raise();
+  //ui->labelFSM->raise();
+  //ui->labelFSM->show();
 
   QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
   textEdit->clear();
@@ -176,8 +189,9 @@ void MainWindow::showFSMInfo() {
   QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
   QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
   QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
-  QLineEdit *fsmComment = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_9");
-  QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
+  QTextEdit *fsmComment = ui->groupBox_3->findChild<QTextEdit *>("textEdit_2");
+  // QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
+  
 
   inputsLine->clear();
   outputsLine->clear();
@@ -186,10 +200,9 @@ void MainWindow::showFSMInfo() {
   valueEdit->clear();
   fsmComment->setText(fsm->getComment());
   fsmName->setText(fsm->getName());
-  fsmLabel->setAlignment(Qt::AlignCenter);
-  fsmLabel->setText(fsm->getName());
+  ui->labelFSM->setAlignment(Qt::AlignCenter);
+  ui->labelFSM->setText(fsm->getName());
   
-
 }
 
 //aka clicking on state, calls this with pointer to that state
@@ -309,11 +322,11 @@ void MainWindow::resizeCode() {
   QLabel *labelName2 = ui->groupBox->findChild<QLabel *>("label_2");
   //if (!textEdit) {return;}
 
-  if (textEdit->pos() == QPoint(40, 90)) {
+  if (textEdit->pos() == QPoint(40, 10)) {
     labelName->setVisible(true);
     labelName2->setVisible(true);
-    textEdit->move(10, 160);
-    textEdit->resize(331, 311);
+    textEdit->move(10, 190);
+    textEdit->resize(671, 281);
     ui->pushButton->move(10, 480);
     return;
   }
@@ -321,8 +334,8 @@ void MainWindow::resizeCode() {
     labelName->setVisible(false);
     labelName2->setVisible(false);
     ui->pushButton->move(10, 90);
-    textEdit->move(40, 90);
-    textEdit->resize(645, 425);
+    textEdit->move(40, 10);
+    textEdit->resize(655, 500);
     textEdit->raise();
   }
 }
@@ -622,8 +635,8 @@ void MainWindow::saveVars() {
   QLineEdit *typeEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_6");
   QLineEdit *valueEdit = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_7");
   QLineEdit *fsmName = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_2");
-  QLineEdit *fsmDescription = ui->groupBox_3->findChild<QLineEdit *>("lineEdit_9");
-  QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
+  QTextEdit *fsmDescription = ui->groupBox_3->findChild<QTextEdit *>("textEdit_2");
+  //QLabel *fsmLabel = ui->groupBox_3->findChild<QLabel *>("labelFSM");
 
   QString input = inputsLine->text();
   QString output = outputsLine->text();
@@ -639,13 +652,13 @@ void MainWindow::saveVars() {
   input.isEmpty() ? input.clear() : fsm->addInput(input);
   output.isEmpty() ? output.clear() : fsm->addOutput(output);
   fsmNameText.isEmpty() ? fsmNameText.clear() : fsm->setName(fsmNameText);
-  fsm->setComment(fsmDescription->text());
+  fsm->setComment(fsmDescription->toPlainText());
   inputsLine->clear();
   outputsLine->clear();
   varName->clear();
   typeEdit->clear();
   valueEdit->clear();
-  fsmLabel->setText(fsm->getName());
+  ui->labelFSM->setText(fsm->getName());
 
   QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
   textEdit->clear();
