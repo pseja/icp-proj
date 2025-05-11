@@ -73,11 +73,6 @@ class MainWindow : public QMainWindow {
     void updateTransitionInfo(TransitionItem *transition);
 
     /**
-     * @brief Handles the Add State button click event.
-     */
-    void on_addStateButton_clicked();
-
-    /**
      * @brief Handles state change events from the simulator.
      *
      * @param stateName Name of the state that was entered.

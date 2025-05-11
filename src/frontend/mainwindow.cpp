@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
   ui->setupUi(this);
   resize(1920, 1080);
   setMinimumSize(800, 600);
-  fsm = new FSM("Default FSM");
+  fsm = new FSM("DefaultFSM");
   automatView = new AutomatView(fsm, this);
   automatView->setMinimumSize(400, 300);
   ui->logConsole->setStyleSheet("background-color:rgb(203, 202, 202);");
@@ -135,11 +135,6 @@ MainWindow::~MainWindow() {
   }
   cleanupTempFiles();
   delete ui;
-}
-
-
-void MainWindow::on_addStateButton_clicked() {
-
 }
 
 void MainWindow::saveState() {
