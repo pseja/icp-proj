@@ -1135,6 +1135,7 @@ void MainWindow::refreshFSM() {
 }
 
 void MainWindow::checkConnection() {
+  client->connectToServer();
   if (client->isConnected()) {
     QMessageBox::information(this, "Connection Status", "Connected to FSM server.");
   } else {
