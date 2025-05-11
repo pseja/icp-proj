@@ -514,7 +514,7 @@
      <property name="geometry">
       <rect>
        <x>120</x>
-       <y>140</y>
+       <y>80</y>
        <width>221</width>
        <height>22</height>
       </rect>
@@ -547,7 +547,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>180</y>
+       <y>130</y>
        <width>71</width>
        <height>16</height>
       </rect>
@@ -556,34 +556,11 @@
       <string>Condition:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_6">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>80</y>
-       <width>57</width>
-       <height>14</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Delay:</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="delayLineEdit">
-     <property name="geometry">
-      <rect>
-       <x>80</x>
-       <y>80</y>
-       <width>261</width>
-       <height>22</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>140</y>
+       <y>80</y>
        <width>101</width>
        <height>16</height>
       </rect>
@@ -663,9 +640,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>200</y>
+       <y>150</y>
        <width>331</width>
-       <height>91</height>
+       <height>141</height>
       </rect>
      </property>
     </widget>

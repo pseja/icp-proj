@@ -301,18 +301,15 @@ void MainWindow::updateTransitionInfo(TransitionItem *transition) {
 
   QLineEdit *eventLine = ui->groupBox_2->findChild<QLineEdit *>("eventLineEdit");
   QTextEdit *conditionLine = ui->groupBox_2->findChild<QTextEdit *>("conditionEdit");
-  QLineEdit *delayLine = ui->groupBox_2->findChild<QLineEdit *>("delayLineEdit");
   QLineEdit *delayVarLine = ui->groupBox_2->findChild<QLineEdit *>("delayVarLineEdit");
   QLabel *fromLabel = ui->groupBox_2->findChild<QLabel *>("labelFrom");
   QLabel *toLabel = ui->groupBox_2->findChild<QLabel *>("labelTo");
   QLabel *arrowLabel = ui->groupBox_2->findChild<QLabel *>("labelArrow");
   eventLine->clear();
   conditionLine->clear();
-  delayLine->clear();
   delayVarLine->clear();
   eventLine->setText(transition->transition->getEvent());
   conditionLine->setText(transition->transition->getCondition());
-  delayLine->setText(QString::number(transition->transition->getDelay()));
   delayVarLine->setText(transition->transition->getDelayVariableName());
   fromLabel->setAlignment(Qt::AlignLeft);
   toLabel->setAlignment(Qt::AlignLeft);
@@ -738,15 +735,20 @@ void MainWindow::saveTransition() {
 
   QLineEdit *lineEdit = ui->groupBox_2->findChild<QLineEdit *>("eventLineEdit");
   QTextEdit *conditionEdit = ui->groupBox_2->findChild<QTextEdit *>("conditionEdit");
-  QLineEdit *delayEdit = ui->groupBox_2->findChild<QLineEdit *>("delayLineEdit");
   QLineEdit *delayVarEdit = ui->groupBox_2->findChild<QLineEdit *>("delayVarLineEdit");
+  /*
   if(lineEdit->text().isEmpty() && conditionEdit->toPlainText().isEmpty() &&
-     delayEdit->text().isEmpty() && delayVarEdit->text().isEmpty()) {return;}
+     delayVarEdit->text().isEmpty()) {return;}
+  */
+  QString event = lineEdit->text();
+  if (!event.isEmpty() && !fsm->getInputs().contains(event)) {
+      QMessageBox::warning(this, "Error", "Event name must be an input.");
+      return;
+  }
 
   selectedTransition->transition->setEvent(lineEdit->text());
   selectedTransition->transition->setCondition(conditionEdit->toPlainText());
   selectedTransition->setLabel(conditionEdit->toPlainText());
-  selectedTransition->transition->setDelay(delayEdit->text().toInt());
   selectedTransition->transition->setDelayVariableName(delayVarEdit->text());
   updateTransitionInfo(selectedTransition);
   selectedTransition = nullptr;
