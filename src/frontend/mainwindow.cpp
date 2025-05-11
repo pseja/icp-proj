@@ -901,6 +901,17 @@ void MainWindow::runFSM() {
   QString xmlPath = QDir::temp().filePath("fsm_run_%1.xml").arg(user);
   XMLParser::FSMtoXML(*fsm, xmlPath);
 
+  QString fileContents;
+  QFile readFile(xmlPath);
+  if (readFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    QTextStream in(&readFile);
+    fileContents = in.readAll();
+    readFile.close();
+    fsm->setInitialFSMXML(fileContents);
+  } else {
+    qDebug() << "[ERROR] Could not read FSM XML from temp file:" << xmlPath;
+  }
+
   //code generation part, using codegen class
   CodeGenerator codeGen;
   QString generatedCode = codeGen.generateCode(fsm);
@@ -1127,7 +1138,6 @@ void MainWindow::refreshFSM() {
 }
 
 void MainWindow::connectToFSM() {
-  client->connectToServer();
   if (!client->isConnected()) {
     ui->logConsole->appendPlainText("[ERROR] Could not connect to FSM server.");
     return;
