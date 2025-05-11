@@ -13,7 +13,7 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
     : QObject(), QGraphicsPathItem(parent), offsetIndex(offsetIndex) {
 
     //initing transition from backend class <- pseja's class
-    transition = new Transition(startState->state, endState->state, "Transition", "", -1, "");
+    transition = new Transition(startState->state, endState->state, "", "", -1, "");
 
     //setting color and axis position of transition line
     setPen(QPen(Qt::black, 2));
