@@ -33,6 +33,8 @@
 #include <QProcess>
 #include <QTimer>
 #include <QDateTime>
+#include <QTcpSocket>
+#include <QHostAddress>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -56,11 +58,18 @@ MainWindow::MainWindow(QWidget *parent)
   ui->buttonStop->setEnabled(false);
   ui->buttonRun->setStyleSheet("background-color: green; color: white;");
 
-  //this will be done later, requires cmake moficiation and new speacial xml file
-  //ui->pushButton->setIcon(QIcon(":/icons/11209980.png"));
-  //ui->pushButton->setIconSize(QSize(25, 25));
-  // setCentralWidget(automatView);
-  
+  // Try to connect to an FSM on startup
+  QTcpSocket probeSocket;
+  probeSocket.connectToHost("127.0.0.1", 54323);
+  qDebug("[INFO] Probing for FSM server on 127.0.0.1:54323...");
+  if (probeSocket.waitForConnected(1000)) {
+      qDebug() << "[INFO] Detected running FSM server on startup, connecting...";
+      ui->logConsole->appendPlainText("[INFO] Detected running FSM server on startup, connecting...");
+      connectToFSM();
+  } else {
+      qDebug() << "[INFO] No FSM server detected on startup.";
+  }
+
   //-------------------------AUTOMAT VIEW SIGNALS-----------------
   connect(automatView, &AutomatView::showFSMInfo, this, &MainWindow::showFSMInfo);
   connect(automatView, &AutomatView::stateSelected, this,&MainWindow::updateStateInfo);
