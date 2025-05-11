@@ -15,9 +15,13 @@ struct FsmStatus {
     QString state;
     QMap<QString, QString> inputs;
     QMap<QString, QString> outputs;
-    struct Variable { QString name, type, value; };
+    struct Variable {
+        QString name, type, value;
+    };
     QList<Variable> variables;
-    struct Timer { QString from, to, ms; };
+    struct Timer {
+        QString from, to, ms;
+    };
     QList<Timer> timers;
 };
 Q_DECLARE_METATYPE(FsmStatus)
@@ -25,18 +29,18 @@ Q_DECLARE_METATYPE(FsmStatus)
 class GuiClient : public QObject {
     Q_OBJECT
    public:
-    explicit GuiClient(const QString& host = "127.0.0.1", quint16 port = 54323, QObject* parent = nullptr);
+    explicit GuiClient(const QString &host = "127.0.0.1", quint16 port = 54323, QObject *parent = nullptr);
     void connectToServer();
-    void sendCommand(const QString& xml);
-    void sendSet(const QString& name, const QString& value);
-    void sendCall(const QString& name);
+    void sendCommand(const QString &xml);
+    void sendSet(const QString &name, const QString &value);
+    void sendCall(const QString &name);
     void sendStatus();
     void sendHelp();
     void sendReqFSM();
     void sendDisconnect();
     void sendShutdown();
     void sendPong();
-    void setHost(const QString& host) { m_host = host; }
+    void setHost(const QString &host) { m_host = host; }
     void setPort(quint16 port) { m_port = port; }
     QString getHost() const { return m_host; }
     quint16 getPort() const { return m_port; }
@@ -45,21 +49,22 @@ class GuiClient : public QObject {
    public slots:
     void onReadyRead();
 
-signals:
-  void stateChange(const QString& state);
-  void printoutput(const QString &name, const QString &value);
-  void printinput(const QString &name, const QString &value);
-  void printvariable(const QString &name, const QString &value);
-  void timerstart(const QString &from, const QString &to, const QString &ms);
-  void timerend(const QString &from, const QString &to);
-  void printmsg(const QString &msg);
-  void printerr(const QString &msg, const QString &code);
-  void printlog(const QString &msg);
-  void requestedFSM(const QString &model);
-  void fsmStatus(const FsmStatus &status);
-  void sendshutdown(const QString &msg);
- private:
-  QTcpSocket* socket;
-  QString m_host;
-  quint16 m_port;
+   signals:
+    void stateChange(const QString &state);
+    void printoutput(const QString &name, const QString &value);
+    void printinput(const QString &name, const QString &value);
+    void printvariable(const QString &name, const QString &value);
+    void timerstart(const QString &from, const QString &to, const QString &ms);
+    void timerend(const QString &from, const QString &to);
+    void printmsg(const QString &msg);
+    void printerr(const QString &msg, const QString &code);
+    void printlog(const QString &msg);
+    void requestedFSM(const QString &model);
+    void fsmStatus(const FsmStatus &status);
+    void sendshutdown(const QString &msg);
+
+   private:
+    QTcpSocket *socket;
+    QString m_host;
+    quint16 m_port;
 };

@@ -7,8 +7,9 @@
 
 #include "GuiClient.hpp"
 
-#include "logger.hpp"
 #include <qobjectdefs.h>
+
+#include "logger.hpp"
 
 /**
  * @brief Construct a new GuiClient object for TCP communication.
@@ -229,8 +230,7 @@ void GuiClient::onReadyRead() {
                     QString from = timer.firstChildElement("from").text();
                     QString to = timer.firstChildElement("to").text();
                     QString ms = timer.firstChildElement("ms").text();
-                    qDebug() << "  [TIMER] from" << from << "to" << to
-                             << "remaining:" << ms << "ms";
+                    qDebug() << "  [TIMER] from" << from << "to" << to << "remaining:" << ms << "ms";
                     status.timers.append({from, to, ms});
                 }
                 emit fsmStatus(status);
