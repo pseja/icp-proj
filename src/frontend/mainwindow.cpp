@@ -923,6 +923,13 @@ void MainWindow::stopFSM() {
       client->sendShutdown();
     }
   }
+  //stop blinking all transitions when fsm is stopped
+  for (QGraphicsItem *item : automatView->scene()->items()) {
+    if (typeid(*item) == typeid(TransitionItem)) {
+      TransitionItem *trans = dynamic_cast<TransitionItem *>(item);
+      trans->stopBlinking();      
+    }
+  }
   ui->groupBox->setEnabled(true);
   ui->groupBox_2->setEnabled(true);
   ui->groupBox_3->setEnabled(true);
