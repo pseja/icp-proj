@@ -1324,7 +1324,7 @@ void MainWindow::addConnection() {
 // its just a funny picture to make your day better
 void MainWindow::tryMe() {
   //qDebug() << "Current working dir:" << QDir::currentPath();
-  QPixmap pixmap(QCoreApplication::applicationDirPath() + "/../src/icons/koteseni.jpeg");
+  QPixmap pixmap(QCoreApplication::applicationDirPath() + "/../src/icons/koteseni.png");
   QDialog *dialog = new QDialog(this);
   QVBoxLayout *layout = new QVBoxLayout(dialog);
   QLabel *label = new QLabel(dialog);
