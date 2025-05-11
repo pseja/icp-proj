@@ -85,6 +85,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->actionSave, &QAction::triggered, this, &MainWindow::saveFSM);
   connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::loadFSM);
   connect(ui->actionTry_me, &QAction::triggered, this, &MainWindow::tryMe);
+  connect(ui->actionCode_guidelines, &QAction::triggered, this, &MainWindow::codeGuidelines);
+  connect(ui->actionAuthors, &QAction::triggered, this, &MainWindow::authors);
   //connect(ui->listWidget, &QListWidget::itemClicked, this, &MainWindow::editTransition);
   connect(ui->buttonRun, &QPushButton::pressed, this, &MainWindow::runFSM);
   connect(ui->pushButton, &QPushButton::pressed, this, &MainWindow::resizeCode);
@@ -1120,5 +1122,65 @@ void MainWindow::tryMe() {
   layout->addWidget(label);
   dialog->setWindowTitle("Kotěšení");
   dialog->resize(600, 400);
+  dialog->exec();
+}
+
+void MainWindow::codeGuidelines() {
+  QDialog *dialog = new QDialog(this);
+  dialog->setWindowTitle("Code Guidelines");
+  dialog->resize(700, 600);
+
+  QVBoxLayout *layout = new QVBoxLayout(dialog);
+
+  QTextEdit *textEdit = new QTextEdit(dialog);
+  textEdit->setReadOnly(true);
+  textEdit->setPlainText(helpText);
+  textEdit->setFontFamily("monospace");
+  textEdit->setFontPointSize(11);
+
+  layout->addWidget(textEdit);
+
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, dialog);
+  connect(buttonBox, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
+  layout->addWidget(buttonBox);
+
+  dialog->exec();
+}
+
+void MainWindow::authors() {
+  QDialog *dialog = new QDialog(this);
+  dialog->setWindowTitle("Authors");
+  dialog->resize(500, 250);
+
+  QVBoxLayout *layout = new QVBoxLayout(dialog);
+
+  QTableWidget *table = new QTableWidget(dialog);
+  table->setColumnCount(3);
+  table->setHorizontalHeaderLabels(QStringList() << "Name" << "xlogin" << "Role");
+  table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+  table->verticalHeader()->setVisible(false);
+  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  table->setSelectionMode(QAbstractItemView::NoSelection);
+
+  struct Author { QString name, xlogin, role; };
+  QVector<Author> authors = {
+      {"Matúš Csirik", "xcsirim00", "Project Leader, Code gen, Client"},
+      {"Lukáš Pšeja", "xpsejal00", "FSM, Logger"},
+      {"Václav Sovák", "xsovakv00", "GUI"}
+  };
+
+  table->setRowCount(authors.size());
+  for (int i = 0; i < authors.size(); ++i) {
+      table->setItem(i, 0, new QTableWidgetItem(authors[i].name));
+      table->setItem(i, 1, new QTableWidgetItem(authors[i].xlogin));
+      table->setItem(i, 2, new QTableWidgetItem(authors[i].role));
+  }
+
+  layout->addWidget(table);
+
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, dialog);
+  connect(buttonBox, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
+  layout->addWidget(buttonBox);
+
   dialog->exec();
 }
