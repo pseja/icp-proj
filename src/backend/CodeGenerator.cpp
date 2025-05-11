@@ -998,8 +998,7 @@ QString CodeGenerator::generateTcpXmlProtocolServer(FSM* fsm) {
                             QString fsmMsgLine = QString::fromUtf8(FSM_XML).replace('\n', ' ').replace('\r', ' ');
                             QString fsmMsg = QString(
                                                  "<event "
-                                                 "type=\"fsm\"><model><![CDATA[%"
-                                                 "1]]></model></event>")
+                                                 "type=\"fsm\"><model>%1</model></event>")
                                                  .arg(fsmMsgLine);
                             socket->write(buildEvent(fsmMsg));
                             socket->flush();
