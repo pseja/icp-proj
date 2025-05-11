@@ -368,6 +368,16 @@ void MainWindow::loadAutomat(const QVector<StateItem *> &states) {
 }
 
 void MainWindow::addState(StateItem *StateItem) {
+  bool hasInitial = false;
+  for (State *state : fsm->getStates()) {
+    if (state->isInitial()) {hasInitial = true; break;}
+  }
+  if (!hasInitial) {
+    StateItem->state->setInitial(true);
+    StateItem->setPen(QPen(QColor(160, 32, 240), 5));
+  }else {
+    StateItem->state->setInitial(false);
+  }
   fsm->addState(StateItem->state);
   connect(StateItem, &StateItem::stateDeleted, this,&MainWindow::handleStateDeleted);
 }
