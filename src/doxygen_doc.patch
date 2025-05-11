@@ -1,0 +1,924 @@
+diff --git a/src/frontend/AutomatView.hpp b/src/frontend/AutomatView.hpp
+index 0a0b08c..8b6b0db 100644
+--- a/src/frontend/AutomatView.hpp
++++ b/src/frontend/AutomatView.hpp
+@@ -1,17 +1,20 @@
++/**
++ * @file AutomatView.hpp
++ * @brief Defines the AutomatView class and it's methods which provide a graphical view for the FSM editing.
++ *
++ * @author Vaclav Sovak (xsovakv00)
++ * @date 11-05-2025
++ */
++
+ #ifndef AUTOMATVIEW_HPP
+ #define AUTOMATVIEW_HPP
+ 
+ #include "StateItem.hpp"
+ #include "TransitionItem.hpp"
+ #include "backend/fsm.hpp"
+-//#include "src/frontend/mainwindow.hpp"
+-//#include "src/frontend/mainwindow.hpp"
+-//#include "src/frontend/mainwindow.hpp"
+-#include <QGraphicsView>
+-#include <QGraphicsScene>
+-#include <QGraphicsEllipseItem>
+-#include <QGraphicsSceneMouseEvent>
+-#include <cstddef>
++// #include "src/frontend/mainwindow.hpp"
++// #include "src/frontend/mainwindow.hpp"
++// #include "src/frontend/mainwindow.hpp"
+ #include <qevent.h>
+ #include <qglobal.h>
+ #include <qgraphicsitem.h>
+@@ -19,37 +22,121 @@
+ #include <qgraphicsview.h>
+ #include <qobjectdefs.h>
+ #include <qwidget.h>
+-#include <QMouseEvent>
++
+ #include <QDebug>
++#include <QGraphicsEllipseItem>
++#include <QGraphicsScene>
++#include <QGraphicsSceneMouseEvent>
++#include <QGraphicsView>
++#include <QMouseEvent>
++#include <cstddef>
+ 
++/**
++ * @class AutomatView
++ * @brief A graphics view widget for displaying and interacting with FSMs.
++ */
+ class AutomatView : public QGraphicsView {
+-  Q_OBJECT
+-
+-public:
+-  explicit AutomatView(FSM *fsm, QWidget *parent = nullptr);
+-signals:
+-  void stateSelected(StateItem *state);
+-  void transitionSelected(TransitionItem *transition);
+-  void addState(StateItem *state);
+-  void addTransition(TransitionItem *trans);
+-  void showFSMInfo();
+-  
+-
+-private slots:
+-  void onSelection();
+-
+-protected:
+-  void mousePressEvent(QMouseEvent *event) override;
+-  void mouseDoubleClickEvent(QMouseEvent *event) override;
+-  void mouseMoveEvent(QMouseEvent *event) override;
+-  void mouseReleaseEvent(QMouseEvent *event) override;
+-
+-private:
+-  StateItem *transitionStart = nullptr;
+-  QGraphicsLineItem *templine = nullptr;
+-  FSM *fsm;
+-  int stateCounter = 1;
+-//  QGraphicsScene *scene;
++    Q_OBJECT
++
++   public:
++    /**
++     * @brief Constructs an AutomatView with the given FSM and parent widget.
++     *
++     * @param fsm Pointer to the FSM model this view will visualize and manipulate.
++     * @param parent Optional parent widget.
++     */
++    explicit AutomatView(FSM *fsm, QWidget *parent = nullptr);
++
++   signals:
++    /**
++     * @brief Signal emitted when a state is selected in the view.
++     *
++     * @param state Pointer to the selected StateItem.
++     */
++    void stateSelected(StateItem *state);
++
++    /**
++     * @brief Signal emitted when a transition is selected in the view.
++     *
++     * @param transition Pointer to the selected TransitionItem.
++     */
++    void transitionSelected(TransitionItem *transition);
++
++    /**
++     * @brief Signal emitted to add a new state to the FSM.
++     *
++     * @param state Pointer to the StateItem to be added.
++     */
++    void addState(StateItem *state);
++
++    /**
++     * @brief Signal emitted to add a new transition to the FSM.
++     *
++     * @param trans Pointer to the TransitionItem to be added.
++     */
++    void addTransition(TransitionItem *trans);
++
++    /**
++     * @brief Signal emitted to display FSM information.
++     */
++    void showFSMInfo();
++
++   private slots:
++    /**
++     * @brief Handles selection changes in the view.
++     */
++    void onSelection();
++
++   protected:
++    /**
++     * @brief Handles mouse press events.
++     *
++     * @param event The mouse event.
++     */
++    void mousePressEvent(QMouseEvent *event) override;
++
++    /**
++     * @brief Handles mouse double-click events.
++     *
++     * @param event The mouse event.
++     */
++    void mouseDoubleClickEvent(QMouseEvent *event) override;
++
++    /**
++     * @brief Handles mouse move events.
++     *
++     * @param event The mouse event.
++     */
++    void mouseMoveEvent(QMouseEvent *event) override;
++
++    /**
++     * @brief Handles mouse release events.
++     *
++     * @param event The mouse event.
++     */
++    void mouseReleaseEvent(QMouseEvent *event) override;
++
++   private:
++    /**
++     * @brief Pointer to the StateItem where a transition begins during creation.
++     */
++    StateItem *transitionStart = nullptr;
++
++    /**
++     * @brief Temporary line shown during transition creation.
++     */
++    QGraphicsLineItem *templine = nullptr;
++
++    /**
++     * @brief Pointer to the visualized FSM.
++     */
++    FSM *fsm;
++
++    /**
++     * @brief Counter for generating unique state names.
++     */
++    int stateCounter = 1;
++    //  QGraphicsScene *scene;
+ };
+ 
+ #endif
+\ No newline at end of file
+diff --git a/src/frontend/StateItem.hpp b/src/frontend/StateItem.hpp
+index b462bd5..cdaf58d 100644
+--- a/src/frontend/StateItem.hpp
++++ b/src/frontend/StateItem.hpp
+@@ -1,42 +1,92 @@
++/**
++ * @file StateItem.hpp
++ * @brief Defines the StateItem class and it's methods which represent a state in the FSM editor.
++ *
++ * @author Vaclav Sovak (xsovakv00)
++ * @date 11-05-2025
++ */
++
+ #ifndef STATEITEM_HPP
+ #define STATEITEM_HPP
+ 
+-#include <QGraphicsEllipseItem>
+-#include <QGraphicsSceneContextMenuEvent>
+-#include <QMenu>
+-#include <QAction>
+ #include <qglobal.h>
+ #include <qgraphicsitem.h>
+ #include <qgraphicssceneevent.h>
+ #include <qobjectdefs.h>
+-#include <QObject>
+ #include <qvariant.h>
++
++#include <QAction>
++#include <QGraphicsEllipseItem>
++#include <QGraphicsSceneContextMenuEvent>
++#include <QMenu>
++#include <QObject>
++
+ #include "backend/state.hpp"
+-//#include "src/backend/state.hpp"
++// #include "src/backend/state.hpp"
+ 
++/**
++ * @class StateItem
++ * @brief A graphical representation of a state in the FSM.
++ */
+ class StateItem : public QObject, public QGraphicsEllipseItem {
+-  Q_OBJECT
+-public:
++    Q_OBJECT
++   public:
++    /**
++     * @brief Constructs a StateItem with the given name and code.
++     *
++     * @param name The name of the state.
++     * @param code The code associated with the state (optional).
++     * @param parent The parent QGraphicsItem (optional).
++     */
+     explicit StateItem(const QString &name, const QString &code = "", QGraphicsItem *parent = nullptr);
+-    State* state;
+-    //void setName(const QString &newName);
+-    //void setCodeSegment(const QString &newCode);
+-    void updateState(const QString &newName, const QString &newCode,
+-                     bool initial);
+-    //QString getCodeSegment();
+-    //QString getName();
+-      
+-protected:
+-  void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+-  void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+-  //QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
+-
+-signals:
+-  void stateDeleted(StateItem *state);
+-  void positionChanged();
+-
+-private:
+-  QGraphicsTextItem *textItem;
++
++    /**
++     * @brief Pointer to the backend State class this item represents.
++     */
++    State *state;
++
++    /**
++     * @brief Updates the state properties.
++     *
++     * @param newName The new name for the state.
++     * @param newCode The new code for the state.
++     * @param initial Whether this is the initial state.
++     */
++    void updateState(const QString &newName, const QString &newCode, bool initial);
++
++   protected:
++    /**
++     * @brief Handles context menu events for the state item.
++     *
++     * @param event The context menu event.
++     */
++    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
++
++    /**
++     * @brief Handles mouse move events for the state item.
++     *
++     * @param event The mouse event.
++     */
++    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
++
++   signals:
++    /**
++     * @brief Signal emitted when the state is deleted.
++     *
++     * @param state Pointer to the deleted StateItem.
++     */
++    void stateDeleted(StateItem *state);
++
++    /**
++     * @brief Signal emitted when the state's position changes.
++     */
++    void positionChanged();
++
++   private:
++    /**
++     * @brief Text item displaying the state's name.
++     */
++    QGraphicsTextItem *textItem;
+ };
+ 
+-#endif // STATEITEM_HPP
++#endif  // STATEITEM_HPP
+diff --git a/src/frontend/TransitionItem.hpp b/src/frontend/TransitionItem.hpp
+index 91c2ba1..977845d 100644
+--- a/src/frontend/TransitionItem.hpp
++++ b/src/frontend/TransitionItem.hpp
+@@ -1,64 +1,152 @@
++/**
++ * @file TransitionItem.hpp
++ * @brief Defines the TransitionItem class and it's methods which represent a transition in the FSM graphical editor.
++ *
++ * @author Vaclav Sovak (xsovakv00)
++ * @date 11-05-2025
++ */
++
+ #ifndef TRANSITIONITEM_HPP
+ #define TRANSITIONITEM_HPP
+ 
+-#include <QGraphicsEllipseItem>
+-#include <QGraphicsSceneContextMenuEvent>
+-#include <QMenu>
+-#include <QAction>
+ #include <qglobal.h>
+ #include <qgraphicsitem.h>
+ #include <qobjectdefs.h>
+-#include <QObject>
+ #include <qpen.h>
+-#include "backend/transition.hpp"
+-#include "StateItem.hpp"
++
++#include <QAction>
++#include <QGraphicsEllipseItem>
++#include <QGraphicsSceneContextMenuEvent>
++#include <QMenu>
++#include <QObject>
+ #include <QTimer>
+ 
++#include "StateItem.hpp"
++#include "backend/transition.hpp"
++
++/**
++ * @class TransitionItem
++ * @brief A graphical representation of a transition between states in the FSM diagram.
++ */
+ class TransitionItem : public QObject, public QGraphicsPathItem {
+-  Q_OBJECT
+-  
+-public:
++    Q_OBJECT
++
++   public:
++    /**
++     * @brief Constructs a TransitionItem between two states.
++     *
++     * @param fromState The source state of the transition.
++     * @param toState The target state of the transition.
++     * @param parent The parent QGraphicsItem (optional).
++     * @param offset Offset value for curved transitions between the same states (optional).
++     */
+     explicit TransitionItem(StateItem *fromState, StateItem *toState, QGraphicsItem *parent = nullptr, int offset = 0);
++
++    /**
++     * @brief Pointer to the backend Transition class this item represents.
++     */
+     Transition *transition;
++
++    /**
++     * @brief Updates the transition's position based on the current state positions.
++     */
+     void updatePosition();
++
++    /**
++     * @brief Custom paint method for drawing the transition.
++     *
++     * @param painter The painter to use for drawing.
++     * @param option Style options for drawing.
++     * @param widget The widget being painted on.
++     */
+     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+-    //void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+-    //void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+-    StateItem* getFrom();
++
++    /**
++     * @brief Gets the source state of the transition.
++     *
++     * @return Pointer to the source StateItem.
++     */
++    StateItem *getFrom();
++
++    /**
++     * @brief Gets the target state of the transition.
++     *
++     * @return Pointer to the target StateItem.
++     */
+     StateItem *getTo();
++
++    /**
++     * @brief Gets the label text of the transition.
++     *
++     * @return The label text as QString.
++     */
+     QString getLabel() const { return label->toPlainText(); }
++
++    /**
++     * @brief Sets the label text of the transition.
++     *
++     * @param text The new label text.
++     */
+     void setLabel(const QString &text) { label->setPlainText(text); }
+-    
++
++    /**
++     * @brief Starts the transition blinking effect alternating between green and black.
++     */
+     void startBlinking() {
+-      if (!blinking) {
+-        blink = new QTimer(this);
+-        connect(blink, &QTimer::timeout, this, &TransitionItem::setBlinking);
+-        blinking = false;
+-      }
+-      blink->start(300);
++        if (!blinking) {
++            blink = new QTimer(this);
++            connect(blink, &QTimer::timeout, this, &TransitionItem::setBlinking);
++            blinking = false;
++        }
++        blink->start(300);
+     }
++
++    /**
++     * @brief Stops the transition blinking effect.
++     */
+     void stopBlinking() {
+-      if (blink) blink->stop();
+-      setPen(QPen(Qt::black, 2));
++        if (blink) blink->stop();
++        setPen(QPen(Qt::black, 2));
+     }
+ 
+-protected:
+-//  void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+-
+-signals:
+-//  void stateDeleted(StateItem *state);
+-
+-private:
+-  StateItem *fromState;
+-  StateItem *toState;
+-  QGraphicsTextItem *label;
+-  int offsetIndex;
+-  QTimer *blink = nullptr;
+-  bool blinking = false;
+-  void setBlinking() {
+-    blinking = !blinking;
+-    setPen(QPen(blinking ? Qt::green : Qt::black, 2));
+-  }
++   private:
++    /**
++     * @brief The source state of the transition.
++     */
++    StateItem *fromState;
++
++    /**
++     * @brief The target state of the transition.
++     */
++    StateItem *toState;
++
++    /**
++     * @brief Text item displaying the transition's label.
++     */
++    QGraphicsTextItem *label;
++
++    /**
++     * @brief Offset index used to position curved transitions.
++     */
++    int offsetIndex;
++
++    /**
++     * @brief Timer used for the blinking effect.
++     */
++    QTimer *blink = nullptr;
++
++    /**
++     * @brief Current blinking state.
++     */
++    bool blinking = false;
++
++    /**
++     * @brief Toggles the blinking effect.
++     */
++    void setBlinking() {
++        blinking = !blinking;
++        setPen(QPen(blinking ? Qt::green : Qt::black, 2));
++    }
+ };
+ 
+-#endif // STATEITEM_HPP
+\ No newline at end of file
++#endif  // TRANSITIONITEM_HPP
+\ No newline at end of file
+diff --git a/src/frontend/mainwindow.hpp b/src/frontend/mainwindow.hpp
+index 13d08d5..46f7ba6 100644
+--- a/src/frontend/mainwindow.hpp
++++ b/src/frontend/mainwindow.hpp
+@@ -1,20 +1,30 @@
++/**
++ * @file mainwindow.hpp
++ * @brief Defines the MainWindow class and it's methods which is the primary GUI for the FSM editor.
++ *
++ * @author Vaclav Sovak (xsovakv00)
++ * @date 11-05-2025
++ */
++
+ #ifndef MAINWINDOW_HPP
+ #define MAINWINDOW_HPP
+ 
+-#include <QMainWindow>
+ #include <qlistwidget.h>
+ #include <qmap.h>
+ #include <qobjectdefs.h>
+ #include <qprocess.h>
+ #include <qvector.h>
++
++#include <QHeaderView>
++#include <QMainWindow>
++#include <QMessageBox>
++#include <QTableWidget>
++#include <QVBoxLayout>
++
+ #include "AutomatView.hpp"
+ #include "StateItem.hpp"
+ #include "backend/GuiClient.hpp"
+ #include "backend/fsm.hpp"
+-#include <QMessageBox>
+-#include <QVBoxLayout>
+-#include <QTableWidget>
+-#include <QHeaderView>
+ 
+ QT_BEGIN_NAMESPACE
+ namespace Ui {
+@@ -22,78 +32,328 @@ class MainWindow;
+ }
+ QT_END_NAMESPACE
+ 
+-class MainWindow : public QMainWindow
+-{
++/**
++ * @class MainWindow
++ * @brief The main window of the FSM editor.
++ */
++class MainWindow : public QMainWindow {
+     Q_OBJECT
+ 
+-public:
++   public:
++    /**
++     * @brief Constructs the main window.
++     *
++     * @param parent Optional parent widget.
++     */
+     MainWindow(QWidget *parent = nullptr);
++
++    /**
++     * @brief Destructor for the main window.
++     */
+     ~MainWindow();
+-    
+ 
+-private slots:
++   private slots:
++    /**
++     * @brief Saves the currently selected state's properties.
++     */
+     void saveState();
++
++    /**
++     * @brief Updates the state property panel when a state is selected.
++     *
++     * @param state The selected StateItem.
++     */
+     void updateStateInfo(StateItem *state);
++
++    /**
++     * @brief Updates the transition property panel when a transition is selected.
++     *
++     * @param transition The selected TransitionItem.
++     */
+     void updateTransitionInfo(TransitionItem *transition);
++
++    /**
++     * @brief Handles the Add State button click event.
++     */
+     void on_addStateButton_clicked();
++
++    /**
++     * @brief Handles state change events from the simulator.
++     *
++     * @param stateName Name of the state that was entered.
++     */
+     void stateChanged(QString stateName);
++
++    /**
++     * @brief Displays an output value in the GUI console.
++     *
++     * @param name Name of the output.
++     * @param value Value of the output.
++     */
+     void printoutput(const QString &name, const QString &value);
++
++    /**
++     * @brief Displays an input value in the GUI console.
++     *
++     * @param name Name of the input.
++     * @param value Value of the input.
++     */
+     void printinput(const QString &name, const QString &value);
++
++    /**
++     * @brief Displays a variable value in the GUI console.
++     *
++     * @param name Name of the variable.
++     * @param value Value of the variable.
++     */
+     void printvariable(const QString &name, const QString &value);
++
++    /**
++     * @brief Logs the start of a timer in the simulation.
++     *
++     * @param from Source state.
++     * @param to Target state.
++     * @param ms Timer duration in milliseconds.
++     */
+     void timerstart(const QString &from, const QString &to, const QString &ms);
++
++    /**
++     * @brief Logs the end of a timer in the simulation.
++     *
++     * @param from Source state.
++     * @param to Target state.
++     */
+     void timerend(const QString &from, const QString &to);
++
++    /**
++     * @brief Displays a message in the GUI console.
++     *
++     * @param msg The message to display.
++     */
+     void printmsg(const QString &msg);
++
++    /**
++     * @brief Displays an error message in the GUI console.
++     *
++     * @param msg Error message.
++     * @param code Error code or additional information.
++     */
+     void printerr(const QString &msg, const QString &code);
++
++    /**
++     * @brief Logs general information in the GUI console.
++     *
++     * @param msg The log message.
++     */
+     void printlog(const QString &msg);
++
++    /**
++     * @brief Handles receiving the requested FSM from the server.
++     *
++     * @param model XML representation of the FSM.
++     */
+     void requestedFSM(const QString &model);
+-    void fsmStatus(const FsmStatus& status);
++
++    /**
++     * @brief Updates UI based on the FSM status.
++     *
++     * @param status Current status of the FSM.
++     */
++    void fsmStatus(const FsmStatus &status);
++
++    /**
++     * @brief Handles the user pressing Enter in the console input.
++     */
+     void onConsoleEnter();
++
++    /**
++     * @brief Displays information about the current FSM.
++     */
+     void showFSMInfo();
++
++    /**
++     * @brief Resizes the code editor to fit the content.
++     */
+     void resizeCode();
++
++    /**
++     * @brief Clears the current FSM.
++     */
+     void clearFSM();
++
++    /**
++     * @brief Refreshes the FSM view.
++     */
+     void refreshFSM();
++
++    /**
++     * @brief Forces a clean reload of the FSM.
++     */
+     void sudoclearFSM();
++
++    /**
++     * @brief Deletes the selected variable.
++     */
+     void deleteVar();
++
++    /**
++     * @brief Stops the running FSM simulation.
++     */
+     void stopFSM();
++
++    /**
++     * @brief Connects to the FSM server for simulation.
++     */
+     void connectToFSM();
++
++    /**
++     * @brief Exports the current FSM to XML format.
++     */
+     void exportXML();
++
++    /**
++     * @brief Exports the current FSM to C++ code.
++     */
+     void exportCPP();
+ 
+-public slots:
+-  void handleStateDeleted(StateItem *state);
+-  void addState(StateItem *state);
+-  void addTransition(TransitionItem *transition);
+-  void saveFSM();
+-  void loadFSM();
+-  //void editTransition(QListWidgetItem *item);
+-  void saveTransition();
+-  void runFSM();
+-  void saveVars();
+-  void tryMe();
+-  void codeGuidelines();
+-  void authors();
+-  //void onReadyRead(const QString &data);
+-
+-private:
+-  FSM *fsm;
+-  Ui::MainWindow *ui;
+-  AutomatView *automatView;
+-  StateItem *selectedState = nullptr;
+-  void loadAutomat(const QVector<StateItem *> &states);
+-  void cleanupTempFiles();
+-  QVector<TransitionItem*> transitionItemsForSelectedState;
+-  TransitionItem *selectedTransition = nullptr;
+-  GuiClient *client;
+-  QProcess *serverProcess = nullptr;
+-  QMap<QString, QString> inputs;
+-  QMap<QString, QString> outputs;
+-  bool autoConnectAttempted = false;
+-
+-QString helpText = R"(Writing code for state actions and transition conditions
++   public slots:
++    /**
++     * @brief Handles state deletion events.
++     *
++     * @param state The StateItem being deleted.
++     */
++    void handleStateDeleted(StateItem *state);
++
++    /**
++     * @brief Adds a new state to the FSM.
++     *
++     * @param state The StateItem to add.
++     */
++    void addState(StateItem *state);
++
++    /**
++     * @brief Adds a new transition to the FSM.
++     *
++     * @param transition The TransitionItem to add.
++     */
++    void addTransition(TransitionItem *transition);
++
++    /**
++     * @brief Saves the current FSM to a file.
++     */
++    void saveFSM();
++
++    /**
++     * @brief Loads an FSM from a file.
++     */
++    void loadFSM();
++
++    /**
++     * @brief Saves changes to the currently selected transition.
++     */
++    void saveTransition();
++
++    /**
++     * @brief Runs the FSM simulation.
++     */
++    void runFSM();
++
++    /**
++     * @brief Saves variables defined in the FSM.
++     */
++    void saveVars();
++
++    /**
++     * @brief Demonstrates sample functionality of the FSM.
++     */
++    void tryMe();
++
++    /**
++     * @brief Shows code guidelines for writing state actions and transition conditions.
++     */
++    void codeGuidelines();
++
++    /**
++     * @brief Shows information about the application authors.
++     */
++    void authors();
++
++   private:
++    /**
++     * @brief The FSM this window is editing.
++     */
++    FSM *fsm;
++
++    /**
++     * @brief UI components of the main window.
++     */
++    Ui::MainWindow *ui;
++
++    /**
++     * @brief The visual editor for the FSM.
++     */
++    AutomatView *automatView;
++
++    /**
++     * @brief Currently selected state in the editor.
++     */
++    StateItem *selectedState = nullptr;
++
++    /**
++     * @brief Loads automaton with the specified states.
++     *
++     * @param states Vector of StateItems to load.
++     */
++    void loadAutomat(const QVector<StateItem *> &states);
++
++    /**
++     * @brief Cleans up temporary files created during execution.
++     */
++    void cleanupTempFiles();
++
++    /**
++     * @brief List of transitions connected to the currently selected state.
++     */
++    QVector<TransitionItem *> transitionItemsForSelectedState;
++
++    /**
++     * @brief Currently selected transition in the editor.
++     */
++    TransitionItem *selectedTransition = nullptr;
++
++    /**
++     * @brief Client for communicating with the FSM server.
++     */
++    GuiClient *client;
++
++    /**
++     * @brief Process for running the FSM server.
++     */
++    QProcess *serverProcess = nullptr;
++
++    /**
++     * @brief Map of input names to their values.
++     */
++    QMap<QString, QString> inputs;
++
++    /**
++     * @brief Map of output names to their values.
++     */
++    QMap<QString, QString> outputs;
++
++    /**
++     * @brief Flag indicating whether auto-connect has been attempted.
++     */
++    bool autoConnectAttempted = false;
++
++    /**
++     * @brief Help text for writing code in the editor.
++     */
++    QString helpText = R"(Writing code for state actions and transition conditions
+ ========================================================
+ 
+ Enter C++ code to define what happens when a state is entered, or to specify conditions for transitions. 
+-Here’s what you need to know:
++Here's what you need to know:
+ 
+ Accessing variables
+ -------------------
+@@ -136,7 +396,5 @@ Example snippets
+ 
+ Tip: Keep your code simple and focused on logic. Use the provided helper functions for interacting with inputs, outputs, and logging. 
+ Remember to use Qtoi for conversions when working with QStrings. Also check out official QString Qt5.9 documentation. )";
+-
+-
+ };
+-#endif // MAINWINDOW_HPP
++#endif  // MAINWINDOW_HPP
