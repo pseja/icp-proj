@@ -13,16 +13,23 @@
 #include <qgraphicsitem.h>
 #include <qobjectdefs.h>
 #include <qpen.h>
-
 #include <QAction>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsSceneContextMenuEvent>
 #include <QMenu>
 #include <QObject>
 #include <QTimer>
-
 #include "StateItem.hpp"
 #include "backend/transition.hpp"
+#include "StateItem.hpp"
+#include "backend/transition.hpp"
+#include <QPen>
+#include <QPainter>
+#include <qgraphicsscene.h>
+#include <qline.h>
+#include <qdebug.h>
+#include <qpoint.h>
+#include <qmath.h>
 
 /**
  * @class TransitionItem
@@ -111,7 +118,7 @@ class TransitionItem : public QObject, public QGraphicsPathItem {
         if (blink) blink->stop();
         setPen(QPen(Qt::black, 2));
     }
-    
+
   signals:
     void transitionDeleted(TransitionItem *transition);
 

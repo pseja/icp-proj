@@ -8,15 +8,7 @@
  */
 
 #include "TransitionItem.hpp"
-#include "StateItem.hpp"
-#include "backend/transition.hpp"
-#include <QPen>
-#include <QPainter>
-#include <qgraphicsscene.h>
-#include <qline.h>
-#include <qdebug.h>
-#include <qpoint.h>
-#include <qmath.h>
+
 
 TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGraphicsItem *parent, int offsetIndex)
     : QObject(), QGraphicsPathItem(parent), offsetIndex(offsetIndex) {
@@ -28,13 +20,19 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
     setPen(QPen(Qt::black, 2));
     setZValue(-10);
     setFlags(QGraphicsItem::ItemIsSelectable);
-    //setAcceptHoverEvents(true);
+    //setting up states
     fromState = startState;
     toState = endState;
     QPointF p1 = startState->pos();
     QPointF p2 = endState->pos();
 
+    // kinda buggy, hopefully will be improved in future
+    // its a dynamic rotation seeking algorithm
+    // rotates sets of self transitions to find a clear space
+    // around the state
     if (fromState == toState) {
+      // starting position with angle facing up
+      //max rotations over 30 degrees
         QPointF p = fromState->pos();
         double baseAngle = 270.0;
         double angleStep = 30.0;
@@ -44,18 +42,21 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
         QRectF ellipseRect;
         QPainterPath path;
 
+        //looping through angles
         for (int i = 0; i < maxTries; ++i) {
             double rad = angle * M_PI / 180.0;
             double dx = cos(rad) * radius;
             double dy = sin(rad) * radius;
             QPointF center = p + QPointF(dx, dy);
-
+            //creating ellipse around the state
             ellipseRect = QRectF(center.x() - radius, center.y() - radius, 2*radius, 2*radius);
             path = QPainterPath();
-            path.arcMoveTo(ellipseRect, angle);
+            path.arcMoveTo(ellipseRect, angle); //arcing to itself
             path.arcTo(ellipseRect, angle, -360);
 
-            
+            //checks for collision with other transitions
+            //if there is no collision, break the loop
+            //otherwise, try again with different angle
             bool collision = false;
             if (scene()) {
                 for (QGraphicsItem* item : scene()->items(path.boundingRect())) {
@@ -72,6 +73,8 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
             angle += angleStep;
         }
 
+        //after angle is found, we set the path
+        //and cascading z values for selection and not overlapping
         setPath(path);
         label = new QGraphicsTextItem(transition->getCondition(), this);
         label->setDefaultTextColor(Qt::darkRed);
@@ -79,7 +82,8 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
         setZValue(-10 - offsetIndex);
     } else {
 
-
+    //otevrwise, we set the path to be a quadratic bezier curve
+    //between the two states(clasical transition)
     QLineF line(p1, p2);
     QPointF normal(-line.dy(), line.dx());
     if (line.length() != 0) {
@@ -95,7 +99,6 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
 
 
     //asigning state to transition, will be used for search, then labeling the transition
-
     label = new QGraphicsTextItem(transition->getCondition(), this);
     label->setDefaultTextColor(Qt::darkRed);
     label->setPos(mid);
@@ -114,67 +117,61 @@ TransitionItem::TransitionItem(StateItem *startState, StateItem *endState, QGrap
 void TransitionItem::updatePosition() {
   //we can change position only when pointer to state exists
   if (fromState && toState) {
-    /*
-    //we recalculate and put the line according to new position
-    setLine(QLineF(fromState->pos(), toState->pos()));
-    //redraw label if one exists
-    if (label) {
-      label->setPos((fromState->pos() + toState->pos()) / 2);
-    }
-    */
+   
     QPointF p1 = fromState->pos();
     QPointF p2 = toState->pos();
-
+    //recalculating process again unfortunately duplicate code
     if (fromState == toState) {
-            QPointF p = fromState->pos();
-            double baseAngle = 270.0;
-            double angleStep = 30.0;
-            double radius = 25.0 + 15.0 * offsetIndex;
-            int maxTries = 12;
-            double angle = baseAngle;
-            QRectF ellipseRect;
-            QPainterPath path;
+      QPointF p = fromState->pos();
+      double baseAngle = 270.0;
+      double angleStep = 30.0;
+      double radius = 25.0 + 15.0 * offsetIndex;
+      int maxTries = 12;
+      double angle = baseAngle;
+      QRectF ellipseRect;
+      QPainterPath path;
 
-            for (int i = 0; i < maxTries; ++i) {
-                double rad = angle * M_PI / 180.0;
-                double dx = cos(rad) * radius;
-                double dy = sin(rad) * radius;
-                QPointF center = p + QPointF(dx, dy);
+      for (int i = 0; i < maxTries; ++i) {
+          double rad = angle * M_PI / 180.0;
+          double dx = cos(rad) * radius;
+          double dy = sin(rad) * radius;
+          QPointF center = p + QPointF(dx, dy);
 
-                ellipseRect = QRectF(center.x() - radius, center.y() - radius, 2*radius, 2*radius);
-                path = QPainterPath();
-                path.arcMoveTo(ellipseRect, angle);
-                path.arcTo(ellipseRect, angle, -360);
+          ellipseRect = QRectF(center.x() - radius, center.y() - radius, 2*radius, 2*radius);
+          path = QPainterPath();
+          path.arcMoveTo(ellipseRect, angle);
+          path.arcTo(ellipseRect, angle, -360);
 
-                bool collision = false;
-                if (scene()) {
-                    for (QGraphicsItem* item : scene()->items(path.boundingRect())) {
-                      if (item != this) {
-                          auto other = dynamic_cast<TransitionItem*>(item);
-                          if (other && other->path().intersects(path)) {
-                              collision = true;
-                              break;
-                          }
-                      }
+          bool collision = false;
+          if (scene()) {
+              for (QGraphicsItem* item : scene()->items(path.boundingRect())) {
+                if (item != this) {
+                    auto other = dynamic_cast<TransitionItem*>(item);
+                    if (other && other->path().intersects(path)) {
+                        collision = true;
+                        break;
                     }
                 }
-                if (!collision) break;
-                angle += angleStep;
-            }
+              }
+          }
+          if (!collision) break;
+          angle += angleStep;
+      }
 
-            setPath(path);
-            if (label) label->setPos(ellipseRect.center().x(), ellipseRect.top() - 20);
-            setZValue(-10 - offsetIndex);
-            return;
+      setPath(path);
+      if (label) label->setPos(ellipseRect.center().x(), ellipseRect.top() - 20);
+      setZValue(-10 - offsetIndex);
+      return;
     }
 
-
+    //otherwise, we set the path to be a quadratic bezier curve
+    //between the two states(clasical transition)
     QLineF line(p1, p2);
     QPointF normal(-line.dy(), line.dx());
     if (line.length() != 0)
         normal /= line.length();
 
-    double offset = 40.0 * (offsetIndex - 0.5); // offsetIndex musí být member proměnná!
+    double offset = 40.0 * (offsetIndex - 0.5);
     QPointF mid = (p1 + p2) / 2 + normal * offset;
 
     QPainterPath path(p1);
@@ -187,50 +184,54 @@ void TransitionItem::updatePosition() {
   }
 }
 
+//getters for from
 StateItem* TransitionItem::getFrom() {
   return fromState;
 }
-
+// getters for to
 StateItem* TransitionItem::getTo() {
   return toState;
 }
 
+//overriding paint method to draw the transition arrow
 void TransitionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
   QPen pen = this->pen();
+  //just color of selected transition
   if (isSelected()) {
     pen.setColor(Qt::red);
     pen.setWidth(5);
   }
   painter->setPen(pen);
   painter->drawPath(path());
-
+  //draw the arrow but not for self transitions
   if (fromState != toState) {
     QPainterPath p = path();
     qreal totalLength = p.length();
-    qreal arrowDistance = 40.0;
+    qreal arrowDistance = 40.0; //diameter of the state
     qreal percent = 1.0 - (arrowDistance / totalLength);
     if (percent < 0.0) percent = 0.0;
-
+    //after distance is calculated, we set the arrow position
     QPointF arrowPos = p.pointAtPercent(percent);
     QPointF beforeArrow = p.pointAtPercent(percent - 0.01);
-
+    //calculating the angle of the arrow
     QLineF line(beforeArrow, arrowPos);
     double angle = std::atan2(arrowPos.y() - beforeArrow.y(), arrowPos.x() - beforeArrow.x());
-
+    //setting the arrow size
     double arrowSize = 18.0;
     QPointF arrowP1 = arrowPos + QPointF(std::cos(angle + M_PI / 7) * -arrowSize,
                                           std::sin(angle + M_PI / 7) * -arrowSize);
     QPointF arrowP2 = arrowPos + QPointF(std::cos(angle - M_PI / 7) * -arrowSize,
                                           std::sin(angle - M_PI / 7) * -arrowSize);
-
+    //creating the arrow head
     QPolygonF arrowHead;
     arrowHead << arrowPos << arrowP1 << arrowP2;
-
+    //setting the color of the arrow
     painter->setBrush(Qt::darkMagenta);
     painter->drawPolygon(arrowHead);
   }
 }
 
+//overriding context menu event to delete the transition
 void TransitionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     QMenu menu;
     QAction *deleteAction = menu.addAction("Delete Transition");
@@ -241,15 +242,3 @@ void TransitionItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
         emit transitionDeleted(this);
     }
 }
-
-/*
-void TransitionItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event) {
-    setZValue(10);
-    QGraphicsPathItem::hoverEnterEvent(event);
-}
-
-void TransitionItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event) {
-    setZValue(-20); // nebo původní hodnota
-    QGraphicsPathItem::hoverLeaveEvent(event);
-}
-*/
