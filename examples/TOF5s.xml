@@ -1,13 +1,13 @@
 <automaton name="TOF5s">
     <comment>Timer to off, jednoduchá verze.</comment>
     <inputs>
-        <input name="in"/>
+        <input name="in" />
     </inputs>
     <outputs>
-        <output name="out"/>
+        <output name="out" />
     </outputs>
     <variables>
-        <variable name="timeout" type="int" value="5000"/>
+        <variable name="timeout" type="int" value="5000" />
     </variables>
     <states>
         <state name="IDLE" initial="true">
@@ -16,20 +16,17 @@
         <state name="ACTIVE">
             <code><![CDATA[output("out", 1);]]></code>
         </state>
-        <state name="TIMING"/>
+        <state name="TIMING" />
     </states>
     <transitions>
         <transition from="IDLE" to="ACTIVE">
-            <condition event="in">Qtoi(valueof("in")) == 1</condition>
-            <condition event="in"><![CDATA[atoi(valueof("in")) == 1]]></condition>
+            <condition event="in"><![CDATA[Qtoi(valueof("in")) == 1]]></condition>
         </transition>
         <transition from="ACTIVE" to="TIMING">
-            <condition event="in">Qtoi(valueof("in")) == 0</condition>
-            <condition event="in"><![CDATA[atoi(valueof("in")) == 0]]></condition>
+            <condition event="in"><![CDATA[Qtoi(valueof("in")) == 0]]></condition>
         </transition>
         <transition from="TIMING" to="ACTIVE">
-            <condition event="in">Qtoi(valueof("in")) == 1</condition>
-            <condition event="in"><![CDATA[atoi(valueof("in")) == 1]]></condition>
+            <condition event="in"><![CDATA[Qtoi(valueof("in")) == 1]]></condition>
         </transition>
         <transition from="TIMING" to="IDLE">
             <delay>timeout</delay>

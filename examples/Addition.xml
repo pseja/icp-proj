@@ -1,27 +1,27 @@
 <automaton name="Addition">
-    <comment>Adds two inputs and prints the result.</comment>
+    <comment>Adds two inputs and prints the result. Usage: Set a (a = 1), set b (b = 2), set sum_req to 1 (sum_req = 1) to see the result.</comment>
     <inputs>
-        <input name="a"/>
-        <input name="b"/>
-        <input name="sum_req"/>
+        <input name="a" />
+        <input name="b" />
+        <input name="sum_req" />
     </inputs>
     <outputs>
-        <output name="sum"/>
+        <output name="sum" />
     </outputs>
     <variables>
-        <variable name="delay500" type="int" value="500"/>
+        <variable name="delay500" type="int" value="500" />
     </variables>
     <states>
         <state name="IDLE" initial="true">
-            <code>inputs["sum_req"] = "0";</code>
+            <code><![CDATA[inputs["sum_req"] = "0";]]></code>
         </state>
         <state name="SUM">
-            <code>int result = Qtoi(valueof("a")) + Qtoi(valueof("b")); output("sum", result);</code>
+            <code><![CDATA[int result = Qtoi(valueof("a")) + Qtoi(valueof("b")); output("sum", result);]]></code>
         </state>
     </states>
     <transitions>
         <transition from="IDLE" to="SUM">
-            <condition event="sum_req">Qtoi(valueof("sum_req")) == 1</condition>
+            <condition event="sum_req"><![CDATA[Qtoi(valueof("sum_req")) == 1]]></condition>
         </transition>
         <transition from="SUM" to="IDLE">
             <delay>delay500</delay>

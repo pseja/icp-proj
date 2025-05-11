@@ -1,10 +1,10 @@
 <automaton name="TimeoutOnly">
     <comment>Automaton where all transitions are only timeouts (path - graph theory)</comment>
     <variables>
-        <variable name="timeout1" type="int" value="1000"/>
-        <variable name="timeout2" type="int" value="2000"/>
-        <variable name="timeout3" type="int" value="3000"/>
-        <variable name="timeout4" type="int" value="4000"/>
+        <variable name="timeout1" type="int" value="1000" />
+        <variable name="timeout2" type="int" value="2000" />
+        <variable name="timeout3" type="int" value="3000" />
+        <variable name="timeout4" type="int" value="4000" />
     </variables>
     <states>
         <state name="FIRST" initial="true" />

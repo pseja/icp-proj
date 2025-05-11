@@ -1,27 +1,27 @@
 <automaton name="EdgeDetector">
-    <comment>Detects rising and falling edges on input sig.</comment>
+    <comment>Detects rising and falling edges on input sig. Usage: Repeatedly set values of sig to either 1 or 0 to simulate edges.</comment>
     <inputs>
-        <input name="sig"/>
+        <input name="sig" />
     </inputs>
     <outputs>
-        <output name="rising"/>
-        <output name="falling"/>
+        <output name="rising" />
+        <output name="falling" />
     </outputs>
     <variables>
-        <variable name="last" type="int" value="0"/>
+        <variable name="last" type="int" value="0" />
     </variables>
     <states>
         <state name="MONITOR" initial="true">
-            <code>
-                if (Qtoi(valueof("sig")) == 1 &amp;&amp; last == 0) output("rising", 1);
-                if (Qtoi(valueof("sig")) == 0 &amp;&amp; last == 1) output("falling", 1);
-                last = Qtoi(valueof("sig"));
+            <code><![CDATA[
+                if (Qtoi(valueof("sig")) == 1 && last == 0) output("rising", 1);
+                if (Qtoi(valueof("sig")) == 0 && last == 1) output("falling", 1);
+                last = Qtoi(valueof("sig"));]]>
             </code>
         </state>
     </states>
     <transitions>
         <transition from="MONITOR" to="MONITOR">
-            <condition event="sig"/>
+            <condition event="sig" />
         </transition>
     </transitions>
 </automaton>
