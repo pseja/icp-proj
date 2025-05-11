@@ -54,6 +54,12 @@ void StateItem::updateState(const QString &newName, const QString &newCode, bool
   state->setCode(newCode);
   state->setInitial(initial);
 
+  if (initial) {
+    setPen(QPen(QColor(160, 32, 240), 5)); 
+  } else {
+    setPen(QPen(Qt::black, 2));
+  }
+
   textItem->setPlainText(state->getName());
   QRectF ell = boundingRect();
   QRectF text = textItem->boundingRect();

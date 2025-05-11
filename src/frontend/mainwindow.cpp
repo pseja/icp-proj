@@ -515,6 +515,8 @@ void MainWindow::requestedFSM(const QString &model) {
     StateItem *stateItem = new StateItem(state->getName(), state->getCode());
     stateItem->state = state;
     stateItem->setPos(100 + col * spacing, 100 + row * spacing);
+    if (state->isInitial()) { stateItem->setPen(QPen(QColor(160, 32, 240), 5));} 
+    else {stateItem->setPen(QPen(Qt::black, 2));}
     automatView->scene()->addItem(stateItem);
     state_map[state] = stateItem;
     
@@ -763,6 +765,10 @@ void MainWindow::loadFSM() {
       StateItem *stateItem = new StateItem(state->getName(), state->getCode());
       stateItem->state = state;
       stateItem->setPos(100 + col * spacing, 100 + row * spacing);
+
+      if (state->isInitial()) { stateItem->setPen(QPen(QColor(160, 32, 240), 5));} 
+      else {stateItem->setPen(QPen(Qt::black, 2));}
+      
       automatView->scene()->addItem(stateItem);
       state_map[state] = stateItem;
 
@@ -1013,6 +1019,8 @@ void MainWindow::refreshFSM() {
     StateItem *stateItem = new StateItem(state->getName(), state->getCode());
     stateItem->state = state;
     stateItem->setPos(100 + col * spacing, 100 + row * spacing);
+    if (state->isInitial()) { stateItem->setPen(QPen(QColor(160, 32, 240), 5));} 
+    else {stateItem->setPen(QPen(Qt::black, 2));}
     automatView->scene()->addItem(stateItem);
     state_map[state] = stateItem;
 
