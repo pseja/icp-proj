@@ -14,13 +14,11 @@
 #include <qobjectdefs.h>
 #include <qprocess.h>
 #include <qvector.h>
-
 #include <QHeaderView>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QTableWidget>
 #include <QVBoxLayout>
-
 #include "AutomatView.hpp"
 #include "StateItem.hpp"
 #include "backend/GuiClient.hpp"
@@ -414,5 +412,34 @@ Example snippets
 
 Tip: Keep your code simple and focused on logic. Use the provided helper functions for interacting with inputs, outputs, and logging. 
 Remember to use Qtoi for conversions when working with QStrings. Also check out official QString Qt5.9 documentation. )";
+
+    /**
+     * @brief Help text for writing commands in console.
+     */
+    QString help = R"(--------------------------------------------------------------------------
+Terminal usage:
+--------------------------------------------------------------------------
+- input value set: 
+input=inputValue
+
+- input call to trigger event without setting a new value
+input
+--------------------------------------------------------------------------
+- clear the terminal (not the fsm)
+/clear
+
+- display help message
+/help
+
+- run the fsm
+/run
+
+- refresh the fsm view
+/refresh
+
+- version display
+/version
+--------------------------------------------------------------------------)";
+    
 };
 #endif  // MAINWINDOW_HPP

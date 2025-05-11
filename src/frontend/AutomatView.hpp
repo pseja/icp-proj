@@ -12,9 +12,6 @@
 #include "StateItem.hpp"
 #include "TransitionItem.hpp"
 #include "backend/fsm.hpp"
-// #include "src/frontend/mainwindow.hpp"
-// #include "src/frontend/mainwindow.hpp"
-// #include "src/frontend/mainwindow.hpp"
 #include <qevent.h>
 #include <qglobal.h>
 #include <qgraphicsitem.h>

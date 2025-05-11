@@ -100,14 +100,34 @@ class GuiClient : public QObject {
      */
     void sendPong();
 
+    /**
+     * @brief Set the host address for the FSM server.
+     * @param host Hostname or IP address.
+     */
     void setHost(const QString &host) { m_host = host; }
 
+    /**
+     * @brief Set the TCP port for the FSM server.
+     * @param port TCP port number.
+     */
     void setPort(quint16 port) { m_port = port; }
 
+    /**
+     * @brief Get the current host address for the FSM server.
+     * @return Hostname or IP address as a QString.
+     */
     QString getHost() const { return m_host; }
 
+    /**
+     * @brief Get the current TCP port for the FSM server.
+     * @return TCP port number.
+     */
     quint16 getPort() const { return m_port; }
 
+    /**
+     * @brief Check if the client is currently connected to the FSM server.
+     * @return True if connected, false otherwise.
+     */
     bool isConnected() const { return socket && socket->state() == QAbstractSocket::ConnectedState; }
 
    public slots:
@@ -119,21 +139,85 @@ class GuiClient : public QObject {
     void onReadyRead();
 
    signals:
+    /**
+     * @brief Emitted when the FSM state changes.
+     * @param state The new state name.
+     */
     void stateChange(const QString &state);
+    /**
+     * @brief Emitted when an output value is received from the FSM server.
+     * @param name Name of the output.
+     * @param value Value of the output.
+     */
     void printoutput(const QString &name, const QString &value);
+    /**
+     * @brief Emitted when an input value is received from the FSM server.
+     * @param name Name of the input.
+     * @param value Value of the input.
+     */
     void printinput(const QString &name, const QString &value);
+    /**
+     * @brief Emitted when a variable value is received from the FSM server.
+     * @param name Name of the variable.
+     * @param value Value of the variable.
+     */
     void printvariable(const QString &name, const QString &value);
+    /**
+     * @brief Emitted when a timer is started in the FSM.
+     * @param from Source state.
+     * @param to Target state.
+     * @param ms Duration in milliseconds.
+     */
     void timerstart(const QString &from, const QString &to, const QString &ms);
+    /**
+     * @brief Emitted when a timer ends in the FSM.
+     * @param from Source state.
+     * @param to Target state.
+     */
     void timerend(const QString &from, const QString &to);
+    /**
+     * @brief Emitted when a message is received from the FSM server.
+     * @param msg The message text.
+     */
     void printmsg(const QString &msg);
+    /**
+     * @brief Emitted when an error message is received from the FSM server.
+     * @param msg The error message text.
+     * @param code The error code.
+     */
     void printerr(const QString &msg, const QString &code);
+    /**
+     * @brief Emitted when a log message is received from the FSM server.
+     * @param msg The log message text.
+     */
     void printlog(const QString &msg);
+    /**
+     * @brief Emitted when the FSM model XML is requested or received.
+     * @param model The FSM model XML as a string.
+     */
     void requestedFSM(const QString &model);
+    /**
+     * @brief Emitted when the FSM status is received from the server.
+     * @param status The current FSM status.
+     */
     void fsmStatus(const FsmStatus &status);
+    /**
+     * @brief Emitted when a shutdown message is sent from the FSM server.
+     * @param msg The shutdown message.
+     */
     void sendshutdown(const QString &msg);
 
    private:
+    /**
+     * @brief TCP socket used for communication with the FSM server.
+     */
     QTcpSocket *socket;
+    /**
+     * @brief Hostname or IP address of the FSM server.
+     */
     QString m_host;
+    /**
+     * @brief TCP port number of the FSM server.
+     */
     quint16 m_port;
 };

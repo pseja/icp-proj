@@ -681,17 +681,15 @@ void MainWindow::onConsoleEnter() {
       runFSM();
       ui->console->clear();
     } else if (command == "clear") {
-      clearFSM();
+      ui->logConsole->clear();
       ui->console->clear();
     } else if (command == "refresh") {
       refreshFSM();
       ui->console->clear();
-    } else if (command == "prettyPrint") {
-      fsm->prettyPrint();
     } else if (command == "help") {
       QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
       ui->logConsole->appendPlainText(now + ": ");
-      ui->logConsole->appendPlainText(helpText);
+      ui->logConsole->appendPlainText(help);
       ui->console->clear();
     } else if (command == "version") {
       ui->logConsole->appendPlainText("[VERSION] Version: 1.0 alpha");
