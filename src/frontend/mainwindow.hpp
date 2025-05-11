@@ -79,7 +79,7 @@ private:
   QProcess *serverProcess = nullptr;
   QMap<QString, QString> inputs;
   QMap<QString, QString> outputs;
-
+  bool autoConnectAttempted = false;
 
 QString helpText = R"(Writing code for state actions and transition conditions
 ========================================================

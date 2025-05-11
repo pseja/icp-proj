@@ -39,6 +39,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , autoConnectAttempted(false)
 {
   ui->setupUi(this);
   resize(1920, 1080);
@@ -58,17 +59,9 @@ MainWindow::MainWindow(QWidget *parent)
   ui->buttonStop->setEnabled(false);
   ui->buttonRun->setStyleSheet("background-color: green; color: white;");
 
-  // Try to connect to an FSM on startup
-  QTcpSocket probeSocket;
-  probeSocket.connectToHost("127.0.0.1", 54323);
-  qDebug("[INFO] Probing for FSM server on 127.0.0.1:54323...");
-  if (probeSocket.waitForConnected(1000)) {
-      qDebug() << "[INFO] Detected running FSM server on startup, connecting...";
-      ui->logConsole->appendPlainText("[INFO] Detected running FSM server on startup, connecting...");
-      connectToFSM();
-  } else {
-      qDebug() << "[INFO] No FSM server detected on startup.";
-  }
+  // Try to connect to an FSM server on startup
+  autoConnectAttempted = true;
+  connectToFSM();
 
   //-------------------------AUTOMAT VIEW SIGNALS-----------------
   connect(automatView, &AutomatView::showFSMInfo, this, &MainWindow::showFSMInfo);
@@ -378,6 +371,11 @@ void MainWindow::saveFSM() {
 }
 
 void MainWindow::stateChanged(QString stateName) {
+  if (autoConnectAttempted) {
+    qDebug() << "Connected to running FSM server on startup";
+    ui->logConsole->appendPlainText("Automatically connected to a remote FSM server.");
+    autoConnectAttempted = false;
+  }
   for (QGraphicsItem *item : automatView->scene()->items()) {
     if (typeid(*item) != typeid(StateItem)) {continue;}
     StateItem *state = dynamic_cast<StateItem *>(item);
