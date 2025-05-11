@@ -295,8 +295,8 @@ void MainWindow::updateTransitionInfo(TransitionItem *transition) {
   conditionLine->setText(transition->transition->getCondition());
   delayLine->setText(QString::number(transition->transition->getDelay()));
   delayVarLine->setText(transition->transition->getDelayVariableName());
-  fromLabel->setAlignment(Qt::AlignCenter);
-  toLabel->setAlignment(Qt::AlignCenter);
+  fromLabel->setAlignment(Qt::AlignLeft);
+  toLabel->setAlignment(Qt::AlignLeft);
   arrowLabel->setAlignment(Qt::AlignCenter);
   fromLabel->setText(transition->getFrom()->state->getName());
   toLabel->setText(transition->getTo()->state->getName());
