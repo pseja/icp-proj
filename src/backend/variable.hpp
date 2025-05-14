@@ -20,9 +20,10 @@ class Variable : public QObject {
     Q_OBJECT
 
    private:
-    QString name;    ///< The name of the variable.
-    QString type;    ///< The type of the variable.
-    QVariant value;  ///< The value of the variable.
+    QString name;           ///< The name of the variable.
+    QString type;           ///< The type of the variable.
+    QVariant value;         ///< The value of the variable.
+    QVariant initialValue;  ///< The initial value of the variable.
 
    public:
     /**
@@ -61,6 +62,13 @@ class Variable : public QObject {
     QVariant getValue();
 
     /**
+     * @brief Gets the initial value of the variable.
+     *
+     * @return The initial value of the variable.
+     */
+    QVariant getInitialValue();
+
+    /**
      * @brief Sets the name of the variable.
      *
      * @param new_name The new name of the variable.
@@ -80,4 +88,9 @@ class Variable : public QObject {
      * @param new_value The new value of the variable.
      */
     void setValue(const QVariant &new_value);
+
+    /**
+     * @brief Resets the value of the variable to its initial value.
+     */
+    void resetToInitialValue();
 };
