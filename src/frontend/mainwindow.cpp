@@ -1038,7 +1038,21 @@ void MainWindow::runFSM() {
   compiling.start("g++", args);
   if (!compiling.waitForFinished() || compiling.exitCode() != 0) {
     ui->logConsole->appendPlainText("[ERROR] Compilation failed!");
-    qDebug() << "Compilation failed SADGE:" << compiling.readAllStandardError();
+    QByteArray compileErr = compiling.readAllStandardError();
+    if (!compileErr.isEmpty()) {
+      ui->logConsole->appendPlainText("[ERROR] Compiler: \n" + QString::fromLocal8Bit(compileErr));
+    }
+    qDebug().noquote() << "[ERROR] Compilation failed!: \n" << QString::fromLocal8Bit(compileErr);
+    ui->groupBox->setEnabled(true);
+    ui->groupBox_2->setEnabled(true);
+    ui->groupBox_3->setEnabled(true);
+    ui->buttonClear->setEnabled(true);
+    ui->buttonRun->setEnabled(true);
+    ui->buttonRefresh->setEnabled(true);
+    ui->buttonStop->setEnabled(false);
+    ui->buttonRun->setStyleSheet("background-color: green; color: white;");
+    ui->buttonStop->setStyleSheet("");
+    automatView->setEnabled(true);
     return;
   }
 
