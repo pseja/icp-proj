@@ -433,8 +433,8 @@ void MainWindow::saveFSM() {
 // simulates active state in running FSM
 void MainWindow::stateChanged(QString stateName) {
   if (autoConnectAttempted) {
-    qDebug() << "Connected to running FSM server on startup";
-    ui->logConsole->appendPlainText("Automatically connected to a remote FSM server.");
+    qDebug() << "Connected to a running FSM server on startup";
+    ui->logConsole->appendPlainText("[INFO] Connected to a running FSM server on startup.");
     autoConnectAttempted = false;
   }
   for (QGraphicsItem *item : automatView->scene()->items()) {
@@ -526,7 +526,7 @@ void MainWindow::printmsg(const QString &msg) {
 // it is used to display error messages in the UI, log console
 void MainWindow::printerr(const QString &msg, const QString &code) {
   QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
-  ui->logConsole->appendPlainText(now + ": [ATTENTION ERROR] " + msg + " (Error code: " + code + ")");
+  ui->logConsole->appendPlainText(now + ": [ERROR] " + msg + " (Error code: " + code + ")");
 }
 // function to log messages in the UI, log console
 void MainWindow::printlog(const QString &msg) {
@@ -537,7 +537,7 @@ void MainWindow::printlog(const QString &msg) {
 // information is parsed and used to display the FSM in the UI
 void MainWindow::requestedFSM(const QString &model) {
   qDebug() << "got FSM";
-  ui->logConsole->appendPlainText("[FSM XML RECEIVED]");
+  // ui->logConsole->appendPlainText("[FSM XML RECEIVED]");
   sudoclearFSM();
   QString user = QString::fromLocal8Bit(qgetenv("USER"));
   if (user.isEmpty()) user = "unknown";
@@ -564,7 +564,7 @@ void MainWindow::requestedFSM(const QString &model) {
     return;
   }
   if(!XMLParser::XMLtoFSM(tempPath, *fsm)){return;}
-  ui->logConsole->appendPlainText("[FSM XML PARSED]");
+  // ui->logConsole->appendPlainText("[FSM XML PARSED]");
   automatView->scene()->clear();
   int cols = ceil(sqrt(fsm->getStates().size()));
   int spacing = 120;
@@ -657,7 +657,7 @@ void MainWindow::fsmStatus(const FsmStatus &status) {
 // we announce the shutdown in the log console
 // kill the process if running and ours otherwise sending shutdown back
 void MainWindow::handleshutdown(const QString &msg) {
-  ui->logConsole->appendPlainText("[SHUTDOWN] FSM server is shutting down.");
+  ui->logConsole->appendPlainText("[SHUTDOWN] FSM server is shutting down.\n[SERVER] " + msg);
   stopFSM();
 }
 
@@ -993,7 +993,7 @@ void MainWindow::runFSM() {
     out << generatedCode;
     file.close();
   } else {
-    ui->logConsole->appendPlainText("[ERROR] Code generation failed!");
+    ui->logConsole->appendPlainText("[ERROR] Code generation failed: Unable to write generated code to file '" + genCpp + "'.");
     qDebug() << "Failed to save generated code to file" << genCpp;
     return;
   }
@@ -1009,7 +1009,7 @@ void MainWindow::runFSM() {
   pkgConfigProc.start("pkg-config", QStringList() << "--cflags" << "--libs" << "Qt5Core" << "Qt5Network"
                                                     << "Qt5Widgets" << "Qt5Xml" << "Qt5Gui");
   if (!pkgConfigProc.waitForFinished() || pkgConfigProc.exitCode() != 0) {
-    ui->logConsole->appendPlainText("[ERROR] pkg-config failed!");
+    ui->logConsole->appendPlainText("[ERROR] Build failed: pkg-config could not retrieve Qt flags. Ensure Qt is installed and pkg-config is configured.");
     qDebug() << "pkg-config failed:" << pkgConfigProc.readAllStandardError();
     return;
   }
@@ -1037,10 +1037,10 @@ void MainWindow::runFSM() {
   QProcess compiling;
   compiling.start("g++", args);
   if (!compiling.waitForFinished() || compiling.exitCode() != 0) {
-    ui->logConsole->appendPlainText("[ERROR] Compilation failed!");
+    ui->logConsole->appendPlainText("[ERROR] Compilation failed: g++ could not compile the generated code.");
     QByteArray compileErr = compiling.readAllStandardError();
     if (!compileErr.isEmpty()) {
-      ui->logConsole->appendPlainText("[ERROR] Compiler: \n" + QString::fromLocal8Bit(compileErr));
+      ui->logConsole->appendPlainText("[ERROR] Compiler output:\n" + QString::fromLocal8Bit(compileErr));
     }
     qDebug().noquote() << "[ERROR] Compilation failed!: \n" << QString::fromLocal8Bit(compileErr);
     ui->groupBox->setEnabled(true);
@@ -1067,12 +1067,12 @@ void MainWindow::runFSM() {
   serverProcess->setProcessEnvironment(myenv);
   serverProcess->start(exe, QStringList{"--port", QString::number(client->getPort()), "--host", client->getHost()});
   if (!serverProcess->waitForStarted()) {
-    ui->logConsole->appendPlainText("[ERROR] Failed to start server process!");
+    ui->logConsole->appendPlainText("[ERROR] Server start failed: Unable to launch FSM server process.");
     qDebug() << "Failed to start server process SADGE";
     return;
   }
   qDebug() << "Server is running RAAAAHHHH:" << serverProcess->processId();
-  ui->logConsole->appendPlainText("[INFO] FSM server started.");
+  ui->logConsole->appendPlainText("[INFO] FSM server started successfully. Waiting for client connection...");
   QTimer::singleShot(750, this, [this]() {
     client->connectToServer();
   });
@@ -1085,11 +1085,11 @@ void MainWindow::stopFSM() {
   if (serverProcess) {
     if (serverProcess->state() != QProcess::NotRunning) {
       serverProcess->terminate();
-      serverProcess->waitForFinished(1000); // wait max 1 sec
+      serverProcess->waitForFinished(1000);
+      ui->logConsole->appendPlainText("[INFO] FSM server process terminated by user.");
     }
     delete serverProcess;
     serverProcess = nullptr;
-    ui->logConsole->appendPlainText("[INFO] FSM server stopped.");
   } else {
     if (client && client->isConnected()) {
       qDebug() << "[DEBUG] Sending shutdown command to remote FSM server.";
@@ -1248,9 +1248,9 @@ void MainWindow::refreshFSM() {
 // can be used in debugging cases or just user awarness
 void MainWindow::checkConnection() {
   if (client->isConnected()) {
-    QMessageBox::information(this, "Connection Status", "Connected to FSM server.");
+    QMessageBox::information(this, "Connection Status", "Connected to an FSM server.");
   } else {
-    QMessageBox::warning(this, "Connection Status", "Not connected to FSM server.");
+    QMessageBox::warning(this, "Connection Status", "Not connected to an FSM server.");
   }
 }
 // function prepares the connection to the FSM server
@@ -1258,9 +1258,10 @@ void MainWindow::checkConnection() {
 void MainWindow::connectToFSM() {
   client->connectToServer();
   if (!client->isConnected()) {
-    ui->logConsole->appendPlainText("[ERROR] Could not connect to FSM server.");
+    ui->logConsole->appendPlainText("[INFO] No valid FSM server to automatically connect to.");
     return;
   }
+  ui->logConsole->appendPlainText("[INFO] Connection successfull: Connected to an FSM server at " + client->getHost() + ":" + QString::number(client->getPort()) + ".");
   showFSMInfo();
   ui->groupBox->setEnabled(false);
   ui->groupBox_2->setEnabled(false);
