@@ -677,22 +677,22 @@ void MainWindow::onConsoleEnter() {
     ui->logConsole->appendPlainText(now + ": " + identifier + " = " + value);
     ui->console->clear();
   } else {
-    if (command == "run") {
+    if (command == "/run") {
       runFSM();
       ui->console->clear();
-    } else if (command == "clear") {
+    } else if (command == "/clear") {
       ui->logConsole->clear();
       ui->console->clear();
-    } else if (command == "refresh") {
+    } else if (command == "/refresh") {
       refreshFSM();
       ui->console->clear();
-    } else if (command == "help") {
+    } else if (command == "/help") {
       QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
       ui->logConsole->appendPlainText(now + ": ");
       ui->logConsole->appendPlainText(help);
       ui->console->clear();
-    } else if (command == "version") {
-      ui->logConsole->appendPlainText("[VERSION] Version: 1.0 alpha");
+    } else if (command == "/version") {
+      ui->logConsole->appendPlainText("[INFO] Version: 1.0 alpha");
       ui->console->clear();
     } else {
       QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
