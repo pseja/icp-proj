@@ -1,0 +1,80 @@
+<automaton name="Doubler">
+    <comment>Use set_to to set a starting number, after inputting go the iteration will begin. Each second the num will double. Input stop to stop this.</comment>
+    <inputs>
+        <input name="stop"/>
+        <input name="set_to"/>
+        <input name="power"/>
+        <input name="double"/>
+        <input name="square"/>
+        <input name="half"/>
+    </inputs>
+    <outputs>
+        <output name="out"/>
+    </outputs>
+    <variables>
+        <variable type="int" value="1000" name="delay"/>
+        <variable type="float" value="1.1" name="num"/>
+    </variables>
+    <states>
+        <state name="DOUBLE">
+            <code><![CDATA[num += num;]]></code>
+        </state>
+        <state name="HALF">
+            <code><![CDATA[num = num/2;]]></code>
+        </state>
+        <state initial="true" name="INIT"/>
+        <state name="POWER">
+            <code><![CDATA[num = num*num;]]></code>
+        </state>
+        <state name="SET">
+            <code><![CDATA[num = Qtoi(valueof("set_to"));]]></code>
+        </state>
+        <state name="SQUARE">
+            <code><![CDATA[num = num*2;]]></code>
+        </state>
+    </states>
+    <transitions>
+        <transition to="INIT" from="DOUBLE">
+            <condition event="stop"><![CDATA[]]></condition>
+        </transition>
+        <transition to="DOUBLE" from="DOUBLE">
+            <delay>delay</delay>
+        </transition>
+        <transition to="INIT" from="HALF">
+            <condition event="stop"><![CDATA[]]></condition>
+        </transition>
+        <transition to="HALF" from="HALF">
+            <delay>delay</delay>
+        </transition>
+        <transition to="POWER" from="INIT">
+            <condition event="power"><![CDATA[]]></condition>
+        </transition>
+        <transition to="SET" from="INIT">
+            <condition event="set_to"><![CDATA[]]></condition>
+        </transition>
+        <transition to="DOUBLE" from="INIT">
+            <condition event="double"><![CDATA[]]></condition>
+        </transition>
+        <transition to="SQUARE" from="INIT">
+            <condition event="square"><![CDATA[]]></condition>
+        </transition>
+        <transition to="HALF" from="INIT">
+            <condition event="half"><![CDATA[]]></condition>
+        </transition>
+        <transition to="INIT" from="POWER">
+            <condition event="stop"><![CDATA[]]></condition>
+        </transition>
+        <transition to="POWER" from="POWER">
+            <delay>delay</delay>
+        </transition>
+        <transition to="INIT" from="SET">
+            <delay>delay</delay>
+        </transition>
+        <transition to="INIT" from="SQUARE">
+            <condition event="stop"><![CDATA[]]></condition>
+        </transition>
+        <transition to="SQUARE" from="SQUARE">
+            <delay>delay</delay>
+        </transition>
+    </transitions>
+</automaton>

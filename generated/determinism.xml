@@ -1,0 +1,29 @@
+<automaton name="determinism.xml">
+    <comment>Automata showcasing determinism. Condition is satisfied for both transitions from the DECIDE state, yet the same one is always taken.</comment>
+    <inputs>
+        <input name="go"/>
+    </inputs>
+    <variables>
+        <variable type="int" value="1000" name="delay"/>
+        <variable type="int" value="1" name="in"/>
+    </variables>
+    <states>
+        <state initial="true" name="START"/>
+        <state name="DECIDE"/>
+        <state name="STATE1"/>
+        <state name="STATE2"/>
+    </states>
+    <transitions>
+        <transition to="DECIDE" from="START">
+            <condition event="go"><![CDATA[]]></condition>
+        </transition>
+        <transition to="STATE2" from="DECIDE"/>
+        <transition to="STATE1" from="DECIDE"/>
+        <transition to="START" from="STATE1">
+            <delay>delay</delay>
+        </transition>
+        <transition to="START" from="STATE2">
+            <delay>delay</delay>
+        </transition>
+    </transitions>
+</automaton>

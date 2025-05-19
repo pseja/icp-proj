@@ -1,0 +1,51 @@
+<automaton name="bin_tree">
+    <comment>Mock binary tree. Set an input with set_to and then input "calc". The active state + the last value of the "less" variables specifies the "search".</comment>
+    <inputs>
+        <input name="set_to"/>
+        <input name="calc"/>
+    </inputs>
+    <variables>
+        <variable type="int" value="0" name="less"/>
+        <variable type="int" value="0" name="num"/>
+    </variables>
+    <states>
+        <state name="_20_">
+            <code><![CDATA[if (num < 20) { less =1; } else { less = 0; }]]></code>
+        </state>
+        <state name="_10_">
+            <code><![CDATA[if (num < 10) { less =1; } else { less = 0; }]]></code>
+        </state>
+        <state name="_30_">
+            <code><![CDATA[if (num < 30) { less =1; } else { less = 0; }]]></code>
+        </state>
+        <state name="_5_">
+            <code><![CDATA[if (num < 5) { less =1; } else { less = 0; }]]></code>
+        </state>
+        <state name="_15_">
+            <code><![CDATA[if (num < 15) { less =1; } else { less = 0; }]]></code>
+        </state>
+        <state name="_25_">
+            <code><![CDATA[if (num < 25) { less =1; } else { less = 0; }]]></code>
+        </state>
+        <state name="_35_">
+            <code><![CDATA[if (num <  35) { less =1; } else { less = 0; }]]></code>
+        </state>
+        <state initial="true" name="START">
+            <code><![CDATA[num=Qtoi(valueof("set_to"));]]></code>
+        </state>
+    </states>
+    <transitions>
+        <transition to="_20_" from="START">
+            <condition event="calc"><![CDATA[]]></condition>
+        </transition>
+        <transition to="START" from="START">
+            <condition event="set_to"><![CDATA[]]></condition>
+        </transition>
+        <transition to="_15_" from="_10_"/>
+        <transition to="_5_" from="_10_"/>
+        <transition to="_30_" from="_20_"/>
+        <transition to="_10_" from="_20_"/>
+        <transition to="_35_" from="_30_"/>
+        <transition to="_25_" from="_30_"/>
+    </transitions>
+</automaton>
