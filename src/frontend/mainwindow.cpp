@@ -181,7 +181,7 @@ void MainWindow::saveState() {
   }
 }
 
-//loasing information about the FSM into main fsm view
+//loading information about the FSM into main fsm view
 void MainWindow::showFSMInfo() {
   ui->groupBox->setEnabled(false);
   ui->groupBox->setVisible(false);
@@ -658,7 +658,39 @@ void MainWindow::fsmStatus(const FsmStatus &status) {
 // kill the process if running and ours otherwise sending shutdown back
 void MainWindow::handleshutdown(const QString &msg) {
   ui->logConsole->appendPlainText("[SHUTDOWN] FSM server is shutting down.\n[SERVER] " + msg);
-  stopFSM();
+  if (serverProcess) {
+    if (serverProcess->state() != QProcess::NotRunning) {
+      serverProcess->terminate();
+      serverProcess->waitForFinished(1000);
+      ui->logConsole->appendPlainText("[INFO] FSM server process terminated by user.");
+    }
+    delete serverProcess;
+    serverProcess = nullptr;
+  }
+    for (Variable *var : fsm->getVariables()) {
+    if (var) {
+      var->resetToInitialValue();
+    }
+  }
+  showFSMInfo();
+  
+  // stop blinking all transitions when fsm is stopped
+  for (QGraphicsItem *item : automatView->scene()->items()) {
+    if (typeid(*item) == typeid(TransitionItem)) {
+      TransitionItem *trans = dynamic_cast<TransitionItem *>(item);
+      trans->stopBlinking();
+    }
+  }
+  ui->groupBox->setEnabled(true);
+  ui->groupBox_2->setEnabled(true);
+  ui->groupBox_3->setEnabled(true);
+  ui->buttonClear->setEnabled(true);
+  ui->buttonRun->setEnabled(true);
+  ui->buttonRefresh->setEnabled(true);
+  ui->buttonStop->setEnabled(false);
+  ui->buttonRun->setStyleSheet("background-color: green; color: white;");
+  ui->buttonStop->setStyleSheet("");
+  automatView->setEnabled(true);
 }
 
 // mini parser for console commands
@@ -721,7 +753,7 @@ void MainWindow::saveVars() {
   QString value = valueEdit->text();
   QString fsmNameText = fsmName->text();
 
-  //variable cannot be empty
+  //variablecannot be empty
   if (!(variable.isEmpty() || type.isEmpty() || value.isEmpty())) {
     Variable *var = new Variable(type, variable, value);
     fsm->addVariable(var);
@@ -861,14 +893,8 @@ void MainWindow::loadFSM() {
     automatView->scene()->clear();
     if(!XMLParser::XMLtoFSM(fileName, *fsm)){return;}
 
-    for (Variable *var : fsm->getVariables()) {
-      if (var) { 
-        var->resetToInitialValue();
-      }
-    }
-
     int cols = ceil(sqrt(fsm->getStates().size()));
-    int spacing = 120;
+    int spacing = 200;
     int row = 0, col = 0;
     // displaying all states that were parsed from the file
     // putting them in a basic position, user can move them manually
@@ -1082,32 +1108,22 @@ void MainWindow::runFSM() {
 // it differs between terminating the process and sending shutdown command
 // both client and owner handling
 void MainWindow::stopFSM() {
-  if (serverProcess) {
-    if (serverProcess->state() != QProcess::NotRunning) {
-      serverProcess->terminate();
-      serverProcess->waitForFinished(1000);
-      ui->logConsole->appendPlainText("[INFO] FSM server process terminated by user.");
-    }
-    delete serverProcess;
-    serverProcess = nullptr;
-  } else {
-    if (client && client->isConnected()) {
-      qDebug() << "[DEBUG] Sending shutdown command to remote FSM server.";
-      client->sendShutdown();
-    }
+  if (client && client->isConnected()) {
+    qDebug() << "[DEBUG] Sending shutdown command to remote FSM server.";
+    client->sendShutdown();
   }
   for (Variable *var : fsm->getVariables()) {
-          if (var) { 
-        var->resetToInitialValue();
-      }
+    if (var) {
+      var->resetToInitialValue();
+    }
   }
   showFSMInfo();
   
-  //stop blinking all transitions when fsm is stopped
+  // stop blinking all transitions when fsm is stopped
   for (QGraphicsItem *item : automatView->scene()->items()) {
     if (typeid(*item) == typeid(TransitionItem)) {
       TransitionItem *trans = dynamic_cast<TransitionItem *>(item);
-      trans->stopBlinking();      
+      trans->stopBlinking();
     }
   }
   ui->groupBox->setEnabled(true);
@@ -1142,6 +1158,7 @@ void MainWindow::sudoclearFSM() {
   selectedTransition = nullptr;
   transitionItemsForSelectedState.clear();
   qDebug() << "Clearing FSM vars";
+
   //segfaulting here because some cast wont provide clear function
   auto clearWidget = [](QWidget* w) {
     if (auto line = qobject_cast<QLineEdit*>(w)) line->clear();
