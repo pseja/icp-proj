@@ -629,7 +629,7 @@ QString CodeGenerator::generateMainFunction(FSM* fsm) {
                 if (!ut) continue;
                 const QString& from = ut->fromStateName();
                 const QString& to = ut->toStateName();
-                if (from == stateName && from != to) {
+                if (from == stateName) {
                     ut->resetTimerArmed();
                     ut->stopTimer();
                     debug(QString("Stopped timer and reset for transition %1 → %2").arg(from, to));
