@@ -878,6 +878,7 @@ QString CodeGenerator::generateTcpXmlProtocolServer(FSM* fsm) {
                             QString name = root.firstChildElement("name").text();
                             QString value = root.firstChildElement("value").text();
                             if (inputs.contains(name)) {
+                                getEventFlags().clear();
                                 bool changed = (inputs[name] != value);
                                 inputs[name] = value;
                                 setInputCalled(name);
@@ -910,6 +911,7 @@ QString CodeGenerator::generateTcpXmlProtocolServer(FSM* fsm) {
                         } else if (type == "call") {
                             QString name = root.firstChildElement("name").text();
                             if (inputs.contains(name)) {
+                                getEventFlags().clear();
                                 setInputCalled(name);
                                 fsm.postEvent(new InputEvent(name, inputs[name]));
                                 log("Input '" + name + "' called via TCP");
@@ -1153,6 +1155,7 @@ QString CodeGenerator::generateTerminalInputHandler(FSM* fsm) {
                 log("Invalid input name: " + ANSI_BOLD + COLOR_ERROR + name + ANSI_RESET);
                 return;
             }
+            getEventFlags().clear();
 
             if (!value.isEmpty()) {
                 // SET mode: store the new value and trigger event
