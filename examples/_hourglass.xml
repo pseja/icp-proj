@@ -4,52 +4,54 @@
         <input name="in"/>
     </inputs>
     <variables>
-        <variable type="int" value="1000" name="delay"/>
-        <variable type="int" value="500" name="delay1"/>
+        <variable name="delay" value="1000" type="int"/>
+        <variable name="delay1" value="500" type="int"/>
     </variables>
     <states>
+        <state name="BOT1"/>
         <state name="BOT2"/>
-        <state name="TOP1"/>
-        <state name="TOP4"/>
-        <state initial="true" name="MIDDLE">
+        <state name="BOT3"/>
+        <state name="BOT4"/>
+        <state name="MIDDLE" initial="true">
             <code><![CDATA[output("out", "tick");]]></code>
         </state>
-        <state name="BOT1"/>
-        <state name="BOT4"/>
+        <state name="TOP1"/>
         <state name="TOP2"/>
         <state name="TOP3"/>
-        <state name="BOT3"/>
+        <state name="TOP4"/>
     </states>
     <transitions>
-        <transition from="BOT2" to="BOT3">
+        <transition to="BOT2" from="BOT1">
             <delay>delay</delay>
         </transition>
-        <transition from="TOP1" to="TOP2">
-            <delay>delay1</delay>
-        </transition>
-        <transition from="TOP4" to="MIDDLE">
-            <delay>delay1</delay>
-        </transition>
-        <transition from="MIDDLE" to="BOT1">
+        <transition to="BOT3" from="BOT2">
             <delay>delay</delay>
         </transition>
-        <transition from="MIDDLE" to="TOP1">
-            <delay>delay1</delay>
-        </transition>
-        <transition from="BOT1" to="BOT2">
+        <transition to="BOT4" from="BOT3">
             <delay>delay</delay>
         </transition>
-        <transition from="BOT4" to="MIDDLE">
+        <transition to="MIDDLE" from="BOT4">
             <delay>delay</delay>
         </transition>
-        <transition from="TOP2" to="TOP3">
-            <delay>delay1</delay>
-        </transition>
-        <transition from="TOP3" to="TOP4">
-            <delay>delay1</delay>
-        </transition>
-        <transition from="BOT3" to="BOT4">
+        <transition to="BOT1" from="MIDDLE">
             <delay>delay</delay>
+            <condition> <![CDATA[Qtoi(valueof("in")) == 1]]> </condition>
+        </transition>
+        <transition to="TOP1" from="MIDDLE">
+            <delay>delay1</delay>
+            <condition> <![CDATA[Qtoi(valueof("in")) == 2]]> </condition>
+        </transition>
+        <transition to="TOP2" from="TOP1">
+            <delay>delay1</delay>
+        </transition>
+        <transition to="TOP3" from="TOP2">
+            <delay>delay1</delay>
+        </transition>
+        <transition to="TOP4" from="TOP3">
+            <delay>delay1</delay>
+        </transition>
+        <transition to="MIDDLE" from="TOP4">
+            <delay>delay1</delay>
         </transition>
     </transitions>
 </automaton>

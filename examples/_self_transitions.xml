@@ -1,4 +1,4 @@
-<automaton name="Doubler">
+<automaton name="self_transitions">
     <comment>Use set_to to set a starting number, after inputting go the iteration will begin. Each second the num will double. Input stop to stop this.</comment>
     <inputs>
         <input name="stop"/>
