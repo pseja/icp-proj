@@ -606,6 +606,7 @@ void MainWindow::requestedFSM(const QString &model) {
       transItem->transition = transition;
       transItem->setLabel(transition->getCondition());
       automatView->scene()->addItem(transItem);
+      connect(transItem, &TransitionItem::transitionDeleted, this, &MainWindow::handleTransitionDeleted);
     }
   }
   qDebug() << "Requesting status from FSM";
@@ -936,6 +937,7 @@ void MainWindow::loadFSM() {
         transItem->transition = transition;
         transItem->setLabel(transition->getCondition());
         automatView->scene()->addItem(transItem);
+        connect(transItem, &TransitionItem::transitionDeleted, this, &MainWindow::handleTransitionDeleted);
       }
     }
     // displaying all inputs, outputs, variables
@@ -1246,6 +1248,7 @@ void MainWindow::refreshFSM() {
       transItem->transition = transition;
       transItem->setLabel(transition->getCondition());
       automatView->scene()->addItem(transItem);
+      connect(transItem, &TransitionItem::transitionDeleted, this, &MainWindow::handleTransitionDeleted);
     }
   }
     QTextEdit *textEdit = ui->groupBox_3->findChild<QTextEdit *>("inputsEdit");
