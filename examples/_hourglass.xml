@@ -1,0 +1,55 @@
+<automaton name="hourglass">
+    <comment>change in to change the cycle</comment>
+    <inputs>
+        <input name="in"/>
+    </inputs>
+    <variables>
+        <variable type="int" value="1000" name="delay"/>
+        <variable type="int" value="500" name="delay1"/>
+    </variables>
+    <states>
+        <state name="BOT2"/>
+        <state name="TOP1"/>
+        <state name="TOP4"/>
+        <state initial="true" name="MIDDLE">
+            <code><![CDATA[output("out", "tick");]]></code>
+        </state>
+        <state name="BOT1"/>
+        <state name="BOT4"/>
+        <state name="TOP2"/>
+        <state name="TOP3"/>
+        <state name="BOT3"/>
+    </states>
+    <transitions>
+        <transition from="BOT2" to="BOT3">
+            <delay>delay</delay>
+        </transition>
+        <transition from="TOP1" to="TOP2">
+            <delay>delay1</delay>
+        </transition>
+        <transition from="TOP4" to="MIDDLE">
+            <delay>delay1</delay>
+        </transition>
+        <transition from="MIDDLE" to="BOT1">
+            <delay>delay</delay>
+        </transition>
+        <transition from="MIDDLE" to="TOP1">
+            <delay>delay1</delay>
+        </transition>
+        <transition from="BOT1" to="BOT2">
+            <delay>delay</delay>
+        </transition>
+        <transition from="BOT4" to="MIDDLE">
+            <delay>delay</delay>
+        </transition>
+        <transition from="TOP2" to="TOP3">
+            <delay>delay1</delay>
+        </transition>
+        <transition from="TOP3" to="TOP4">
+            <delay>delay1</delay>
+        </transition>
+        <transition from="BOT3" to="BOT4">
+            <delay>delay</delay>
+        </transition>
+    </transitions>
+</automaton>
