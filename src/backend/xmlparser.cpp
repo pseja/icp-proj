@@ -259,10 +259,6 @@ bool XMLParser::XMLtoFSM(const QString &file_path, FSM &state_machine) {
             Variable *delay_variable = nullptr;
 
             if (!condition_node.isNull()) {
-                if (!condition_node.hasAttribute("event") || condition_node.attribute("event").isEmpty()) {
-                    qCritical() << "Invalid XML format: <condition> element has no \"event\" attribute or it's empty";
-                    return false;
-                }
 
                 if (condition_node.attributes().count() > 1) {
                     qCritical() << "Invalid XML format: The <condition> element has additional attributes";
