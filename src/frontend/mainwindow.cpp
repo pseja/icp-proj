@@ -1161,7 +1161,6 @@ void MainWindow::sudoclearFSM() {
   transitionItemsForSelectedState.clear();
   qDebug() << "Clearing FSM vars";
 
-  //segfaulting here because some cast wont provide clear function
   auto clearWidget = [](QWidget* w) {
     if (auto line = qobject_cast<QLineEdit*>(w)) line->clear();
     else if (auto text = qobject_cast<QTextEdit*>(w)) text->clear();
