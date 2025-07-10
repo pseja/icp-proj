@@ -1,5 +1,8 @@
 # Tool for Visual Editing, Code Generation, and Monitoring of Interpreted Finite State Machines
 
+## Final Evaluation
+(97/100) - The states and transitions didn't show the source code on hover.  
+
 ## Interpreted Finite State Machine
 In this context, an interpreted finite state machine refers to a [Moore-type](https://en.wikipedia.org/wiki/Moore_machine) automaton that responds to input events, executes internal actions, and generates outputs.
 
